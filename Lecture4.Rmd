@@ -424,14 +424,14 @@ pnorm(80, mean=72, sd=10, lower.tail=FALSE)
 
 ```{r normal pdf mu changes, echo=FALSE, warning=FALSE, fig.height=4.5}
 
-normals.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+normals.mu.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
     stat_function(fun=dnorm, args=list(mean=0, sd=1), aes(color = "E(X)=0, sd(X)=1"))+
     stat_function(fun=dnorm, args=list(mean=0, sd=0.5), aes(color = "E(X)=1, sd(X)=1"))+
     stat_function(fun=dnorm, args=list(mean=2, sd=1), aes(color = "E(X)=2, sd(X)=1"))+
     stat_function(fun=dnorm, args=list(mean=-2, sd=1), aes(color = "E(X)=-2, sd(X)=1"))+
     #scale_colour_manual("Legend")+#, values = c("red", "blue", "green", "orange", "purple"))+
     xlab("x")+ylab("p(x)")
-normals.pdf
+normals.mu.pdf
 ```
 
 ### The Effects of Parameter Changes II
@@ -440,13 +440,13 @@ normals.pdf
 
 ```{r normal pdf sigma changes, echo=FALSE, warning=FALSE, fig.height=4.5}
 
-normals.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+normals.sigma.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
     stat_function(fun=dnorm, args=list(mean=0, sd=1), aes(color = "E(X)=0, sd(X)=1"))+
     stat_function(fun=dnorm, args=list(mean=0, sd=2), aes(color = "E(X)=0, sd(X)=2"))+
     stat_function(fun=dnorm, args=list(mean=0, sd=0.5), aes(color = "E(X)=0, sd(X)=0.5"))+
     #scale_colour_manual("Legend")+#, values = c("red", "blue", "green", "orange", "purple"))+
     xlab("x")+ylab("p(x)")
-normals.pdf
+normals.sigma.pdf
 ```
 
 ### The 68-95-99.7% Rule
@@ -703,5 +703,9 @@ pnorm(80, mean=75, sd=10, lower.tail=TRUE)
 
 - Probability a student gets between a 65 and 85:
 ```{r, zscore3}
-pnorm(85, mean=75, sd=10, lower.tail=TRUE)-pnorm(65, mean=75, sd=10, lower.tail=TRUE)
+pnorm(85, mean=75, sd=10, 
+      lower.tail=TRUE)-pnorm(
+        65, mean=75, sd=10, 
+        lower.tail=TRUE)
 ```
+
