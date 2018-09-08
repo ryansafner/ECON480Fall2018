@@ -1,0 +1,707 @@
+---
+title: "Lecture 4: Random Variables"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "September 10, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+# Random Variables
+
+### Experiments
+
+- An \alert{experiment} is any procedure that can (in principle) be repeated infinitely and has a well-defined set of outcomes
+
+\begin{example}
+Flip a coin 10 times
+\end{example}
+
+\begin{figure}
+	\includegraphics[height=1.5in]{headstails}	
+\end{figure}
+
+### Random Variables
+
+- A \alert{random variable (RV)} takes on values that are unknown in advance, but determined by an experiment
+- A R.V. is a numerical summary of a random outcome 
+
+\begin{example}
+The number of Heads from 10 coin flips
+\end{example}
+
+\begin{figure}
+	\includegraphics[height=1.5in]{headstails}	
+\end{figure}
+
+### Random Variables: Notation
+
+- Random variable $X$ takes on individual values ($X_i$) from a set of possible values 
+- Often capital letters to denote RV's
+
+\begin{example}
+Let $X$ be the number of Heads from 10 coin flips. $x_i \in \{0, 1, 2,...,10\}$
+\end{example}
+
+## Discrete Random Variables 
+
+### Discrete Random Variables
+
+- A \alert{discrete random variable} takes on a finite/countable set of possible values
+
+\begin{example}
+	Let $X$ be the number of times your computer crashes this semester, $x_i \in \{0, 1, 2, 3, 4\}$
+\end{example}
+
+\begin{figure}
+		\includegraphics[height=1.75in]{bluescreen}	
+\end{figure}
+
+### Discrete Random Variables: Probability Distribution
+
+- The \alert{probability distribution} of a R.V. fully lists all the possible values of $X$ and their associated probabilities
+
+\begin{example}
+		\begin{table}
+		\begin{tabular}{cc}
+		$x_i$ & $P(X=x_i)$\\ \toprule 
+		0 & 0.80\\
+		1 & 0.10\\
+		2 & 0.06\\
+		3 & 0.03\\
+		4 & 0.01\\ \bottomrule 
+		\end{tabular}
+	\end{table}	
+\end{example} 
+
+### Discrete Random Variables: PDF
+
+- The \alert{probability distribution function (pdf)} summarizes the possible outcomes of $X$ and their probabilities
+- Notation: $f_X$ is the pdf of $X$: 
+
+$$f_X=p_i, i=1,2,...,k$$
+
+- For any real number $x_i$, $f(x_i)$ is the probablity that $X=x_i$
+
+### Discrete Random Variables: PDF Example
+
+\begin{example}
+		\begin{table}
+		\begin{tabular}{cc}
+		$x_i$ & $P(X=x_i)$\\ \toprule 
+		0 & 0.80\\
+		1 & 0.10\\
+		2 & 0.06\\
+		3 & 0.03\\
+		4 & 0.01\\ \bottomrule 
+		\end{tabular}
+	\end{table}	
+	\begin{itemize}
+	  \item<2-> What is $f(0)$?
+	  \item<3-> What is $f(3)$?
+	\end{itemize} 
+\end{example} 
+
+### Discrete Random Variables: PDF Graph
+
+```{r discrete pdf}
+crashes<-c(0,1,2,3,4)
+prob<-c(0.8,0.1,0.06,0.03,0.01)
+crashes<-data.frame(crashes, prob)
+
+crashes.pdf<-ggplot(crashes, aes(x=crashes, y=prob))+
+  geom_bar(stat="identity", fill="#0072B2")+xlab("Crashes")+ylab("Probability")
+
+crashes.pdf
+```
+
+### Discrete Random Variables: CDF
+
+- The \alert{\emph{cumulative} density function (cdf)} describes the probability that $X$ will be *at most* (less than or equal to) a given value $x_i$
+- Notation: $F_X=P(X \leq x_i)$
+
+\begin{example}
+		\begin{table}
+		\begin{tabular}{ccc}
+		$x_i$ & $f(x)$ & $F(X)$\\ \toprule 
+		0 & 0.80 & 0.80\\
+		1 & 0.10 & 0.90\\
+		2 & 0.06 & 0.96\\
+		3 & 0.03 & 0.99\\
+		4 & 0.01 & 1.00\\ \bottomrule 
+		\end{tabular}
+	\end{table}	
+	\begin{itemize}
+	  \item <3-> What is the probability your computer will crash at most once? $F(1)$?
+	  \item <4-> What is the probability your computer will crash at most three times? $F(3)$?
+	 \end{itemize}
+\end{example} 
+
+### Discrete Random Variables: CDF Graph
+
+```{r discrete cdf}
+crashes$cprob<-(cumsum(crashes$prob))
+
+crashes.cdf<-ggplot(crashes, aes(x=crashes, y=cprob))+
+  geom_bar(stat="identity", fill="#0072B2")+xlab("Crashes")+ylab("Cumulative Probability")
+
+crashes.cdf
+
+```
+
+## Expected Value and Variance
+
+### Expected Value of a Random Variable
+
+- The \alert{expected value} of a random variable $X$, written $E(X)$, is the long-run average value of $X$ "expected" after many repetitions
+
+\onslide<3->\begin{equation*}
+E(X)= p_1x_1+p_2x_2+...+p_kx_k \onslide<4->= \displaystyle \sum^k_{i=1} p_i x_i
+\end{equation*}
+
+- A probability-weighted average of $X$, with each $x_i$ weighted by its associated probability $p_i$
+- Also called the \alert{mean} or \alert{expectation} of $X$, also denoted $\mu_X$
+
+### Expected Value: Example
+
+\begin{example}	
+Suppose you lend your friend \$100 at 10\% interest. If the loan is repaid, you receive \$110	. Your friend is 99\% likely to repay, but there is a default risk of 1\% where you get nothing. What is the expected value of repayment? 
+\end{example}
+
+### Expected Value: Example II
+
+\begin{example}
+	Let $X$ be a random variable that is described by the following pdf:
+	\begin{table}
+	\begin{tabular}{cccc}
+	$x_i$ & $P(X=x_i)$\\ \toprule
+	1 & 0.50\\
+	2 & 0.25\\
+	3 & 0.10\\
+	4 & 0.05\\ \bottomrule 	
+	\end{tabular}
+	\end{table}
+	\begin{itemize}
+		\item What is $E(X)$?
+	\end{itemize}
+\end{example}
+
+### Variance of a Random Variable
+
+- The \alert{variance} of a random variable $X$, denoted $var(X)$ or $\sigma^2_X$ is:
+
+\begin{equation*}
+		\sigma^2_X = \sum_{i=1}^n(x_i-\mu_X)^2p_i \onslide<3-> = E[(X-\mu_X)^2]	
+\end{equation*}
+
+- This is the expected value of the squared deviations from the mean
+    - i.e. the probability-weighted average of the squared deviations 
+
+### Standard Deviation of a Random Variable
+
+- The \alert{standard deviation} of a random variable $X$, denoted $sd(X)$ or $\sigma_X$ is:
+
+$$\sigma_X=\sqrt{\sigma_X^2}$$
+
+### Standard Deviation: Example
+
+\begin{example}
+	What is the standard deviation of computer crashes? 
+		\begin{table}
+		\begin{tabular}{cccccc}
+		& \multicolumn{5}{c}{Number of Computer Crashes}\\ \cmidrule{2-6}
+				$x_i$ & 0 & 1 & 2 & 3 & 4\\ \toprule 
+				$P(X=x_i)$ & 0.80 & 0.10 & 0.06 & 0.03 & 0.01\\ \bottomrule 
+		\end{tabular}
+	\end{table}	
+	\begin{itemize}
+	  \item<2-> First, calculate the mean: 
+	  \begin{align*}
+	  E(X)&=0(0.80)+1(0.10)+2(0.06)+3(0.03)+4(0.01)\\
+	  &=0+0.1+0.12+0.09+0.04\\
+	  &=0.35\\
+	  \end{align*}
+	\end{itemize}
+\end{example} 
+
+### Standard Deviation: Example II
+
+\begin{example}
+	What is the standard deviation of computer crashes? 
+	\begin{itemize}
+	  \item<2-> Next, find the deviations from the mean and square them: 
+				\begin{tabular}{cccccc}
+		& \multicolumn{5}{c}{Number of Crashes ($E(X)=0.35$)}\\ \cmidrule{2-6}
+				$x_i$ & 0 & 1 & 2 & 3 & 4\\ \toprule 
+				$P(X=x_i)$ & 0.80 & 0.10 & 0.06 & 0.03 & 0.01\\ 
+				$(x_i-E(X))$ & -0.35 & 0.65 & 1.65 & 2.65 & 3.65\\  
+				$(x_i-E(X)$ & 0.1225 & 0.4225 & 2.7225 & 7.0225 & 13.3225\\ \bottomrule 
+		\end{tabular}
+		\item<3-> Take the expectation of the squared deviations to get variance
+			\scriptsize \begin{align*}
+	\sigma^2_X &= 0.1225(0.80)+0.4225(0.10)+2.7225(0.06)+7.0225(0.03)+13.3225(0.01)\\
+	&=0.098+0.04225+0.16335+0.210675+0.133225\\
+	&=0.6475 \\ 
+	\end{align*}
+  \end{itemize}
+\end{example}
+
+### Standard Deviation: Example III 
+\begin{example}
+	What is the standard deviation of computer crashes? 
+	\begin{itemize}
+		\item To get standard deviation, $\sigma$, take the square root:
+	\begin{align*}
+		\sigma=\sqrt{\sigma^2}\\
+		&=\sqrt{0.6475}\\
+		&=0.8047\\
+	\end{align*}
+	\end{itemize}
+\end{example} 
+
+## Continuous Random Variables
+
+### Continuous Random Variables
+
+- \alert{\emph{Continuous} random variables} can take on an uncountable (infinite) number of values
+- So many values that the probability of any specific value is infinitely small $\rightarrow$ 0.
+- Instead, we focus on a *range* of values it might take on
+
+\begin{figure}
+		\includegraphics[height=1.5in]{continuous}	
+\end{figure}	
+
+### Continuous Random Variable PDF
+
+- The \alert{probability \emph{density} function (pdf)} of a continuous variable represents the probability between two values as the area under a curve
+- The total area under the curve is 1
+- Since $P(a)=0$ and $P(b)=0$, $P(a<X<b)=P(a \leq X \leq b)$
+
+
+\begin{figure}
+		\centering 	
+		\begin{tikzpicture}
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$X$, ylabel={},
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick={-4, -3, -2, -1, 0, 1, 2, 3, 4}, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = none
+  ]
+  \addplot [fill=red!50, draw=none, domain=-1:1] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\end{axis}
+\end{tikzpicture}
+\caption*{P($-1 \leq X \leq 1$): area under the curve between -1 and 1.} 
+\end{figure}
+
+### Continuous Random Variable PDF
+
+- FYI using calculus:
+
+$$P(a \leq X \leq b) = \int_a^b f(x) dx $$
+
+- These functions are complicated: we have software or (old fashioned!) probability tables to calculate
+
+```{r continuous pdf, echo=FALSE}
+
+funcShaded <- function(x) {
+    y <- dnorm(x, mean = 0, sd = 1)
+    y[x < -1 | x >1] <- NA
+    return(y)
+}
+
+continuous.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+    stat_function(fun=dnorm, args=list(mean=0, sd=1), color="blue")+
+    stat_function(fun=funcShaded, geom="area", fill="#84CA72", alpha=0.5)+
+    xlab("x")+ylab("p(x)")
+continuous.pdf
+```
+
+### Continuous Random Variable CDF
+
+- The \alert{\emph{cumulative} density function (cdf)} describes the area under the pdf for all values less than or equal to (i.e. to the left of) a given value, $k$
+$$P(X \leq k)$$ 
+
+```{r continuous cdf shaded L, echo=FALSE}
+
+cdfshadedL <- function(x) {
+    y <- pnorm(x, mean = 0, sd = 1)
+    y[x < -4 | x >1] <- NA
+    return(y)
+}
+
+continuous.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+    stat_function(fun=pnorm, args=list(mean=0, sd=1), color="blue")+
+    stat_function(fun=cdfshadedL, geom="area", fill="#84CA72", alpha=0.5)+
+    xlab("x")+ylab("p(x)")
+continuous.pdf
+```
+
+### Continuous Random Variable CDF II
+
+- Note: to find the probability of values *greater* than or equal to (to the right of) a given value $k$:
+$$P(X \geq k)=1-P(X \leq k)$$
+
+```{r continuous cdf shaded R, echo=FALSE}
+
+cdfshadedR <- function(x) {
+    y <- pnorm(x, mean = 0, sd = 1)
+    y[x < 1 | x >4] <- NA
+    return(y)
+}
+
+continuous.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+    stat_function(fun=pnorm, args=list(mean=0, sd=1), color="blue")+
+      stat_function(fun=cdfshadedR, geom="area", fill="#84CA72", alpha=0.5)+
+    xlab("x")+ylab("p(x)")
+continuous.pdf
+```
+
+## Normal Distribution
+
+### The Normal Distribution
+
+- The \alert{Gaussian} or \alert{normal distribution} is the most common type of probability distribution, and we make extensive use of it
+
+$$ X \sim N(\mu,\sigma)$$
+
+- Continuous, symmetric, unimodal, with mean $\mu$ and standard deviation $\sigma$
+
+```{r normal pdf, echo=FALSE}
+
+normal.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+    stat_function(fun=dnorm, args=list(mean=0, sd=1), color="blue")+
+    xlab("x")+ylab("p(x)")
+normal.pdf
+```
+
+### The Normal PDF
+
+- The pdf of $X \sim N(\mu, \sigma)$ is 
+$$P(X=k)=	\frac{1}{\sqrt{2\pi \sigma^2}}e^{-\frac{1}{2}\big(\frac{(k-\mu)}{\sigma}\big)^2}$$ 
+- **Do not try and learn this**, we have software and (previously tables) to calculate pdfs and cdfs
+
+```{r calculate normal}
+# Find probability that a student earns at least an 80 if
+#the average grade is a 75 and standard deviation is 10
+
+#lower.tail is TRUE if calculating area to LEFT of 80, 
+#FALSE if to the RIGHT
+pnorm(80, mean=72, sd=10, lower.tail=FALSE) 
+```
+
+### The Effects of Parameter Changes I 
+
+- The pdf moves left/right based on $\mu$
+
+```{r normal pdf mu changes, echo=FALSE, warning=FALSE, fig.height=4.5}
+
+normals.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+    stat_function(fun=dnorm, args=list(mean=0, sd=1), aes(color = "E(X)=0, sd(X)=1"))+
+    stat_function(fun=dnorm, args=list(mean=0, sd=0.5), aes(color = "E(X)=1, sd(X)=1"))+
+    stat_function(fun=dnorm, args=list(mean=2, sd=1), aes(color = "E(X)=2, sd(X)=1"))+
+    stat_function(fun=dnorm, args=list(mean=-2, sd=1), aes(color = "E(X)=-2, sd(X)=1"))+
+    #scale_colour_manual("Legend")+#, values = c("red", "blue", "green", "orange", "purple"))+
+    xlab("x")+ylab("p(x)")
+normals.pdf
+```
+
+### The Effects of Parameter Changes II
+
+- The pdf gets fatter/skinnier based on $\sigma$
+
+```{r normal pdf sigma changes, echo=FALSE, warning=FALSE, fig.height=4.5}
+
+normals.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+    stat_function(fun=dnorm, args=list(mean=0, sd=1), aes(color = "E(X)=0, sd(X)=1"))+
+    stat_function(fun=dnorm, args=list(mean=0, sd=2), aes(color = "E(X)=0, sd(X)=2"))+
+    stat_function(fun=dnorm, args=list(mean=0, sd=0.5), aes(color = "E(X)=0, sd(X)=0.5"))+
+    #scale_colour_manual("Legend")+#, values = c("red", "blue", "green", "orange", "purple"))+
+    xlab("x")+ylab("p(x)")
+normals.pdf
+```
+
+### The 68-95-99.7% Rule
+
+\begin{itemize}
+		\item The \textcolor{teal}{68-95-99.7\% (empirical) rule}: for a normal distribution:
+		\begin{itemize}
+			\item<2-> $P(\mu-1\sigma \leq X \leq \mu+1\sigma) \approx$ 68\% 
+			\item<3-> $P(\mu-2\sigma \leq X \leq \mu+2\sigma) \approx$ 95\%
+			\item<4-> $P(\mu-3\sigma \leq X \leq \mu+3\sigma) \approx$ 99.7\%
+		\end{itemize} 
+	\end{itemize}
+	\begin{figure}
+			\begin{tikzpicture}
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$\sigma$, ylabel=$f(X)$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick={-4,-3,-2,-1,0,1,2,3,4}, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = none
+  ]
+ \only<2->{\addplot [fill=red!20, draw=none, domain=-1:1] {gauss(0,1)} \closedcycle;}
+  \only<3->{\addplot [fill=red!50, draw=none, domain=-2:-1] {gauss(0,1)} \closedcycle;}
+  \only<3->{\addplot [fill=red!50, draw=none, domain=1:2] {gauss(0,1)} \closedcycle;}
+  \only<4->{\addplot [fill=red!75, draw=none, domain=-3:-2] {gauss(0,1)} \closedcycle;}
+  \only<4->{\addplot [fill=red!75, draw=none, domain=2:3] {gauss(0,1)} \closedcycle;}
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw<2->[yshift=-0.75cm, <->,very thick](axis cs:-1,0) -- node [fill=white] {\small $\mu \pm \sigma$} (axis cs:1,0);
+\draw<3->[yshift=-1.25cm, <->,very thick](axis cs:-2,0) -- node [fill=white] {\small $\mu \pm 2\sigma$} (axis cs:2,0);
+\draw<2->[yshift=2cm, <->,very thick](axis cs:-1,0) -- node[fill=white] {\small 68\%} (axis cs:1,0);
+\draw<3-> [yshift=1.25cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small 95\%} (axis cs:2,0);
+\draw<4-> [yshift=.5cm, <->,very thick](axis cs:-3,0) -- node[fill=white] {\small 99.7\%} (axis cs:3,0);
+\draw<4->[yshift=-1.75cm, <->,very thick](axis cs:-3,0) -- node [fill=white] {\small $\mu \pm 3\sigma$} (axis cs:3,0);
+\end{axis}
+\end{tikzpicture}
+\end{figure}
+
+### The Standard Normal Distribution
+
+- We \alert{standardize} a variable by calculating its \alert{Z-score} and converting to the \alert{standard normal distribution}
+$$Z=\frac{x-\mu}{\sigma}$$
+- $Z$ is the number of standard deviations a value is above/below of its mean 
+- Can compare distributions of variables with very different units! 
+
+### The Standard Normal Distribution II
+
+- The \alert{standard normal distribution} has mean 0 and standard deviation 1
+$$Z \sim N(0,1)$$
+
+```{r standard normal, echo=FALSE, warning=FALSE, fig.height=4.5}
+
+standard.normal.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+    stat_function(fun=dnorm, args=list(mean=0, sd=1), aes(color = "E(X)=0, sd(X)=1"))+
+    xlab("x")+ylab("p(x)")
+standard.normal.pdf
+```
+
+### The Standard Normal CDF
+
+- Standard normal cdf:
+$$\Phi(k)=P(Z \leq k)$$
+
+```{r standard normal cdf, echo=FALSE, warning=FALSE, fig.height=4.5}
+
+standard.normal.cdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
+    stat_function(fun=pnorm, args=list(mean=0, sd=1), aes(color = "E(X)=0, sd(X)=1"))+
+    xlab("x")+ylab("p(x)")
+standard.normal.cdf
+```
+
+### Standardizing Variables: Example
+
+\begin{example}
+On August 8, 2011, the Dow dropped 634.8 points, sending shock waves through the financial community. Assume that during mid-2011 to mid-2012 the daily change for the Dow is normally distributed, with the mean daily change of 1.87 points and a standard deviation of 155.28 points. What is the $Z$-score?
+\end{example}
+
+\begin{itemize}
+		\item<2-> Convert to $Z$-score: 	
+	\begin{equation*}
+		Z = \frac{X - \mu}{\sigma} \onslide<3-> = \frac{634.8-1.87}{155.28} \onslide<4-> = -4.1 
+	\end{equation*}
+		\item<4-> This is 4.1 standard deviations ($\sigma$) beneath the mean. 
+\end{itemize}
+
+### Standardizing Variables: Example II
+
+\begin{example}
+In the last quarter of 2015, a group of 64 mutual funds had a mean return of 2.4\% with a standard deviation of 5.6\%. These returns can be approximated by a normal distribution.
+	\end{example}
+	\begin{itemize}\small 
+		\item<2-> What percent of the funds would you expect to be earning between -3.2\% and 8.0\% returns? 
+\end{itemize}
+
+### Standardizing Variables: Example III
+
+\begin{itemize}
+			\item Convert to standard normal to find $Z$-scores for 8 and -3.2. 
+	\onslide<2->\begin{equation*}
+	P(-3.2 < X < 8)	
+	\end{equation*}
+	\onslide<3->\begin{equation*}
+	P(\frac{-3.2-2.4}{5.6} < \frac{X-2.4}{5.6} < \frac{8-2.4}{5.6})	
+	\end{equation*}
+	\onslide<4->\begin{equation*}
+	P(-1 < Z < 1)	
+	\end{equation*}
+	\item<5-> $P(X \pm 1\sigma)=0.68$ 
+\end{itemize}
+
+### Standardizing Variables: Example IV
+
+\begin{figure}
+					\begin{tikzpicture}[scale=.75]
+\begin{axis}[
+  no markers, domain=-20:24.8, samples=100,
+  axis lines*=left, xlabel=$X$, ylabel={},
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick={-20, -14.4, -8.8, -3.2, 2.4, 8, 13.6, 19.2, 24.8}, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = none
+  ]
+  \addplot [fill=red!50, draw=none, domain=-3.2:8] {gauss(2.4,5.6)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(2.4,5.6)};
+  \draw [yshift=-0.75cm, <->,very thick](axis cs:-3.2,0) -- node [fill=white] {\small $\mu \pm \sigma$} (axis cs:8,0);
+\draw [yshift=2cm, <->,very thick](axis cs:-3.2,0) -- node[fill=white] {\small 68\%} (axis cs:8,0);
+\end{axis}
+\end{tikzpicture}
+		\begin{tikzpicture}[scale=.75]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$Z$, ylabel={},
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick={-4, -3, -2, -1, 0, 1, 2, 3, 4}, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = none
+  ]
+  \addplot [fill=red!50, draw=none, domain=-1:1] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+  \draw [yshift=-0.75cm, <->,very thick](axis cs:-1,0) -- node [fill=white] {\small $\mu \pm \sigma$} (axis cs:1,0);
+\draw [yshift=2cm, <->,very thick](axis cs:-1,0) -- node[fill=white] {\small 68\%} (axis cs:1,0);
+\end{axis}
+\end{tikzpicture}
+\end{figure}
+
+### Standardizing Variables: Example V
+
+\begin{example}
+In the last quarter of 2015, a group of 64 mutual funds had a mean return of 2.4\% with a standard deviation of 5.6\%. These returns can be approximated by a normal distribution.
+\end{example}
+
+\begin{itemize}\small 
+		\item What percent of the funds would you expect to be earning between -3.2\% and 8.0\% returns? 
+		\item<3-> What percent of the funds would you expect to be earning 2.4\% or less?
+		\item<4-> What percent of the funds would you expect to be earning between -8.8\% and 13.6\%?
+		\item<5-> What percent of the funds would you expect to be earning returns greater than 13.6\%?
+\end{itemize}
+
+### Finding Z-Score Probabilities
+
+- How do we actually find the probabilities for $Z-$scores? 	
+
+\begin{figure}
+		\includegraphics[width=4.5in]{ztable}	
+\end{figure}
+
+### Finding Z-Score Probabilities II
+
+\begin{columns}
+		\begin{column}[c]{5cm}
+				\begin{figure}
+				\begin{tikzpicture}[scale=.5]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel={}, ylabel={},
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \addplot [fill=red!50, draw=none, domain=-4:1] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[thick](axis cs:1,0)node[below]{\small $k$};
+\end{axis}
+\end{tikzpicture}
+	\caption*{\small $P(Z \leq k)=\Phi(k)$}
+	\end{figure}
+		\end{column}
+			\begin{column}[c]{5cm}
+					\begin{figure}
+				\begin{tikzpicture}[scale=.5]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel={}, ylabel={},
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \addplot [fill=red!50, draw=none, domain=1:4] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[thick](axis cs:1,0)node[below]{\small $k$};
+\end{axis}
+\end{tikzpicture}
+	\caption*{\small $P(Z \geq k)=1-\Phi(k)$}
+	\end{figure}
+			\end{column}
+	\end{columns}
+					\begin{figure}
+				\begin{tikzpicture}[scale=.5]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel={}, ylabel={},
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \addplot [fill=red!50, draw=none, domain=-2:1] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[thick](axis cs:-2,0)node[below]{\small $j$};
+\draw[thick](axis cs:1,0)node[below]{\small $k$};
+\end{axis}
+\end{tikzpicture}
+	\caption*{\small $P(j \geq Z \geq k)=\Phi(k)-\Phi(j)$}
+\end{figure}
+
+### Finding Z-Score Probabilities with *R*
+
+- Let the distribution of grades be normal, with mean 75 and standard deviation 10.
+- Note: `lower.tail=TRUE` if calculating area to LEFT of value $k$, `=FALSE` if to the RIGHT
+- Probability a student gets at least an 80:
+```{r, zscore1}
+pnorm(80, mean=75, sd=10, lower.tail=FALSE) 
+```
+- Probability a student gets at most an 80:
+```{r, zscore2}
+pnorm(80, mean=75, sd=10, lower.tail=TRUE) 
+```
+
+### Finding Z-Score Preobabilities with *R* II
+
+- Probability a student gets between a 65 and 85:
+```{r, zscore3}
+pnorm(85, mean=75, sd=10, lower.tail=TRUE)-pnorm(65, mean=75, sd=10, lower.tail=TRUE)
+```

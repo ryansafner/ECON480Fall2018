@@ -1,0 +1,456 @@
+---
+title: "Lecture 1: Introduction to Econometrics"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "August 27, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+# What is Econometrics?
+
+### Why Everyone, Yes *Everyone*, Should Learn Statistics
+
+![\href{https://www.smbc-comics.com/comic/why-i-couldn39t-be-a-math-teacher}{SMBC}](smbcmathteacher.png)
+
+### Why Everyone, Yes *Everyone*, Should Learn Statistics
+
+![\href{https://www.smbc-comics.com/comic/2010-12-01}{SMBC}](smbc2080stats.png)
+
+### We're Not so Good at Statistics: Votes 
+
+- Votes in the U.S. House of Representatives in favor of passing the Civil Rights Act of 1964:
+
+\begin{table}[h!]
+  \begin{tabular}{rr}
+  Democrat & Republican\\ \toprule
+  61\% & 80\% \\ \bottomrule 
+  \end{tabular}
+\end{table}
+
+- Simple enough: "on average, Republicans tended to vote for passage more than Democrats"
+
+### We're Not so Good at Statistics: Votes II 
+
+- Suppose we break it down further between Dems vs. Reps from Northern vs. Southern states:
+
+\begin{table}[h!]
+  \begin{tabular}{lrr}
+   & Democrat & Republican\\ \toprule 
+   \multirow{2}{*}{North} & \textcolor{magenta}{94\%} & 85\%\\
+  & (145/154) & (138/162)\\ \midrule 
+   \multirow{2}{*}{South} & \textcolor{magenta}{7\%} & 0\% \\
+   & (7/94) & (0/10)\\ \midrule 
+   \multirow{2}{*}{Overall} & 61\% & \textcolor{magenta}{80\%}\\
+   & (152/248) &  (138/172)\\ \bottomrule
+  \end{tabular}
+\end{table}
+
+- In *both* North and South, Democrats are more likely to vote for passage than Republicans, despite a higher proportion of Republicans *overall* voted for the act than Democrats! 
+
+### We're Not so Good at Statistics: Votes III 
+
+\begin{table}[h!]
+  \begin{tabular}{lrr}
+   & Democrat & Republican\\ \toprule 
+   \multirow{2}{*}{North} & \textcolor{magenta}{94\%} & 85\%\\
+  & (145/154) & (138/162)\\ \midrule 
+   \multirow{2}{*}{South} & \textcolor{magenta}{7\%} & 0\% \\
+   & (7/94) & (0/10)\\ \midrule 
+   \multirow{2}{*}{Overall} & 61\% & \textcolor{magenta}{80\%}\\
+   & (152/248) &  (138/172)\\ \bottomrule
+  \end{tabular}
+\end{table}
+
+- A far greater proportion of Democrats at the time were from the South (94/248, 38%) vs. Republicans (10/172, 6%)
+- The 7% of southern Democrats voting for the act dragged down the Democrats' overall percentage much more than the 0% of southern Republicans 
+
+### We're Not so Good at Statistics: Kidney Stones 
+
+- Suppose you suffer from kidney stones, your doctor offers you *treatment A* vs. *treatment B*
+- In clinical trials, treatment A was effective for a higher overall percentage of patients than treatment B
+- But, treatment B was effective for a higher percentage of patients in *both* groups (large and small stones)
+- How can this be?
+
+![](redorbluepill.jpg){height=1.75in}
+
+### We're Not so Good at Statistics: Kidney Stones II 
+
+- From a real [medical study](https://www.ncbi.nlm.nih.gov/pmc/articles/PMC1339981/): 
+
+\begin{table}[h!]
+  \begin{tabular}{lrr}
+   & Treatment A & Treatment B\\ \toprule 
+   \multirow{2}{*}{Small Stones} & \textcolor{magenta}{93\%} & 87\%\\
+  & (81/87) & (234/270)\\ \midrule 
+   \multirow{2}{*}{Large Stones} & \textcolor{magenta}{73\%} & 69\% \\
+   & (192/263) & (55/80)\\ \midrule 
+   \multirow{2}{*}{Overall} & 78\% & \textcolor{magenta}{83\%}\\
+   & (273/350) &  (289/350)\\ \bottomrule
+  \end{tabular}
+\end{table}
+
+- The sizes of the two groups (i.e. who gets A vs B) are *very* different 
+- A **lurking variable** in the study is the *severity* of the case: doctors tended to give *B* for less severe cases 
+
+### Simpson's Paradox
+
+\begin{alertblock}{Simpson's Paradox}
+The correlation between two variables can change (even reverse!) when additional variables are considered
+\end{alertblock}
+
+![](homerdoh.jpg)
+
+### We're Not so Good at Statistics: Smoking 
+
+- 1964: U.S. Surgeon General issued a [report](http://profiles.nlm.nih.gov/ps/access/NNBBMQ.pdf) claiming that cigarette smoking causes lung cancer
+- Evidence based primarily on *correlations* between cigarette smoking and lung cancer
+
+![](smokingsjwarning.jpg)
+
+
+### We're Not so Good at Statistics: Smoking II 
+
+![](bigtobaccotestify.jpg){height=2in}
+
+- Tobacco companies attacked the report, naturally
+
+### We're Not so Good at Statistics: Smoking III 
+
+\begin{columns}
+		\begin{column}[c]{.7\textwidth}
+			\begin{itemize}
+			  \item But \href{https://priceonomics.com/why-the-father-of-modern-statistics-didnt-believe/}{so did Ronald Fisher, the "father of modern statistics"}
+			  \item<2-> There could be a lurking variable (genetics?) that causes \emph{both} lung cancer \emph{and} people wanting to smoke (i.e. nicotine craving)
+			  \item<3-> If true: despite correlation between smoking and lung cancner, decision to smoke or not would have \emph{no impact} on whether or not you get lung cancer! 
+			\end{itemize}
+		\end{column}
+		\begin{column}[c]{.3\textwidth}
+		\begin{tabular}{c}
+			\includegraphics[height=2in]{fishersmoke.png}\\
+			\small Ronald A. Fisher\\
+			\small 1890--1924\\
+		\end{tabular}
+	\end{column}
+\end{columns}
+
+### We're Not so Good at Statistics: Correlation vs. Causation
+
+- The goal of statistics professors everywhere is for you to learn one thing above all else:
+\begin{center}
+\alert{Correlation does not imply causation}
+\end{center}
+
+- Can NOT conclude *from correlation alone* that $X$ *causes* $Y$
+- May be other confounding variables (e.g. $Z$, etc) that affect $X$ and/or $Y$
+- May be reverse causation (maybe $Y$ causes $X$, or both cause each other)
+
+![](confoundingturbulence.jpg){height=1.5in}
+
+### We're Not so Good at Statistics: Correlation vs. Causation I 
+
+![](spuriouscorr1.png)
+
+### We're Not so Good at Statistics
+
+- Now you might think that we can never *really* say what causes something...
+- It's always good to be skeptical, *but*
+- This is where \alert{econometrics} comes in
+
+![](causation.jpg){height=2in}
+
+### Econometrics
+
+- \alert{Econometrics} is the application of statistical and other empirical tools to quantify economic relationships in the real world.
+- Uses real data to: 
+    * test economic hypotheses
+	  *	estimate quantitatively the causal effects between economic variables
+	  * make forecasts of future events
+
+![](statsgraphs.jpg){height=1.5in}
+
+### Econometrics
+
+- What we *really* use econometrics for is demonstrating evidence for \alert{causal relationships} between real world entities/forces of interest, and to attempt to *quantify* them, e.g. 
+    - "For every additional police officer in a metropolitan district, crime rates decrease by 0.12%, on average"
+    - "Each additional year of education tends to increase a person's yearly wages by $2,500, on average"
+    - "For every 1% tariffs are lowered, a country's GDP growth rate rises by 0.025%, on average"
+
+### Why Econometrics is Useful: Example 1
+\begin{example}
+  		Does reducing class size improve elementary school education?	
+\end{example}
+
+- Claim: with smaller class sizes, students get more one-on-one attention, learn better
+
+![](smallclass.jpg){height=1.75in}
+
+### Why Econometrics is Useful: Example 1
+\begin{example}
+  		Does reducing class size improve elementary school education?	
+\end{example}
+
+- What is the precise effect of class size on performance? 
+- A policy-relevant tradeoff with a budget constraint
+- Biases due to wealthy school districts?
+
+![](smallclass.jpg){height=1.75in}
+
+### Why Econometrics is Useful: Example 2
+\begin{example}
+  		Is there racial discrimination in home mortgage lending?
+\end{example}
+* Boston Fed: 28% of African-Americans are denied mortgages compared to only 9% of White Americans
+
+![](mortgageapp.jpg){height=2in}
+
+### Why Econometrics is Useful: Example 2
+\begin{example}
+  		Is there racial discrimination in home mortgage lending?
+\end{example}
+* What factors determine whether a person is denied a mortgage?
+* How many denials are explained *purely* by race, vs. other factors?
+
+![](mortgageapp.jpg){height=2in}
+
+### Why Econometrics is Useful: Example 3
+\begin{example}
+  How much do state cigarette taxes reduce smoking rates?
+\end{example}
+* Econ 101: raise price $\implies$ lower quantity consumed
+* What is the *price elasticity of demand* for smoking? 
+
+![](smokingwarning.jpg){height=2in}
+
+### Why Econometrics is Useful: Example 3
+\begin{example}
+  How much do state cigarette taxes reduce smoking rates?
+\end{example}
+* Low cigarette taxes probably causes more smoking (& vice versa).
+* Might more smokers also cause low cigarette taxes?
+
+![](smokingwarning.jpg){height=2in}
+
+### Why Econometrics is Useful: Example 4
+\begin{example}
+  What will the inflation rate be next year?
+\end{example}
+* Banks, governments, businesses make forecasts about economic indicators to make future plans 
+* This course is less about forecasting
+
+![](finance.png){height=2in}
+
+# The Basic Empirical Research Process
+
+### Theory and Data
+
+\begin{columns}
+		\begin{column}[c]{6cm}
+			"Experience without theory is blind, but theory without experience is mere intellectual play."
+		\end{column}
+		\begin{column}[c]{5cm}
+		\begin{tabular}{c}
+			\includegraphics[height=2in]{kant.jpg}\\
+			\small Immanuel Kant\\
+			\small 1724-1804\\
+		\end{tabular}
+	\end{column}
+\end{columns}
+
+## Economic Theory 
+
+### Economic Theory
+* First, we must formulate a question we are interested in answering (harder than you think!)
+* Ex: How does education affect wages? Does going to school longer raise your wages? 
+* We need a theory to tell us how and why phenomena cause each other! Otherwise all we have are correlations! 
+
+### Economic Theory: External Validity 
+
+* We need a good theory for \alert{external validity} of a study
+  - Is what is true of one sample/population true of others? 
+	- Lucas (1976) critique: can't base policy off of historical econometric relationships that, when changed, will cause people to change their behavior! 
+	
+![](externalvalidity.png){height=2in}
+
+### Economic Theory & Economic Models
+* Economic theorizing often involves building a formal model to relate economic phenomena and build intuitions	
+
+\begin{example}
+		Becker (1968) famously models crime as a rational choice: 
+  $$		y = f(x_1,x_2,x_3,x_4,x_5,x_6,x_7)	$$
+	\begin{tabular}{llll} 
+		$y$: & hours spent on criminal activities & $x_1$: & hourly ``wage'' of criminal activity\\
+		$x_2$: & hourly wage for legal employment & $x_3$: & other income\\
+		$x_4$: & probability of getting caught & $x_5$: & probability of conviction if caught\\
+		$x_6$: & expected sentence if convicted & $x_7$: & age\\
+	\end{tabular}
+
+\end{example}
+
+* We can at least predict the "sign" of each relationship between $y$ and each $x_i$ (then estimate the quantitative impact)
+
+## Econometric Models
+
+### Econometric Models: Basics 
+
+$$	\textcolor<2->{teal}{y} = \textcolor<5->{olive}{\beta_0} + \textcolor<5->{olive}{\beta_1} \textcolor<3->{blue}{x_1} + \textcolor<5->{olive}{\beta_2} \textcolor<3->{blue}{x_2} + \textcolor<6->{magenta}{\epsilon} 	$$
+	\begin{itemize}
+		\item<2-> \textcolor{teal}{$y$} is the \textcolor{teal}{dependent variable} of interest
+			\begin{itemize}
+				\item AKA ``response variable,'' ``regressand,'' ``Left-hand side (LHS) variable''
+			\end{itemize}
+		\item<3-> \textcolor{blue}{$x_1$} and \textcolor{blue}{$x_2$} are \textcolor{blue}{independent variables}
+			\begin{itemize}
+				\item AKA ``explanatory variables,'' ``regressors,'' ``Right-hand side (RHS) variables,'' ``covariates,'' ``control variables''	
+			\end{itemize}
+		\item<4-> We have observed values of $y$, $x_1$, and $x_2$ \& ``regress $y$ on $x_1$ and $x_2$''
+		\item<5-> \textcolor{olive}{$\beta_0, \beta_1,$} and \textcolor{olive}{$\beta_2$} are unknown \textcolor{olive}{parameters} to \emph{estimate}
+		\item<6-> \textcolor{magenta}{$\epsilon$} is the \textcolor{magenta}{error term}
+			\begin{itemize}
+				\item It is \textbf{stochastic} (random) 
+				\item We can never measure the error term
+			\end{itemize}
+	\end{itemize}
+
+### Econometric Models: Wage and Education Example 
+\begin{example} 
+		$$
+	wage = \beta_0 + \beta_1 educ + \beta_2 expr + \epsilon 	
+		$$
+\end{example}
+- Most of econometrics is about trying to estimate the parameters ("the betas")
+- Suppose we (hypothetically) find that:
+    * $\hat{\beta_0}=6.2$
+    * $\hat{\beta_1}=4.1$
+    * $\hat{\beta_2}=7.1$
+- Then we can make predictions based on our empirical model of the causal relationship between $X$'s and $Y$
+
+### Econometric Models: Wage and Education Example II 
+\begin{example} 
+		$$
+	\widehat{wage} = 6.2+4.1 educ + 7.1 expr 	
+		$$
+\end{example}
+- Predictions based on our empirical model of the causal relationship between $X$'s and $Y$
+    * A year of education (holding experience constant) increases wages by $4.1 thousand 
+    * A year of experience (holding education constant) increases wages by $7.1 thousand 
+    * For someone with 10 years of education and 3 years of experience, their predicted wage is 
+
+$$\widehat{wage}=6.2+4.1(10)+7.1(3)=\$68.5 \text{ thousand}$$
+
+# About the Course
+
+### Real Talk
+
+![](opengatemath1.jpg){height=3in}
+
+### Real Talk II 
+
+![](opengatemath2.jpg){height=3in}
+
+### Real Talk III
+
+![](opengatemath3.jpg){height=3in}
+
+### Real Talk IV
+
+- This will be one of the hardest courses you take at Hood 
+- There will be moments where you have no idea WTF is going on (*this is normal*)
+- Yes, you can still get an **A**
+
+![](difficultclass.png)
+
+### What You'll Get out of this Course 
+
+1. To understand and evaluate statistical & empirical claims 
+    a. Skepticism & critical thinking skills 
+2. To understand research design, causation, and hypothesis testing
+3. To gain experience analyzing, interpreting, and communicating real data
+    a. Research project
+    b. Use Tools of the Trade: data analysis with *R* 
+    c. Ambitious: managing workflow and reproducibility with *R Markdown* 
+    
+![R Studio](r.png){height=1in}
+
+### You are in Demand
+
+\begin{figure}
+  \includegraphics[height=2in]{hbrdatascience.png}\\
+  \caption*{\href{https://hbr.org/2012/10/data-scientist-the-sexiest-job-of-the-21st-century}{Harvard Business Review}}
+\end{figure}
+
+### You are in Demand II 
+
+\begin{figure}
+  \includegraphics[height=1in]{netflixjobs1.jpeg}\\
+  \includegraphics[height=1in]{netflixdatajobs3.png}\\
+  \caption*{\href{https://medium.com/netflix-techblog/notebook-innovation-591ee3221233}{The Netflix Tech Blog}}
+\end{figure}
+
+### You are budding Data-Scientists
+
+![](datascience1.png)
+
+### You are budding Data-Scientists II 
+
+![](datascience2.png)
+
+### The Sexiest Industry Terms are Basically Just Statistics 
+
+![](machinelearning.jpg)
+
+### *R* is Very Powerful: I Literally Ran the Code in This Slide
+
+```{r gapminderload, echo=FALSE}
+library("ggplot2")
+library("gapminder")
+```
+
+```{r gapminderp, echo=TRUE, fig.height=3, fig.width=10,warning=FALSE}
+ggplot(data = gapminder, aes(x = gdpPercap, 
+	y = lifeExp, color = continent, fill= continent))+
+	geom_point()+geom_smooth(method = "lm") +
+	scale_x_log10()+ylab("Life Expectancy (Years)")+
+	xlab("Log GDP/Capita")
+```
+
+### End This Nightmare! 
+![\href{http://phdcomics.com/comics/archive_print.php?comicid=1531}{PhD Comics}](phdfinal.png)
+
+### Using *R Markdown*
+
+![From \href{https://www.rstudio.com/wp-content/uploads/2016/03/rmarkdown-cheatsheet-2.0.pdf}{R Markdown Cheatsheet}](rmd.png)
+
+### Ambitious: Use *R Markdown* to Think About Your Workflow
+
+- \alert{Reproducible research}: you run my code (e.g. the last slide) and you will get the same graph as me, *every time.* 
+- \alert{Manage your workflow}: No more copy/paste pictures across 3 programs, 10 files, etc.
+    - No more re-run everything and re-copy/paste when you change your data  
+    - I can change the axes in the same file as I wrote the slide with my graph, and it will remake the graph in the slide automatically  
+- *R Markdown* is a simple human- and machine-readable language:  do *all* your work in one file, export to PDF, Word, HTML, Slides 
+- Using *R* is required, *R Markdown* is optional
+    - Advanced: version control with GitHub
