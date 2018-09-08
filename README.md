@@ -18,7 +18,7 @@ The *.rmd* file is compiled using "knitr" to produce a *.pdf* file. It can easil
 
 1. In *R Studio*, use the drop down menu: File -> New Project -> Version Control -> Git
 ![](gitrstudio.png)
-2. In the first field, enter the repository's URL (e.g. [http://github.com/ryansafner/ECON480Fall2018](http://github.com/ryansafner/ECON480Fall2018))
+2. In the first field, enter the repository's URL (e.g. [http://github.com/ryansafner/ECON480Fall2018](http://github.com/ryansafner/ECON480Fall2018){height=1in})
 3. In the second field, choose a name for the folder to be created on your computer
 4. In the third field, choose a location for the folder to be created on your computer  
     - e.g. for me, I store it under `~/Dropbox/Teaching/Hood College/ECON 480 - Econometrics/`
