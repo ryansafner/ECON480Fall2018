@@ -1,0 +1,634 @@
+---
+title: "Lecture 3: Data and Descriptive Statistics"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "September 5, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+# Data Basics
+
+### Data Basics
+
+- \alert{Data} are information with context
+- Data values, or \alert{observations} describe information about some entity
+- \alert{Metadata} describe the process about how data is collected 
+
+### Data Basics II
+
+- \alert{Individuals} are the entities described by a set of data 
+    - e.g. persons, households, firms, countries 
+- \alert{Variables} are particular characteristics about an individual
+    - e.g. age, income, profits, population, GDP, marital status, type of legal institutions
+- \alert{Observations} are the individuals described by a collection of variables 
+    - e.g. for one individual, we have their age, sex, income, education, etc.  
+    - individuals and observations are *not necessarily* the same: 
+        - e.g. we can have separate observations on the same individual over time 
+
+\begin{figure}
+		\includegraphics[height=1.35in]{individual1.jpg}
+		\includegraphics[height=1.35in]{bargraph}
+\end{figure}
+        
+### Categorical Variables 
+
+- \alert{Categorial variables} place an individual into one of several possible categories
+    - e.g. sex, season, political party
+    - may be responses to questions
+    - can be quantitative (e.g. age, zip code)
+
+\begin{figure}
+		\includegraphics[height=1.5in]{categoricaldata}
+\end{figure}
+
+### Representing Categorical Variables
+
+\begin{table}
+  \centering 
+  \begin{tabular}{lrrrrr}
+  Cut & Fair & Good & Very Good & Premium & Ideal\\ \toprule
+  Count & 1610 & 4906 & 12082 & 13791 & 21551 \\ \midrule
+  Proportion & 0.030 & 0.091 & 0.224 & 0.256 & 0.400\\ \bottomrule 
+  \end{tabular}
+  \caption*{Cut characteristics of 53,940 diamonds}
+\end{table}
+- A good way to represent categorical variables is with a \alert{frequency table} 
+- **Count**: frequency (total number) of individuals in a category
+- **Proportion**: *relative* frequency (percentage of all individuals) in a category
+
+### Representing Categorical Variables II
+
+```{r, diamonds, echo=TRUE, fig.height=3}
+ggplot(diamonds, aes(x=cut))+
+  geom_bar(fill="indianred", color="black")
+```
+
+- Charts and graphs are *always* better ways to visualize data
+- A \alert{bar chart} represents categories as bars, with lengths proportional to the count or relative frequency fo each category
+
+### Quantitative Variables
+
+- \alert{Quantitative variables} take on numerical values of equal units that describe an individual
+    - Units: points, dollars, inches 
+    - Context: GPA, prices, height
+- We mathematically manipulate quantitative variables *only* (even if categorical variables are numbers!)
+    - e.g. sum, average, standard deviation
+
+\begin{figure}
+		\includegraphics[height=1.5in]{mathoperations}	
+\end{figure}
+
+### Context! 
+
+- How variables are classified depends on the *purpose* of collecting and using the data
+
+\onslide<2-> \begin{example}
+  \begin{itemize}
+    \item \emph{Age}, measured in years (quantitative) vs. categories of child, adult, senior, etc. 
+  \end{itemize}
+\end{example}
+
+### Categorical or Quantitative?
+
+\begin{example}
+	What kind of data (categorical or quantitative) does each variable describe ?
+	\begin{enumerate}[<+->]
+		\item The number of pairs of shoes you own
+		\item The type of car you drive
+		\item Where you go on vacation
+		\item The amount of money spent on a Super Bowl ad
+		\item Customer ratings 
+		\item The date a purchase was made
+		\item Transaction ID	
+		\item Number of correct answers on an exam
+	\end{enumerate}
+\end{example}
+
+### Discrete Data
+
+- \alert{Discrete data} are finite, with a countable number of alternatives 
+    - Categorical: e.g. letter grades A, B, C, D, F
+    - Quantitative: integers, e.g. SAT Score, number of children 
+
+\begin{figure}
+  \includegraphics[height=2in]{buildingblocks}
+\end{figure}
+
+### Continuous Data
+
+- \alert{Continuous data} are infinitely divisible, with an uncountable number of alternatives
+    - e.g. weights, temperature, GPA
+- Many discrete variables may be treated as if they are continuous
+    - e.g. SAT scores, wages 
+
+\begin{figure}
+		\includegraphics[height=1.5in]{continuous}	
+\end{figure}
+
+### Discrete or Continous?
+
+\begin{example}
+	What kind of data (discrete or continuous) does each variable describe ?
+	\begin{enumerate}[<+->]
+		\item Weight in pounds
+		\item Price in dollars 
+		\item Grade (Letter) 
+		\item Temperature
+		\item Amazon Star Rating 
+		\item Number of customers
+		\item Transaction ID	
+		\item Number of correct answers on an exam
+	\end{enumerate}
+\end{example}
+
+
+### Spreadsheets
+
+```{r, example.spreadsheet.setup, echo=FALSE}
+ID<-c(1,2,3,4,5)
+Name<-c("John","Emile","Natalya","Lakisha","Cheng")
+Age<-c(23,18,28,31,36)
+Sex<-c("Male","Male","Female","Female","Male")
+Income<-c(41000,52600,48000,60200,81900)
+example<-data.frame(ID,Name,Age,Sex,Income)
+```
+
+```{r, example.spreadsheet, echo=FALSE}
+example 
+```
+
+- The most common data structure we use is a \alert{spreadsheet}
+    - Note: *R* calls this a `data frame`
+- A **row** contains data about all variables for a single individual
+- A **column** contains data about a single variable across all individuals
+- It is good practice to have an **ID variable** to count and keep track of each observation
+
+### Some Notation
+
+- It is common to some notation like the following:
+- Let $\{x_1, x_2, \cdots, x_n\}$ be a simple data series
+    - $n$ individual observations
+    - $x_i$ is the value of the $i$^th^ observation for $i=1,2,\cdots, n$
+    
+\begin{example}
+ \begin{itemize}[<+->]
+    \item Let $x$ represent the score on a homework assignment:
+    \begin{equation*}
+    75, 100, 92, 87, 79, 0, 95
+    \end{equation*}
+    \item What is $n$? 
+    \item What is $x_1$?
+    \item What is $x_6$?
+  \end{itemize} 
+\end{example}
+
+### Datasets: Cross-Section
+
+```{r, example.spreadsheet2, echo=FALSE}
+example 
+```
+
+- \alert{Cross-sectional data}: observations of individuals at a given point in time
+    - Each observation is a unique individual
+    - Simplest and most common data 
+    - A "snapshot" to compare differences across individuals
+    
+### Datasets: Time Series
+
+```{r, example.timeseries.setup, echo=FALSE}
+Year<-c(1950,1960,1970,1980,1985)
+GDP<-c(8.2,9.9,10.2,12.4,13.6)
+Unemployment<-c(0.06,0.04,0.08,0.08,0.06)
+CPI<-c(100,118,130,190,196)
+example.timeseries<-data.frame(Year,GDP,Unemployment,CPI)
+```
+
+```{r, example.timeseries, echo=FALSE}
+example.timeseries
+```
+
+- \alert{Time-series data}: observations of the same individuals over time 
+    - Each observation is an individual-year
+    - Often used for macroeconomics, finance, and forecasting
+    - Unique challenges for time series 
+    - A "moving picture" to see how individuals change over time 
+
+### Datasets: Panel Data
+
+```{r, example.panel.setup, echo=FALSE}
+City<-c("Philadelphia","Philadelphia","Washington D.C.","Washington D.C.", "New York")
+Year<-c(1986, 1990, 1986, 1990, 1986)
+Murders<-c(5, 8, 2, 10, 3)
+Population<-c(3.7,4.2,0.250,0.275,6.4)
+Unemployment<-c(8.7,7.2,5.4,5.5,9.6)
+Police<-c(440,471,75,85,102)
+example.panel<-data.frame(City,Year,Murders,Population,Unemployment,Police)
+```
+
+```{r, example.panel, echo=FALSE}
+example.panel
+```
+
+- \alert{Panel dataset}, or \alert{longitudinal dataset}: a time-series for *each* cross-sectional entity
+    - Must be the *same* cross-sectional entities over time 
+    - More common today for serious researchers 
+    - Unique challenges for panel data
+    - A combination of "snapshot" comparisons and differences over time 
+
+# Basic Statistics
+ 
+### Variables and Distributions
+
+- Variable shave a \alert{distribution} of different individual values (and how frequently they take these values)
+- We want to *visualize* and *analyze* distributions to search for meaningful patterns using **statistics** 
+
+### Two Types of Statistics 
+
+- Two main categories or uses of statistics:
+    1. \alert{Descriptive Statistics:} describes or summarizes the properties of a sample
+		2. \alert{Inferential Statistics:} uses a sample in order to infer properties about a larger population
+
+\begin{figure}
+		\includegraphics[height=1.5in]{statsgraphs}	
+\end{figure}
+
+### Histograms 
+
+- A common way to present a variable's distribution is a \alert{histogram}
+    - The quantitative analog to the bar graph for a categorical variable 
+- We divide up the data values into **bins** of a certain size, and count the number of values falling within each bin, representing them visually as bars 
+
+### Histograms: Example
+
+\begin{example}
+A class of 13 students takes a quiz (out of 100 points) with the following results:
+
+\begin{equation*}
+\{ 0, 62, 66, 71, 71, 74, 76, 79, 83, 86, 88, 93, 95 \}
+\end{equation*}
+\end{example}
+
+### Histogram: Example
+
+```{r histogram2, echo=FALSE, fig.height=4.5, fig.width=10, warning=FALSE}
+quizzes<-data.frame(scores=c(0,62,66,71,71,74,76,79,83,86,88,93,95))
+
+quizzes.histogram<-ggplot(quizzes,aes(x=scores))+
+  geom_histogram(breaks=c(0,10,20,30,40,50,60,70,80,90,100),color="black",fill="#56B4E9")+scale_x_continuous(breaks=c(0,10,20,30,40,50,60,70,80,90,100))+
+  xlab("Scores")+ylab("Number of Students")
+quizzes.histogram 
+```
+
+### Descriptive Statistics
+
+- We are often interested in the *shape* or *pattern* of a distribution, particularly: 
+    - Measures of central tendency
+    - Measures of dispersion
+    - Shape of distribution 
+
+### Central Tendency: Mode
+
+- The \alert{mode} of a variable is simply its most frequent value 
+- A variable can have multiple modes 
+
+\begin{example}
+\{0, 62, 66, \textcolor<4->{magenta}{71}, \textcolor<4->{magenta}{71}, 74, 76, 79, 83, 86, 88, 93, 95\} 
+\end{example}
+
+
+### Multi-Modal Distributions
+
+```{r, bimodal.example, echo=FALSE, fig.height=4.5}
+quizzes.bimodal<-data.frame(scores=c(0,33,33,33,33,35,62,66,71,71,74,76,79,83,86,88,93,95))
+
+quizzes.histogram.bimodal<-ggplot(quizzes.bimodal,aes(x=scores))+
+  geom_histogram(breaks=c(0,10,20,30,40,50,60,70,80,90,100),color="black",fill="#56B4E9")+scale_x_continuous(breaks=c(0,10,20,30,40,50,60,70,80,90,100))+
+  xlab("Scores")+ylab("Number of Students")
+quizzes.histogram.bimodal
+
+```
+- Looking at a histogram, the modes are often the "peaks" of the distribution
+- May be **unimodal**, **bimodal**, **trimodal**, etc
+
+### Symmetry
+
+```{r, symmetric.histogram, echo=FALSE, fig.height=4.5}
+
+symmetric<-data.frame(x=rnorm(500,25,10))
+
+symmetric.histogram<-ggplot(symmetric,(aes(x)))+
+    geom_histogram(stat="bin",bins=10,color="black",fill="green")
+
+symmetric.histogram
+```
+
+- A distribution is **symmetric** if it looks roughly the same on either side of the "center"
+- The thinner ends (far left and far right) are called the **tails** of a distribution
+
+### Symmetry and Skew 
+
+```{r, skew.left.histogram, echo=FALSE, fig.height=4.5}
+
+skew.left<-data.frame(x=rbeta(500,5,1))
+
+skew.left.histogram<-ggplot(skew.left,(aes(x)))+
+    geom_histogram(stat="bin",bins=10,color="black",fill="indianred")
+
+#hist(rbeta(10000,5,2))
+skew.left.histogram
+```
+- If one tail stretches farther than the other, distribution is **skewed** in the direction of the longer tail
+
+### Outliers
+
+- An extreme value that does not appear part of the general pattern of a distribution is an \alert{outlier}
+```{r outlier, echo=FALSE, fig.height=3.5}
+quizzes.histogram 
+```
+
+### Outliers
+
+- Outliers can strongly affect descriptive statistics about a dataset
+- Outliers can be the most informative part of the data
+- Outliers could be the result of errors 
+- Outliers should always be discussed in presentations about data
+
+## Measures of Central Tendency
+
+### Arithmetic Mean (Population)
+
+- The natural measure of the center of a *population*'s distribution is its "average" or \alert{arithmetic mean ($\mu$)} 
+
+$$\mu=\frac{x_1+x_2+...+x_N}{N} = \frac{1}{N} \sum^N_{i=1} x_i$$ 
+
+- For $N$ values of variable $x$, "mu" is the sum of all individual $x$ values $(x_i)$ from 1 to $N$, divided by the $N$ number of values
+
+### Arithmetic Mean (Sample)
+
+- When we have a *sample*, we compute the \alert{sample mean ($\bar{x}$)} 
+
+$$\bar{x}=\frac{x_1+x_2+...+x_n}{n} = \frac{1}{n} \sum^n_{i=1} x_i$$
+-For $n$ values of variable $x$, "$x$-bar" is the sum of all individual $x$ values $(x_i)$ from 1 to $n$, divided by the $n$ number of values 
+
+### Sample Mean Example
+$$\{0, 62, 66, 71, 71, 74, 76, 79, 83, 86, 88, 93, 95\}$$
+
+\begin{align*}
+\bar{x}&=\frac{1}{13}(0+62+66+71+71+74+76+79+83+86+88+93+95)\\
+&=\frac{944}{13}\\
+&=72.61\\
+\end{align*}
+
+- Note the mean need not be an actual value of the data!
+
+### Sample Mean and Outliers
+
+$$\{62, 66, 71, 71, 74, 76, 79, 83, 86, 88, 93, 95\}$$
+
+- If we drop the outlier (0)
+
+\begin{align*}
+\bar{x}&=\frac{1}{12}(62+66+71+71+74+76+79+83+86+88+93+95)
+&=\frac{944}{12}\\
+&=78.67\\
+\end{align*}
+
+### Median
+$$\{0, 62, 66, 71, 71, 74, \textcolor<4->{magenta}{76}, 79, 83, 86, 88, 93, 95\}$$
+
+- The \alert{median} is the midpoint of the distribution
+- 50% to the left of the median, 50% to the right of the median
+- Arrange values in numerical order
+    - For odd $n$: median is middle observation
+    - For even $n$: median is average of two middle observations
+
+### Median and Outliers
+$$\{0, 62, 66, 71, 71, 74, 76, 79, 83, 86, 88, 93, 95\}$$
+- The median is *robust* to outliers (if 0 changes to 62)
+$$\{62, 62, 66, 71, 71, 74, \textcolor{magenta}{76}, 79, 83, 86, 88, 93, 95\}$$
+
+### Mean, Median, Symmetry, Skew
+
+$$\{1, 2, 2, 3, 3, 3, 4, \textcolor<3->{magenta}{4, 4}, 4, 5, 5, 5, 6, 6, 7\}$$ 
+
+```{r, symmetric1, echo=FALSE, fig.height=3}
+symmetric1<-data.frame(x=c(1,2, 2, 3, 3, 3, 4, 4, 4, 4, 5, 5, 5, 6, 6, 7))
+
+symmetric1.histogram<-ggplot(symmetric1,aes(x=x))+
+  geom_histogram(breaks=c(0,1,2,3,4,5,6,7),color="black",fill="#56B4E9")+scale_x_continuous(breaks=c(0,1,2,3,4,5,6,7))
+symmetric1.histogram
+
+```
+
+- Mean: $\frac{64}{16}=4$
+- Median: 4
+- For a symmetric distribution, mean=median
+
+### Mean, Median, Symmetry, Skew II
+
+$$\{1, 2, 3, 4, 4, 4, \textcolor<3->{magenta}{5}, 5, 6, 6, 6, 7, 7\}$$ 
+
+```{r, skewl, echo=FALSE, fig.height=3}
+leftskew<-data.frame(x=c(1,2,3,4,4,4,5,5,6,6,6,7,7))
+
+leftskew.hist<-ggplot(leftskew,aes(x=x))+
+  geom_histogram(breaks=c(0,1,2,3,4,5,6,7),color="black",fill="#56B4E9")+scale_x_continuous(breaks=c(0,1,2,3,4,5,6,7))
+leftskew.hist
+```
+
+- Mean: $\frac{60}{13}=4.6$
+- Median: 5
+- For a left-skewed distribution, mean$<$median
+
+### Mean, Median, Symmetry, Skew III
+
+$$\{1, 1, 2, 2, 2, 3, \textcolor<3->{magenta}{3}, 4, 4, 4, 5, 6, 7\}$$ 
+
+```{r, skewr, echo=FALSE, fig.height=3}
+rightskew<-data.frame(x=c(1,1,2,2,2,3,3,4,4,4,5,6,7))
+
+rightskew.hist<-ggplot(rightskew,aes(x=x))+
+  geom_histogram(breaks=c(0,1,2,3,4,5,6,7),color="black",fill="#56B4E9")+scale_x_continuous(breaks=c(0,1,2,3,4,5,6,7))
+rightskew.hist
+```
+
+- Mean: $\frac{44}{13}=3.4$
+- Median: 3
+- For a right-skewed distribution, mean$>$median
+
+## Measures of Spread
+
+### Measures of Spread
+
+- The more *variation* in the data, the less helpful a measure of central tendency will tell us
+- Beyond just the center, we also want to measure the spread
+- Simplest metric is \alert{range}=max-min
+
+### Five Number Summary
+
+Once we know the values of the quartiles, we can construct a \alert{five-number summary} of a distribution, including:
+    1. Minimum
+    2. $Q_1$ (25%)
+    3. Median (50%)
+    4. $Q_3$ (75%)
+    5. Maximum
+    
+### Five Number Summary II
+
+```{r fivenum}
+summary(quizzes$scores)
+```
+
+### Boxplots
+
+- Graphical way to visualize five number summary is a \alert{boxplot}
+\begin{columns}	
+	\begin{column}[c]{8cm}
+		\begin{itemize}
+				\item<3-> The length of the box is the IQR (Q1-Q3) 
+				\item<4-> The line within the box is the median 
+				 \item<5-> The ``whiskers'' identify data within $1.5 \times IQR$
+				\item<6-> Points beyond the whiskers are \textcolor{magenta}{outliers} 
+		\end{itemize}
+		\end{column}
+		\begin{column}[c]{4cm}
+			\begin{figure}
+			\begin{tikzpicture}[scale=0.45]\scriptsize 
+				\draw<3->[black, thick, fill=green!50] (0,0)--(0,2)node[left]{$Q_3$}--(2,2)--(2,0);
+				\draw<3->[black, thick, fill=red!50] (0,0)--(0,-3)node[left]{$Q_1$}--(2,-3)--(2,0);
+				\draw<4->[very thick, dashed, black] (0,0)--(2,0)node[right]{Median};
+				\draw<5->[black, thick] (1,2)--(1,4)--(0.75,4)--(1.25,4)node[right]{$Q_3+1.5*IQR$};
+				\draw<5->[black, thick] (1,-3)--(1,-4)--(0.75,-4)--(1.25,-4)node[right]{$Q_1-1.5*IQR$};
+				\draw<6->[magenta, fill=magenta] (1,5) circle (0.125cm)node[right]{Outlier};
+			\end{tikzpicture}
+		\end{figure}
+		\end{column}
+\end{columns}
+
+### Boxplots II
+
+\begin{center} Quiz 1: \{0, 62, 66, 71, 71, 74, 76, 79, 83, 86, 88, 93, 95\}	\\
+			Quiz 2: \{50, 62, 72, 73, 79, 81, 82, 82, 86, 90, 94, 98, 99\} \end{center} 
+		\onslide<2->Quiz 1 
+\begin{table}
+			\begin{tabular}{ccccc}
+			Min & $Q_1$ & Median & $Q_3$ & Max\\ \toprule 
+			0 & 71 & 76 & 86 & 95\\ \bottomrule 	
+			\end{tabular}
+		\end{table}
+		\onslide<3->Quiz 2
+			\begin{table}
+			\begin{tabular}{ccccc}
+			Min & $Q_1$ & Median & $Q_3$ & Max\\ \toprule 
+			50 & 73 & 82 & 90 & 99\\ \bottomrule 	
+			\end{tabular}
+\end{table}
+
+### Boxplots III
+
+```{r second quiz, echo=FALSE, fig.height=4}
+quizzes<-data.frame(scores=c(0,62,66,71,71,74,76,79,83,86,88,93,95))
+#rename scores as quiz 1
+colnames(quizzes)<- c("quiz1")
+#add student variable to track student over multiple quizzes
+quizzes$student<-(1:13)
+
+#add quiz 2
+quizzes$quiz2<-c(50, 62, 72, 73, 79, 81, 82, 82, 86, 90, 94, 98, 99)
+
+# second quiz boxplot
+library("tidyr") #for gather 
+quizzesl<-gather(quizzes, key="student", value="scores") #need to create a variable for which quiz it is (x axis below)
+colnames(quizzesl)<-c("quiz","score")
+quizzes.boxplot<-ggplot(quizzesl, aes(x=quiz,y=score,fill=quiz))+
+    geom_boxplot()+
+    stat_boxplot(geom='errorbar')+
+    xlab("Quiz")+ylab("Scores")
+quizzes.boxplot
+```
+
+
+### Deviations
+
+- Each observation \textcolor{magenta}{deviates} from the mean of the data: 
+$$deviation = x_i-\mu	$$
+
+- There are as many deviations as there are data points ($n$)
+- We can measure the \emph{average} or \textcolor{magenta}{standard deviation} from the mean
+
+### Variance 
+
+- The \textcolor{teal}{population variance ($\sigma^2$)} of a \emph{population} distribution measures the average of the \emph{squared} deviations from the population mean
+
+$$\sigma^2 = \frac{\displaystyle\sum^N_{i=1} (x_i-\mu)^2}{N}	$$
+
+- Why do we square deviations? 
+
+### Standard Deviation
+
+-Square root the variance to get the \textcolor{teal}{population standard deviation ($\sigma$)}, the average deviation from the mean (in $x$ units)
+$$\sigma=\sqrt{\sigma^2}=\sqrt{\frac{\displaystyle\sum^N_{i=1} (x_i-\mu)^2}{N}	}$$
+
+### Sample Variance
+
+- The \textcolor{magenta}{sample variance ($s^2$)} of a \emph{sample} distribution measures the average of the \emph{squared} deviations from the sample mean
+
+$$s^2 = \frac{\displaystyle\sum^n_{i=1} (x_i-\bar{x})^2}{n-1}	$$
+
+
+-Why divide by $n-1$?
+
+### Sample Standard Deviation
+- Square root the variance to get the \textcolor{teal}{sample standard deviation ($s$)}, the average deviation from the mean (in $x$ units)
+
+$$s=\sqrt{s^2}=\sqrt{\frac{\displaystyle\sum^n_{i=1} (x_i-\bar{x})^2}{n-1}	}$$
+
+### Descriptive Statistics: Population vs. Sample
+
+\begin{columns}
+		\begin{column}[c]{5cm}
+		Population Parameters
+		\begin{itemize}
+			\item Population Size: $N$
+			\item Mean: $\mu$
+			\item Variance: $\sigma^2=\frac{1}{N} \displaystyle\sum^N_{i=1} (x_i-\mu)^2$
+			\item Standard Deviation: $\sigma = \sqrt{\sigma^2}$
+		\end{itemize}
+		\end{column}
+		\begin{column}[c]{5cm}
+		Sample Statistics
+		\begin{itemize}
+			\item Sample Size: $n$
+			\item Mean: $\bar{x}$
+			\item Variance: $s^2=\frac{1}{n-1} \displaystyle\sum^n_{i=1} (x_i-\bar{x})^2$
+			\item Standard Deviation: $s = \sqrt{s^2}$
+		\end{itemize}
+		\end{column}
+\end{columns}
+
+

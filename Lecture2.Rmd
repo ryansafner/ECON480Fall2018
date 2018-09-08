@@ -1,0 +1,364 @@
+---
+title: "Lecture 2: The Quest for Causality"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "August 29, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+# The Two Big Problems with Data
+
+### Two Big Problems with Data
+
+- We want to use econometrics to **identify** causal relationships and make **inferences** about them
+    1. Problem for **identification**: \alert{endogeneity}
+    2. Problem for **inference**: \alert{randomness}
+
+\begin{figure}
+		\includegraphics[height=2in]{randomgeometry}	
+\end{figure}
+
+### Identification Problem: Endogeneity
+
+- An independent variable ($x$) is \alert{exogenous} if its variation is *unrelated* to other factors that affect the dependent variable ($y$)
+
+- An independent variable ($x$) is \alert{endogenous} if its variation is *related* to other factors that affect the dependent variable ($y$)
+
+### Identification Problem: Endogeneity II
+
+\begin{figure}
+		\includegraphics[height=2.75in]{causality}	
+		\caption*{Bailey (2017: 12)}
+\end{figure}
+
+### Inference Problem: Randomness
+
+- Data is random due to **natural sampling variation**
+    - Taking one sample of a population will yield slightly different information than another sample of the same population 
+- Common in statistics, *easy to fix*
+- **Inferential Statistics**: making claims about a wider population using sample data 
+    - We use common tools and techniques to deal with randomness
+
+\begin{figure}
+  \includegraphics[height=1.75in]{sampling.jpg}
+\end{figure}
+
+# Identifying Causal Effects: Randomized Controlled Trials
+
+### Randomized Controlled Trials & Causation
+
+- The *ideal* way to demonstrate causation is through a \alert{randomized controlled trial (RCT)} or "random experiment"
+    - *Randomly* assign experimental units (e.g. people, firms, etc.) into groups
+    - **Treatment group(s)** get a (level/kind of) treatment
+    - **Control group** gets no treatment 
+    - Compare results of treatment and control groups to observe the \alert{average treatment effect (ATE)}
+- **We will understand "causality" to mean the ATE from an ideal RCT** 
+
+\begin{figure}
+  \includegraphics[height=2in]{groupsplit}
+\end{figure}
+
+### Randomized Controlled Trials & Causation II
+
+\begin{figure}
+		\includegraphics[height=2.45in]{rct}	
+		\caption*{Classic (simplified) procedure of a randomized control trial (RCT) from medicine}
+\end{figure}
+
+### Randomized Controlled Trials & Causation III 
+
+- \alert{Random assignment} to groups ensures that the *only* differences between members of the treatment(s) and control groups is *receiving treatment or not*
+
+\begin{table}
+	\begin{tabular}{cc}
+		\includegraphics[height=1.5in]{3apples} & \includegraphics[height=1.5in]{3apples}\\
+		Treatment Group & Control Group	
+	\end{tabular}
+\end{table}
+
+### Randomized Controlled Trials & Causation III 
+
+- \alert{Random assignment} to groups ensures that the *only* differences between members of the treatment(s) and control groups is *receiving treatment or not*
+- \alert{Selection bias:} (pre-existing) differences between members of treatment and control groups *other* than treatment, that affect the outcome 
+\begin{table}
+	\begin{tabular}{cc}
+		\includegraphics[height=1.5in]{3apples} & \includegraphics[height=1.5in]{3oranges}\\
+		Treatment Group & Control Group	
+	\end{tabular}
+	\caption*{\large \textbf{Selection Bias}}
+\end{table}
+
+# Some Theory by Example
+
+### The Quest for Causal Effects
+
+\begin{figure}
+		\includegraphics[height=2.75in]{twopaths}
+\end{figure}
+
+### Example: The Effect of Having Health Insurance 
+
+\begin{example}
+		 What is the impact of having health insurance on health outcomes?
+	\end{example}
+	\begin{itemize} 
+		\item<2-> National Health Interview Survey (NHIS) asks ``Would you say your health in general is excellent, very good, good, fair, or poor?''
+		\begin{itemize}
+			\item<3-> \textcolor{magenta}{Outcome variable ($Y$):} Index of health (1-poor to 5-excellent) in a sample of married NHIS respondents in 2009 who may or may not have health insurance 
+			\item<4-> \textcolor{teal}{Treatment ($X$):} Having health insurance  (vs. not)
+		\end{itemize}	
+	\end{itemize}
+	\begin{figure}
+		\includegraphics[height=1.5in]{healthcare}	
+\end{figure}
+
+### Example: The Effect of Having Health Insurance II
+
+\begin{figure}
+		\includegraphics[height=2.75in]{econometricshealthnocaption}	
+		\caption*{\scriptsize Health and demographics of insured and uninsured couples in NHIS (Angrist \& Pischke 2015)}
+\end{figure}
+
+### Example: The Effect of Having Health Insurance III
+
+\begin{itemize}
+		\item \textcolor{purple}{$Y$}: outcome variable (health index score, 1-5)
+		\item<2-> \textcolor{purple}{$Y_i$}: health score of an individual $i$ 
+		\item<3-> Individual $i$ has a choice between two outcomes: 
+		\begin{itemize}
+			\item<4-> \textcolor{magenta}{$Y_{0,i}$}: individual $i$ with \emph{no} health insurance
+			\item<5-> \textcolor{teal}{$Y_{1,i}$}: individual $i$ with health insurance 
+		\end{itemize}
+			\item<6-> (\textcolor{teal}{$Y_{1,i}$} $-$ \textcolor{magenta}{$Y_{0,i}$}): \textbf{causal effect of having insurance for individual $i$}
+	\end{itemize}
+		\begin{figure}
+		\includegraphics[height=1.5in]{healthcare}	
+\end{figure}
+
+
+### Example: A Hypothetical Comparison 
+
+\begin{columns}
+		\begin{column}[t]{5cm}
+			\begin{itemize}
+			\item<2->John ($Y_J$)
+			\begin{itemize}
+				\item \textcolor{magenta}{$Y_{0,J}$} $= 3$
+				\item \textcolor{teal}{$Y_{1,J}$} $= 4$
+				\item<3->(\textcolor{teal}{$Y_{1,J}$} $-$ \textcolor{magenta}{$Y_{0,J}$}) $=1$
+				\item<4->Will buy insurance
+				\item<5->We observe\\ $Y_J=$\textcolor{teal}{$Y_{1,J}$} $=$ 4
+			\end{itemize}
+		\end{itemize} 
+		\begin{figure}
+				\onslide<2->\includegraphics[height=1.5in]{coldman}
+		\end{figure}
+		\end{column}
+		\begin{column}[t]{5cm}
+		\begin{itemize} 
+			\item<6->Maria ($Y_M$)
+				\begin{itemize}
+				\item \textcolor{magenta}{$Y_{0,M}$} $= 5$
+				\item \textcolor{teal}{$Y_{1,M}$} $= 5$
+				\item<7->(\textcolor{teal}{$Y_{1,M}$} $-$ \textcolor{magenta}{$Y_{0,M}$}) $=0$
+				\item<8->Will \emph{not} buy insurance
+				\item<9->We observe\\ $Y_M=$\textcolor{magenta}{$Y_{0,M}$} $=$ 5
+			\end{itemize}	
+			\end{itemize} 
+			\begin{figure}
+					\onslide<6->\includegraphics[height=1.5in]{femalejogger}	
+			\end{figure}
+		\end{column}
+\end{columns}
+
+### Example: A Hypothetical Comparison II
+
+\begin{columns}
+		\begin{column}[t]{5cm}
+			\begin{itemize}
+			\item John ($Y_J$)
+			\begin{itemize}
+				\item \textcolor{magenta}{$Y_{0,J}$} $= 3$
+				\item \textcolor{teal}{$Y_{1,J}$} $= 4$
+				\item (\textcolor{teal}{$Y_{1,J}$} $-$ \textcolor{magenta}{$Y_{0,J}$}) $=1$
+				\item Will buy insurance
+				\item We only observe\\ $Y_J=$\textcolor{teal}{$Y_{1,J}$} $=$ 4
+			\end{itemize}
+		\end{itemize} 
+		\end{column}
+		\begin{column}[t]{5cm}
+		\begin{itemize} 
+			\item Maria ($Y_M$)
+				\begin{itemize}
+				\item \textcolor{magenta}{$Y_{0,M}$} $= 5$
+				\item \textcolor{teal}{$Y_{1,M}$} $= 5$
+				\item (\textcolor{teal}{$Y_{1,M}$} $-$ \textcolor{magenta}{$Y_{0,M}$}) $=5$
+				\item Will \emph{not} buy insurance
+				\item We only observe\\ $Y_M=$\textcolor{magenta}{$Y_{0,M}$} $=$ 5
+			\end{itemize}	
+			\end{itemize} 
+		\end{column}
+\end{columns}
+\begin{itemize}
+		\item \emph{Observed} difference between John \& Maria: \textbf{$Y_J-Y_M = -1$}
+\end{itemize}
+
+### Example: A Hypothetical Comparison III
+
+\begin{itemize}
+	\item Note that what we \emph{actually} see is: 
+\end{itemize}
+	\begin{equation*}
+		Y_J-Y_M=\underbrace{\textcolor{teal}{Y_{1,J}}-\textcolor{magenta}{Y_{0,M}}}_{=-1}
+	\end{equation*}
+	\begin{itemize}
+		\item<2-> Algebra trick: add and subtract $Y_{0,J}$:
+	\end{itemize}
+	\begin{equation*}
+		\onslide<3->Y_J-Y_M=\textcolor<4->{blue}{\underbrace{Y_{1,J}-Y_{0,J}}_{=1}}+\textcolor<5->{red}{\underbrace{Y_{0,J}-Y_{0,M}}_{=-2}}	
+	\end{equation*}
+	\begin{itemize}
+		\item<4-> \textcolor{blue}{Causal effect of buying health insurance for John}
+		\item<5-> \textcolor{red}{Difference between John \& Maria before treatment}: called \textbf{selection bias}
+	\end{itemize}
+
+### Example: The Effect of Having Health Insurance
+
+\begin{table}
+	\begin{tabular}{cc}
+		\includegraphics[height=1.5in]{3apples} & \includegraphics[height=1.5in]{3oranges}\\
+		Treatment Group & Control Group	
+	\end{tabular}
+		\caption*{\large \textbf{Selection Bias}}
+\end{table}
+
+### Example: Thinking About the Data
+
+\begin{columns}
+  \begin{column}[t]{7cm}
+\begin{table}
+		\caption*{Ideal (but impossible) data}
+		\begin{tabular}{cccc}\small 
+		$i$ & $Y_{1,i}$ & $Y_{0,i}$ & \textcolor{purple}{$(Y_{1,i} - Y_{0,i})$}\\ \toprule 
+		J & 4 & 3 & 1\\
+		M & 5 & 5 & 0\\ \midrule 
+		& $avg(Y_{1,i})$ & $avg(Y_{0,i})$ & \textcolor{teal}{$avg(Y_{1,i})-avg(Y_{0,i})$}\\
+		& 4.5 & 4 & 0.5\\ \bottomrule
+		\end{tabular}
+	\end{table}
+  \end{column}
+  \begin{column}[t]{7cm}
+	\onslide<2->\begin{table}
+		\caption*{Actually observed data}
+		\begin{tabular}{cccc}\small 
+		$i$ & $Y_{1,i}$ & $Y_{0,i}$ & \textcolor{purple}{$(Y_{1,i} - Y_{0,i})$}\\ \toprule 
+		J & 4 & \textcolor{red}{?} & \textcolor{red}{?}\\
+		M & \textcolor{red}{?} & 5 & \textcolor{red}{?}\\ \midrule 
+		& $avg(Y_{1,i})$ & $avg(Y_{0,i})$ & \textcolor{teal}{$avg(Y_{1,i})-avg(Y_{0,i})$}\\ 
+		& \textcolor{red}{?} & \textcolor{red}{?} & \textcolor{red}{?} \\ \bottomrule
+		\end{tabular}
+  \end{table}
+  \end{column}
+\end{columns}
+
+### Example: Thinking About the Data II
+
+- For entire groups (of size $n$), the \textcolor{teal}{average treatment effect (ATE)} is: 	
+$$ ATE = \frac{1}{n} \sum^n_{i=1} [Y_{1,i}-Y_{0,i}]  $$
+$$ ATE = \frac{1}{n} \sum^n_{i=1} Y_{1,i} - \frac{1}{n} \sum^n_{i=1} Y_{0,i} $$
+
+- Taking all of the individual treatment effects and averaging them over $n$ individuals
+    - i.e. $Y_{1,J} - Y_{0,J}$ and $Y_{1,M}-Y_{0,M}$
+
+### Example: Thinking About the Data III
+
+- Basic comparisons (such as from the table) tell us *something* about outcomes, but *not* ATE!
+    - We only see insured's $Y_{1,i}$ and uninsured's $Y_{0,i}$ outcomes 
+- Difference in average health outcomes by treatment (insurance) status is: 
+    
+$$\text{Difference in group outcomes} = \text{ATE} + \text{Selection bias}$$
+
+- **Selection bias**: difference in average $Y_{0,i}$ between groups *before* any treatments 
+  	- $Y_{0,i}$ includes *everything* about person $i$ related to health but *not* treatment (insurance) status
+	  - Imagine a world where *nobody* has insurance, who would be healthiest?
+
+### Randomization: The Silver Bullet 
+
+- If treatment is \alert{randomly assigned} for a large sample, it eliminates selection bias!	
+    - Treatment & control groups differ *only* by members being treated or not treated 
+	  - Creates *ceterus paribus* conditions in economics: groups are otherwise identical (same education, family size, age, etc...) *on average* 
+\begin{table}\small 
+	\begin{tabular}{cc}
+		\includegraphics[height=1in]{3apples} & \includegraphics[height=1in]{3apples}\\
+		 Treatment Group & Control Group	
+	\end{tabular}
+\end{table}
+
+# Natural Experiments
+
+### The Quest for Causal Effects
+
+- Society is not our laboratory (probably a good thing)
+- We rarely can collect \alert{experimental data}
+
+\begin{figure}
+  \includegraphics[height=2in]{madlaboratory}
+\end{figure}
+
+### The Quest for Causal Effects II 
+
+- Instead, we often rely on \alert{observational data}
+    - This data is *not random*! 
+    - Must take extra care in forming an **identification strategy** 
+- To make good claims about causation in society, we must get clever! 
+
+\begin{figure}
+  \includegraphics[height=2in]{fieldobserver}
+\end{figure}
+
+### Natural Experiments
+
+- Economists often resort to searching for \alert{natural experiments}
+    - Some events beyond our control occur that separate *otherwise similar* entities into a "treatment" group and a "control" group that we can compare 
+        - e.g. natural disasters, U.S. State laws, military draft 
+
+\begin{figure}
+		\includegraphics[height=2in]{nskorea2}	
+\end{figure}
+
+### The 'First' Natural Experiment
+
+\begin{figure}
+		\includegraphics[height=2in]{jonsnow}	
+		\caption*{Jon Snow utilized the first famous natural experiment to establish the foundations of epidemiology and the germ theory of disease} 
+\end{figure}
+
+### The 'First' Natural Experiment II
+
+\begin{figure}
+		\includegraphics[height=2in]{johnsnow}
+		\includegraphics[height=2in]{choleramap}
+		\caption*{*John Snow (1855) utilized the first famous natural experiment to establish the foundations of epidemiology and the germ theory of disease: water pumps \emph{downstream} of a sewage dump in the Thames river spread cholera while water pumps \emph{upstream} did not - \href{http://blogs.plos.org/publichealth/2013/03/11/john-snow-the-first-epidemiologist/}{\textcolor{magenta}{Read More}}}
+\end{figure}
+
+### Famous Natural Experiments
+
+- **Oregon Health Insurance Experiment**: Oregon used lottery to grant Medicare access to 10,000 people, showing access to Medicaid increased use of health services, lowered debt, etc. relative to those not on Medicaid
+- **Angrist (1990)** finds that lifetime earnings of (random) drafted Vietnam veterans is 15% lower than non-veterans
+- **Card & Kreuger (1994)** find that minimum wage hike in fast-food restaurants on NJ side of border had no disemployment effects relative to restaurants on PA side of border during the same period
+- **Acemoglu, Johnson, and Robinson (2001)** find that inclusive institutions lead to higher economic development than extractive institutions, determined by a colony's disease environment in 1500
+- We will look at some of these in greater detail throughout the course
+- [A great list, with explanations is here](http://economicspsychologypolicy.blogspot.com/2015/06/list-of-19-natural-experiments.html)
