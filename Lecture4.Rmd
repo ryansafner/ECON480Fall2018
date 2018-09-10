@@ -37,7 +37,7 @@ knitr::opts_chunk$set(dev.args=list(bg="transparent"))
 
 - An \alert{experiment} is any procedure that can (in principle) be repeated infinitely and has a well-defined set of outcomes
 
-\begin{example}
+\onslide<2->\begin{example}
 Flip a coin 10 times
 \end{example}
 
@@ -50,7 +50,7 @@ Flip a coin 10 times
 - A \alert{random variable (RV)} takes on values that are unknown in advance, but determined by an experiment
 - A R.V. is a numerical summary of a random outcome 
 
-\begin{example}
+\onslide<3->\begin{example}
 The number of Heads from 10 coin flips
 \end{example}
 
@@ -63,7 +63,7 @@ The number of Heads from 10 coin flips
 - Random variable $X$ takes on individual values ($X_i$) from a set of possible values 
 - Often capital letters to denote RV's
 
-\begin{example}
+\onslide<3->\begin{example}
 Let $X$ be the number of Heads from 10 coin flips. $x_i \in \{0, 1, 2,...,10\}$
 \end{example}
 
@@ -103,7 +103,7 @@ Let $X$ be the number of Heads from 10 coin flips. $x_i \in \{0, 1, 2,...,10\}$
 - The \alert{probability distribution function (pdf)} summarizes the possible outcomes of $X$ and their probabilities
 - Notation: $f_X$ is the pdf of $X$: 
 
-$$f_X=p_i, i=1,2,...,k$$
+$$f_X=p_i, \quad i=1,2,...,k$$
 
 - For any real number $x_i$, $f(x_i)$ is the probablity that $X=x_i$
 
@@ -135,19 +135,23 @@ crashes<-data.frame(crashes, prob)
 
 crashes.pdf<-ggplot(crashes, aes(x=crashes, y=prob))+
   geom_bar(stat="identity", fill="#0072B2")+xlab("Crashes")+ylab("Probability")
+```
 
+### Discrete Random Variables: PDF Graph II
+
+```{r discrete pdf show, echo=FALSE,fig.height=4.5, warning=FALSE}
 crashes.pdf
 ```
 
 ### Discrete Random Variables: CDF
 
-- The \alert{\emph{cumulative} density function (cdf)} describes the probability that $X$ will be *at most* (less than or equal to) a given value $x_i$
+- The \alert{\emph{cumulative} density function (cdf)} lists probability $X$ will be *at most* (less than or equal to) a given value $x_i$
 - Notation: $F_X=P(X \leq x_i)$
 
-\begin{example}
+\onslide<3->\begin{example}
 		\begin{table}
 		\begin{tabular}{ccc}
-		$x_i$ & $f(x)$ & $F(X)$\\ \toprule 
+		$x_i$ & $f(X)$ & $F(X)$\\ \toprule 
 		0 & 0.80 & 0.80\\
 		1 & 0.10 & 0.90\\
 		2 & 0.06 & 0.96\\
@@ -156,24 +160,29 @@ crashes.pdf
 		\end{tabular}
 	\end{table}	
 	\begin{itemize}
-	  \item <3-> What is the probability your computer will crash at most once? $F(1)$?
-	  \item <4-> What is the probability your computer will crash at most three times? $F(3)$?
+	  \item <4-> What is the probability your computer will crash at most once \onslide<5->, $F(1)$? \onslide<5-> three times, $F(3)$?
 	 \end{itemize}
 \end{example} 
 
 ### Discrete Random Variables: CDF Graph
 
 ```{r discrete cdf}
-crashes$cprob<-(cumsum(crashes$prob))
+crashes$cprob<-(cumsum(crashes$prob)) 
+
+crashes #show table
 
 crashes.cdf<-ggplot(crashes, aes(x=crashes, y=cprob))+
-  geom_bar(stat="identity", fill="#0072B2")+xlab("Crashes")+ylab("Cumulative Probability")
-
-crashes.cdf
-
+  geom_bar(stat="identity", fill="#0072B2")+xlab("Crashes")+
+  ylab("Cumulative Probability")
 ```
 
-## Expected Value and Variance
+### Discrete Random Variables: CDF Graph II 
+
+```{r discrete cdf show, echo=FALSE, warning=FALSE, fig.heigh=4.5}
+crashes.cdf
+```
+
+# Expected Value and Variance
 
 ### Expected Value of a Random Variable
 
@@ -201,14 +210,23 @@ Suppose you lend your friend \$100 at 10\% interest. If the loan is repaid, you 
 	$x_i$ & $P(X=x_i)$\\ \toprule
 	1 & 0.50\\
 	2 & 0.25\\
-	3 & 0.10\\
-	4 & 0.05\\ \bottomrule 	
+	3 & 0.15\\
+	4 & 0.10\\ \bottomrule 	
 	\end{tabular}
 	\end{table}
 	\begin{itemize}
 		\item What is $E(X)$?
 	\end{itemize}
 \end{example}
+
+### Expected Value: Example III
+
+```{r, rv mean}
+x<-c(1,2,3,4) #x values 
+p.x<-c(0.50,0.25,0.15,0.10) #probabilities
+rv<-data.frame(x,p.x) #combine into data frame
+sum(rv$x*rv$p.x) #sum of each value times its probability
+```
 
 ### Variance of a Random Variable
 
@@ -255,11 +273,11 @@ $$\sigma_X=\sqrt{\sigma_X^2}$$
 	\begin{itemize}
 	  \item<2-> Next, find the deviations from the mean and square them: 
 				\begin{tabular}{cccccc}
-		& \multicolumn{5}{c}{Number of Crashes ($E(X)=0.35$)}\\ \cmidrule{2-6}
+		& \multicolumn{5}{c}{Number of Crashes ($\mu=0.35$)}\\ \cmidrule{2-6}
 				$x_i$ & 0 & 1 & 2 & 3 & 4\\ \toprule 
 				$P(X=x_i)$ & 0.80 & 0.10 & 0.06 & 0.03 & 0.01\\ 
-				$(x_i-E(X))$ & -0.35 & 0.65 & 1.65 & 2.65 & 3.65\\  
-				$(x_i-E(X)$ & 0.1225 & 0.4225 & 2.7225 & 7.0225 & 13.3225\\ \bottomrule 
+				$(x_i-\mu)$ & -0.35 & 0.65 & 1.65 & 2.65 & 3.65\\  
+				$(x_i\mu)^2$ & 0.1225 & 0.4225 & 2.7225 & 7.0225 & 13.3225\\ \bottomrule 
 		\end{tabular}
 		\item<3-> Take the expectation of the squared deviations to get variance
 			\scriptsize \begin{align*}
@@ -282,6 +300,38 @@ $$\sigma_X=\sqrt{\sigma_X^2}$$
 	\end{align*}
 	\end{itemize}
 \end{example} 
+
+### Standard Deviation: Example IV
+
+\begin{example}
+For the random variable we saw before, what is it's standard deviation? 
+
+	\begin{table}
+	\begin{tabular}{cccc}
+	$x_i$ & $P(X=x_i)$\\ \toprule
+	1 & 0.50\\
+	2 & 0.25\\
+	3 & 0.15\\
+	4 & 0.10\\ \bottomrule 	
+	\end{tabular}
+	\end{table}
+\end{example}
+
+### Standard Deviaiont: Example V
+```{r, rv.var}
+rv$deviations<-(rv$x-1.85) #take deviations
+rv$sqdeviations<-(rv$deviations^2) #square deviations
+
+rv #show table
+
+sum(rv$sqdeviations*rv$p.x) #add squared deviations times probabilities
+```
+
+### Standard Deviation: Example VI
+
+```{r, rv.sd}
+sqrt(sum(rv$sqdeviations*rv$p.x)) #take sqaure root of variance for sd
+```
 
 ## Continuous Random Variables
 
@@ -328,9 +378,9 @@ $$\sigma_X=\sqrt{\sigma_X^2}$$
 
 $$P(a \leq X \leq b) = \int_a^b f(x) dx $$
 
-- These functions are complicated: we have software or (old fashioned!) probability tables to calculate
+- Complicated: software or (old fashioned!) probability tables to calculate
 
-```{r continuous pdf, echo=FALSE}
+```{r continuous pdf, echo=FALSE, fig.height=2.9}
 
 funcShaded <- function(x) {
     y <- dnorm(x, mean = 0, sd = 1)
@@ -350,7 +400,7 @@ continuous.pdf
 - The \alert{\emph{cumulative} density function (cdf)} describes the area under the pdf for all values less than or equal to (i.e. to the left of) a given value, $k$
 $$P(X \leq k)$$ 
 
-```{r continuous cdf shaded L, echo=FALSE}
+```{r continuous cdf shaded L, echo=FALSE, fig.height=3}
 
 cdfshadedL <- function(x) {
     y <- pnorm(x, mean = 0, sd = 1)
@@ -370,7 +420,7 @@ continuous.pdf
 - Note: to find the probability of values *greater* than or equal to (to the right of) a given value $k$:
 $$P(X \geq k)=1-P(X \leq k)$$
 
-```{r continuous cdf shaded R, echo=FALSE}
+```{r continuous cdf shaded R, echo=FALSE, fig.height=3}
 
 cdfshadedR <- function(x) {
     y <- pnorm(x, mean = 0, sd = 1)
@@ -385,17 +435,17 @@ continuous.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
 continuous.pdf
 ```
 
-## Normal Distribution
+# Normal Distribution
 
 ### The Normal Distribution
 
-- The \alert{Gaussian} or \alert{normal distribution} is the most common type of probability distribution, and we make extensive use of it
+- The \alert{Gaussian} or \alert{normal distribution} is the most useful type of probability distribution
 
 $$ X \sim N(\mu,\sigma)$$
 
 - Continuous, symmetric, unimodal, with mean $\mu$ and standard deviation $\sigma$
 
-```{r normal pdf, echo=FALSE}
+```{r normal pdf, echo=FALSE, fig.height=2.75}
 
 normal.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
     stat_function(fun=dnorm, args=list(mean=0, sd=1), color="blue")+
@@ -408,15 +458,6 @@ normal.pdf
 - The pdf of $X \sim N(\mu, \sigma)$ is 
 $$P(X=k)=	\frac{1}{\sqrt{2\pi \sigma^2}}e^{-\frac{1}{2}\big(\frac{(k-\mu)}{\sigma}\big)^2}$$ 
 - **Do not try and learn this**, we have software and (previously tables) to calculate pdfs and cdfs
-
-```{r calculate normal}
-# Find probability that a student earns at least an 80 if
-#the average grade is a 75 and standard deviation is 10
-
-#lower.tail is TRUE if calculating area to LEFT of 80, 
-#FALSE if to the RIGHT
-pnorm(80, mean=72, sd=10, lower.tail=FALSE) 
-```
 
 ### The Effects of Parameter Changes I 
 
@@ -460,7 +501,7 @@ normals.sigma.pdf
 		\end{itemize} 
 	\end{itemize}
 	\begin{figure}
-			\begin{tikzpicture}
+			\begin{tikzpicture}[scale=.8]\scriptsize 
 \begin{axis}[
   no markers, domain=-4:4, samples=100,
   axis lines*=left, xlabel=$\sigma$, ylabel=$f(X)$,
@@ -499,7 +540,7 @@ $$Z=\frac{x-\mu}{\sigma}$$
 - The \alert{standard normal distribution} has mean 0 and standard deviation 1
 $$Z \sim N(0,1)$$
 
-```{r standard normal, echo=FALSE, warning=FALSE, fig.height=4.5}
+```{r standard normal, echo=FALSE, warning=FALSE, fig.height=3.5}
 
 standard.normal.pdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
     stat_function(fun=dnorm, args=list(mean=0, sd=1), aes(color = "E(X)=0, sd(X)=1"))+
@@ -512,7 +553,7 @@ standard.normal.pdf
 - Standard normal cdf:
 $$\Phi(k)=P(Z \leq k)$$
 
-```{r standard normal cdf, echo=FALSE, warning=FALSE, fig.height=4.5}
+```{r standard normal cdf, echo=FALSE, warning=FALSE, fig.height=3.5}
 
 standard.normal.cdf<-ggplot(data.frame(x=-4:4),aes(x=x))+
     stat_function(fun=pnorm, args=list(mean=0, sd=1), aes(color = "E(X)=0, sd(X)=1"))+
@@ -623,6 +664,7 @@ In the last quarter of 2015, a group of 64 mutual funds had a mean return of 2.4
 
 \begin{columns}
 		\begin{column}[c]{5cm}
+				Probability to Left of $k$
 				\begin{figure}
 				\begin{tikzpicture}[scale=.5]
 \begin{axis}[
@@ -644,6 +686,7 @@ In the last quarter of 2015, a group of 64 mutual funds had a mean return of 2.4
 	\end{figure}
 		\end{column}
 			\begin{column}[c]{5cm}
+					Probability to the Right of $k$
 					\begin{figure}
 				\begin{tikzpicture}[scale=.5]
 \begin{axis}[
@@ -664,7 +707,8 @@ In the last quarter of 2015, a group of 64 mutual funds had a mean return of 2.4
 	\caption*{\small $P(Z \geq k)=1-\Phi(k)$}
 	\end{figure}
 			\end{column}
-	\end{columns}
+			\begin{column}[c]{5cm}
+			Probability Between $j$ and $k$
 					\begin{figure}
 				\begin{tikzpicture}[scale=.5]
 \begin{axis}[
@@ -685,27 +729,79 @@ In the last quarter of 2015, a group of 64 mutual funds had a mean return of 2.4
 \end{tikzpicture}
 	\caption*{\small $P(j \geq Z \geq k)=\Phi(k)-\Phi(j)$}
 \end{figure}
+\end{column}
+\end{columns}
 
 ### Finding Z-Score Probabilities with *R*
 
 - Let the distribution of grades be normal, with mean 75 and standard deviation 10.
-- Note: `lower.tail=TRUE` if calculating area to LEFT of value $k$, `=FALSE` if to the RIGHT
 - Probability a student gets at least an 80:
 ```{r, zscore1}
 pnorm(80, mean=75, sd=10, lower.tail=FALSE) 
 ```
+
+```{r, zscore1vis, echo=FALSE, fig.height=3}
+
+z1shade <- function(x) {
+    y <- dnorm(x, mean = 75, sd = 10)
+    y[x < 80 | x >115] <- NA
+    return(y)
+}
+
+z1.vis<-ggplot(data.frame(x=35:115),aes(x=x))+
+    stat_function(fun=dnorm, args=list(mean=75, sd=10), color="blue")+
+    stat_function(fun=z1shade, geom="area", fill="#84CA72", alpha=0.5)+
+    scale_x_continuous(breaks=c(35,40,45,50,55,60,65,70,75,80,85,90,95,100))+
+    xlab("Score")+ylab("Probability")
+z1.vis
+
+```
+
+### Finding Z-Score Probabilities with *R* II 
+
 - Probability a student gets at most an 80:
 ```{r, zscore2}
 pnorm(80, mean=75, sd=10, lower.tail=TRUE) 
 ```
 
-### Finding Z-Score Preobabilities with *R* II
+```{r, zscore2vis, echo=FALSE, fig.height=3}
+
+z2shade <- function(x) {
+    y <- dnorm(x, mean = 75, sd = 10)
+    y[x < 35 | x >80] <- NA
+    return(y)
+}
+
+z2.vis<-ggplot(data.frame(x=35:115),aes(x=x))+
+    stat_function(fun=dnorm, args=list(mean=75, sd=10), color="blue")+
+    stat_function(fun=z2shade, geom="area", fill="#84CA72", alpha=0.5)+
+    scale_x_continuous(breaks=c(35,40,45,50,55,60,65,70,75,80,85,90,95,100))+
+    xlab("Score")+ylab("Probability")
+z2.vis
+
+```
+
+### Finding Z-Score Probabilities with *R* III
 
 - Probability a student gets between a 65 and 85:
 ```{r, zscore3}
-pnorm(85, mean=75, sd=10, 
-      lower.tail=TRUE)-pnorm(
-        65, mean=75, sd=10, 
-        lower.tail=TRUE)
+pnorm(85, mean=75, sd=10, lower.tail=TRUE)-pnorm(
+        65, mean=75, sd=10, lower.tail=TRUE)
 ```
 
+```{r, zscore3vis, echo=FALSE, fig.height=3}
+
+z3shade <- function(x) {
+    y <- dnorm(x, mean = 75, sd = 10)
+    y[x < 65 | x >85] <- NA
+    return(y)
+}
+
+z3.vis<-ggplot(data.frame(x=35:115),aes(x=x))+
+    stat_function(fun=dnorm, args=list(mean=75, sd=10), color="blue")+
+    stat_function(fun=z3shade, geom="area", fill="#84CA72", alpha=0.5)+
+    scale_x_continuous(breaks=c(35,40,45,50,55,60,65,70,75,80,85,90,95,100))+
+    xlab("Score")+ylab("Probability")
+z3.vis
+
+```

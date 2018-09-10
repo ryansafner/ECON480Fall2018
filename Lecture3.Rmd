@@ -585,20 +585,20 @@ $$deviation = x_i-\mu	$$
 
 - The \textcolor{teal}{population variance ($\sigma^2$)} of a \emph{population} distribution measures the average of the \emph{squared} deviations from the population mean
 
-$$\sigma^2 = \frac{\displaystyle\sum^N_{i=1} (x_i-\mu)^2}{N}	$$
+$$\sigma^2 = \frac{1}{N}\displaystyle\sum^N_{i=1} (x_i-\mu)^2	$$
 
 - Why do we square deviations? 
 
 ### Standard Deviation
 
 -Square root the variance to get the \textcolor{teal}{population standard deviation ($\sigma$)}, the average deviation from the mean (in $x$ units)
-$$\sigma=\sqrt{\sigma^2}=\sqrt{\frac{\displaystyle\sum^N_{i=1} (x_i-\mu)^2}{N}	}$$
+$$\sigma=\sqrt{\sigma^2}=\sqrt{\frac{1}{N}\displaystyle\sum^N_{i=1} (x_i-\mu)^2	}$$
 
 ### Sample Variance
 
 - The \textcolor{magenta}{sample variance ($s^2$)} of a \emph{sample} distribution measures the average of the \emph{squared} deviations from the sample mean
 
-$$s^2 = \frac{\displaystyle\sum^n_{i=1} (x_i-\bar{x})^2}{n-1}	$$
+$$s^2 = \frac{1}{n-1}\displaystyle\sum^n_{i=1} (x_i-\bar{x})^2	$$
 
 
 -Why divide by $n-1$?
@@ -606,7 +606,14 @@ $$s^2 = \frac{\displaystyle\sum^n_{i=1} (x_i-\bar{x})^2}{n-1}	$$
 ### Sample Standard Deviation
 - Square root the variance to get the \textcolor{teal}{sample standard deviation ($s$)}, the average deviation from the mean (in $x$ units)
 
-$$s=\sqrt{s^2}=\sqrt{\frac{\displaystyle\sum^n_{i=1} (x_i-\bar{x})^2}{n-1}	}$$
+$$s=\sqrt{s^2}=\sqrt{\frac{1}{n-1}\displaystyle\sum^n_{i=1} (x_i-\bar{x})^2	}$$
+
+### Sample Standard Deviation: Example
+
+\begin{example}
+Calculate the sample standard deviation for the following series: 
+$$\{2, 4, 6, 8, 10 \}$$
+\end{example}
 
 ### Descriptive Statistics: Population vs. Sample
 
