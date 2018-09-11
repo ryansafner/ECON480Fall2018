@@ -551,7 +551,7 @@ summary(quizzes$scores)
 
 ### Boxplots III
 
-```{r second quiz, echo=FALSE, fig.height=4}
+```{r second.quiz, echo=FALSE, fig.height=4}
 quizzes<-data.frame(scores=c(0,62,66,71,71,74,76,79,83,86,88,93,95))
 #rename scores as quiz 1
 colnames(quizzes)<- c("quiz1")
