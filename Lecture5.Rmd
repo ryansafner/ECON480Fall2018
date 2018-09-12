@@ -1,0 +1,562 @@
+---
+title: "Lecture 5: Meet R"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "September 12, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+### Excel, Stata, R 
+
+\begin{table}
+  \begin{tabular}{lll}
+  Excel & Stata & R\\ \toprule
+  MS Office License & Expensive License & Free! \\ 
+  Proprietary & Proprietary & Open Source\\
+  Default, used in finance & Primary for economists & Largest use by data scientists\\
+  Not reproducible & Reproducible (.do files) & Reproducible (.R files)\\
+  Can't incorporate into docs & Can't incorporate into docs & Can run in chunks within docs\\
+  Very limited extensions & Many packages & Most packages written for R first\\
+  Point-and-click & Point-and-click or command line & Almost exclusively command line\\
+  Limited formulas & Just one command per task & Many alternative commands\\ \bottomrule
+  \end{tabular}
+\end{table}
+
+### Stata and Excel Can't Do This (Right in the Slides)
+
+```{r gapminderload, echo=FALSE}
+library("ggplot2")
+library("gapminder")
+```
+
+```{r gapminderp, echo=TRUE, fig.height=3, fig.width=10,warning=FALSE}
+ggplot(data = gapminder, aes(x = gdpPercap, 
+	y = lifeExp, color = continent, fill= continent))+
+	geom_point()+geom_smooth(method = "lm") +
+	scale_x_log10()+ylab("Life Expectancy (Years)")+
+	xlab("Log GDP/Capita")
+```
+
+### York Workflow for Data Analysis 
+
+![Workflow](workflow.png)
+
+- Need software that can import, tidy, analyze, plot, and present data 
+- R can do all of this (with *R Markdown*, all in the same document)
+
+### Learning to Code 
+
+- You are literally learning a new language, complete with grammar and syntax rules, and specific vocabulary
+- `R` like all command line programming is *very literal*, a single typo or misplaced comma will lead to a different outcome than you intended, or fail completely
+
+### Learning to Code II
+
+\begin{columns}
+  \begin{column}{.7\textwidth}
+  "There’s an implied contract between you and R: it will do the tedious computation for you, but in return, you must be completely precise in your instructions. Typos matter. Case matters." 
+  
+\textcolor{gray}{\scriptsize \href{http://r4ds.had.co.nz/workflow-basics.html}{R for Data Science}}
+  \end{column}
+  \begin{column}{.3\textwidth}
+  \begin{tabular}{c}
+    \includegraphics[height=2in]{hadley}\\
+    Hadley Wickham\\
+    Chief Scientist, R Studio\\
+  \end{tabular}
+  \end{column}
+\end{columns}
+
+### Say Hello to My Little Friend
+![](googlehelp.png)
+
+### Say Hello to Your New BEST Friend
+
+![](stackoverflow.png)
+
+### R Also Plays Along Pretty Nicely
+
+```{r}
+#type help("functionname") to get documentation on the command 
+help("lm")
+```
+![](rlmhelp.png)
+
+# Writing and Saving R Code
+
+### Naming Conventions
+- Object names cannot start with a digit or contain a space or comma
+- FOR THE LOVE OF GOD AVOID SPACES IN GENERAL
+    - You've seen webpages intended to be called `"my webpage in html"` turned into `http://my%20webpage%20in%20html.html`
+    - Consider both your `R` objects and your files and folder names on your computer...(`/School/ECON_480_Econometrics/Homeworks_and_Data/`)
+- It will be wise to adopt some consistent standard for demarcating names:
+```
+i.use.snake.case
+otherPeopleUseCamelCase
+some_people_use_underscores
+And_aFew.People_RENOUNCEconvention
+```
+
+### Working Directory
+
+- *R* assumes a default (often inconvenient) working directory on your computer
+- Find out where *R* currently is pulling or saving files to/from with **getwd()**
+- Change the working directory to wherever you plan on keeping your related data and documents with **setwd("filepath")**
+    - **filepath** refers to the location of the folder on your computer, e.g. `~/Dropbox/Teaching/Hood College/ECON 480 - Econometrics/Data`
+    - OS-specific to Windows vs. Mac vs. Linux
+
+### Writing and Saving R Code: Tips
+
+- Comment, comment, comment! 
+  * Use the hashtag `#` to start a comment (`R` ignores everything on that line after the hashtag)
+  * Can be made its own line or at the end of lines 
+```{r writing, eval=FALSE}
+# Run regression of y on x, save as reg1
+reg1<-lm(y~x, data=data) #runs regression
+summary(reg1$coefficients) #prints coefficients
+```
+- **Save often!**
+    - Better yet, ask me about version control and GitHub (later)
+
+### Writing and Saving R Code
+
+1. \alert{Command line/Console}: writing each command by itself and copying down the result as needed
+    - Great for testing individual commands to see what happens
+    - Not reproducible! Not saved! NOT RECOMMENDED!
+2. \alert{.R files}: A sequence of commands (and hopefully comments) saved as a script, the entire script is run all at once
+    - Can test individual commands in command line and then put good commands in *.R* file 
+    - Equivalent to a *.do* file for Stata
+    - Reproducible, saved, commented
+
+### Writing and Saving R Code II 
+
+3. \alert{R Markdown (*.Rmd*) files}: A plain text document written in *R Markdown* language
+    - Allows for individual chunks of *R* code to be run individually (great for testing one command instead of all at once)
+    - Reproducible, saved, commented as if a normal document 
+    - Can write an entire document (text, equations, R commands, figures, tables, etc) with one file! 
+    - Can export to html, MS Word, Beamer, etc!
+    - Markdown is a language that is intuitive, simple, human- and machine-readable
+
+### R Studio 
+
+![Rstudio Windows](rstudio.png)
+
+### Agenda for Today and for the Future
+
+- **Today**: practice using the Command Line/Console in *R*
+      - Learn different commands and results relevant to data analysis 
+      - By the end, saving a script as a *.R* file 
+- **Later**: *R Markdown* and the benefits to plain text, literate programming, and workflow management 
+
+### Coding Basics
+
+- First, ecognize that `R` can be used as a simple calculator
+```{r calc}
+2+2
+sqrt(100/4)
+log(5)
+```
+- This will be helpful later when we want to transform variables
+
+### Using Packages
+
+- \alert{Packages} are extensions designed by users 
+- Remember, `R` is open source, packages are usually published first on [Github](github.com)
+- Official packages distributed and documented through [CRAN](cran.r-project.org/) 
+- To use a (previously-installed) package (note the ""): 
+```
+library("packagename")
+```
+- If you do not have a package, they are easy to install with (yes, note the plural "s")
+```
+install.packages("packagename")
+```
+
+### Using Packages
+
+- Here is a list of the most important packages you will probably use for things relevant to econometrics
+
+\begin{table}
+  \begin{tabular}{ll}
+  Package name & Use \\ \toprule 
+  \texttt{ggplot2} & Rendering beautiful graphics (scatterplots, histograms, etc)\\
+  \texttt{stargazer} & Rendering professioanl looking regression output tables\\
+  \texttt{dplyr} & Manipulating data much more intuitively\\
+  \texttt{sandwich} & More tools for regression, particularly robust SE's\\
+  \texttt{tidyverse} & An epic \emph{meta}package of \texttt{ggplot2, dplyr} and other popular packages\\ \bottomrule
+  \end{tabular}
+\end{table}
+
+- Google each of these for more documentation
+- We will explore each of these in more detail later 
+
+# Objects in R
+
+### Vectors
+
+- The simplest data structure in `R` is a \alert{vector}, simply a collection of objects
+- To construct a vector, use the "combine/concatenate" function "**c()**"
+- **Example**: a vector of the numbers 1 through 5
+
+\onslide<4->
+```{r vector 1}
+c(1,2,3,4,5)
+```
+
+- We can also build vectors via generating series
+
+\onslide<6->
+```{r vector 11}
+1:5
+```
+
+### Vectors II 
+
+- We can perform mathematical operations on a vector as a whole:
+```{r vector 3}
+sum(1:5)
+mean(1:5)
+```
+
+### Storing Objects
+
+- `R` is an \alert{object-oriented} programming language 
+- We will almost always store data in **objects** and run **functions** on objects
+    - Objects are assigned values: `objectname<-value`
+    - Functions take the form: `functionname(objectname)`
+- Storing a vector as an object called "*x*" using the assignment operator "**<-**" 
+
+\onslide<6->
+```{r store vector as x}
+x<-c(1,2,3,4,5)
+```
+- To inspect an object, we simply call it up by name
+
+\onslide<8->
+```{r look at x}
+x
+```
+
+### Storing Objects: Text
+
+- Vectors need not contain only numbers: 
+
+\onslide<2->
+```{r vector words}
+list<-c("red", "blue", "purple")
+```
+
+- Note above, *strings* or *characters* of text require quotation marks around them 
+- We can inspect the object via calling it by its name, or more formally, telling *R* to **print()** the contents of the object
+
+\onslide<4->
+```{r print list}
+list
+print(list)
+```
+
+### Variable/Data Classes
+
+- Vectors **must** contain the same type of elements (e.g. numerical or text)
+  * Technically this refers to **atomic vectors** (nearly all vectors are atomic)
+  * There can be a non-atomic vector, known as a **list** (see below)
+- Vectors with "mixed" types will convert all elements to the lowest-common denominator, e.g. character
+- You can always check the type of vector using **class()**
+```{r vector types}
+mixed<-c(5, pi, TRUE, 4.3, "cabbage")
+class(mixed)
+```
+
+### Variable/Data Classes
+  - \alert{Numeric} (aka "double"), as it sounds, can perform mathematical operations
+```{r numeric, echo=TRUE, eval=FALSE}
+numeric<-c(1,2,3,4,5)
+```
+  - \alert{Logical} is a series of binary elements that can either be TRUE or FALSE
+
+\onslide<2->
+```{r logical, echo=TRUE,eval=FALSE}
+logical<-c(TRUE,FALSE,FALSE,TRUE)
+```
+
+  - \alert{Character} is a string of text: letters, numbers, and symbols, cannot perform mathematical operations
+
+\onslide<3->
+```{r char, echo=TRUE,eval=FALSE}
+character<-c("one","two","7","orange")
+```
+
+### Factors 
+  - \alert{Factor} is a special type of character variable, often used to indicate membership in one of several possible categories, called **levels** (e.g. for plotting, or conditional statistics and data work)
+```{r factors}
+students<-factor(c("freshman", "senior", "senior", "junior", "freshman", 
+                   "sophomore", "freshman"))
+levels(students) #extract unique levels 
+nlevels(students) #count the number of levels 
+```
+
+
+### Factors II 
+
+```{r factors2}
+table(students) #tabulate number of values for each level 
+```
+
+### Changing Variable/Data Classes
+
+- Again, check the type of data with **class()**
+- Change the type with **as.classname()**
+    - Note you can't turn characters into numeric (if there's no numbers), but you can turn numeric into characters
+```{r class change}
+class(x)
+x<-as.character(x)
+class(x)
+x<-as.numeric(x)
+class(x)
+```
+
+### Storing Objects and Indexing
+
+- Use **[square brackets]** to isolate elements of a vector for commands
+```{r vector index}
+print(list) #Our original list 
+list[1] #Inspect first element 
+list[c(1,3)] #Inspect first and third elements
+```
+
+### Storing Objects and Indexing II 
+
+- Use **[square brackets]** to isolate elements of a vector for commands
+
+```{r list2}
+list[2]<-"orange" #Change second element
+print(list) #Our new list
+```
+
+### Vector Operations
+
+- Keeping our first vector *x*, let's create another object *y*
+```{r vector y}
+y<-10
+```
+- Let's create a third object *z*, which is the product of *x* and *y*
+
+\onslide<2->
+```{r z is x times y}
+z<-x*y
+z
+```
+
+### Redefining Objects
+
+- Objects and variables maintain their value until they are changed. We can redefine `x` as 6 simply with another command to define `x`. 
+
+```{r redefine x}
+x
+x<-6
+x 
+```
+
+### Functions
+
+- Most of R: `functionname(objectname)`
+- A \alert{function} produces a (hopefully useful) output based on the input that it recieves. 
+- Functions can be recognized by the parentheses () at the end of their names. 
+- The `c()` command that produces a vector, was an example of a function.
+
+### Some Useful Functions
+
+- Mathematical/Statistical Functions
+
+\begin{table}
+  \begin{tabular}{lll}
+  Function & Use & Example\\ \toprule
+  \texttt{sum()} & Takes the sum of an object & \texttt{sum(1:10)}\\
+  \texttt{mean()} & Takes the arithmetic mean of an object & \texttt{mean(1:10)}\\
+  \texttt{rnorm()} & Takes a number of draws (e.g. 5) from a normal distribution & \texttt{rnorm(5)}\\
+  \texttt{round()} & Rounds an object (e.g. x) to (e.g. 2) decimal places & \texttt{round(x,2)}\\ \bottomrule
+  \end{tabular}
+\end{table}
+
+- Note functions can have functions in their arguments, e.g. `round(rnorm(5),2)`
+
+# Data Frames
+
+### Data Frames
+
+- The most important object in `R` is a \alert{data frame}, used for statistics, plots, regressions, etc
+    - "Rectangular" data (i.e. "spreadsheet"): rows are observations, columns are variables 
+    - Can hold variables of different classes
+    - All vectors (columns) must have the same length! 
+
+```{r dataframeex}
+gapminder
+```
+
+### Data Frames: From Scratch
+
+- We often import existing data into a dataframe (see importing data below)
+- We could construct a data frame from scratch using **data.frame()**
+- Suppose we have 4 different vectors, `v1`, `v2`, `v3`, and `v4`
+```{r dataframe}
+v1<-c(10,20,30,45,60) # A list of integers
+v2<-LETTERS[1:5] # The first 5 letters
+v3<-round(rnorm(5),2) #5 random draws from normal distr, rounded to 2 decimal places
+v4<-c("Apples","Oranges","Bananas","Kiwi","Watermelon") #Fruits 
+mydf<-data.frame(v1,v2,v3,v4) #make dataframe called mydf
+```
+
+### Data Frames: From Scratch
+
+- Check the structure of a data frame with `str()`
+
+```{r}
+str(mydf) #examine structure
+class(mydf) #check it's a dataframe
+```
+
+### Data Frames: From Scratch
+- Note instead of making the vectors first and then combining them, we could have done it all at once:
+
+```{r, eval=FALSE} 
+mydf<-data.frame(v1=c(10,20,30,45,60),
+                v2=LETTERS[1:5],
+                v3=round(rnorm(5),2),
+                v4=c("Apples","Oranges","Bananas","Kiwi","Watermelon"))
+```
+
+### Data Frames: Quick Look
+
+- We will use the `gapminder` dataset as a quick example
+  * **str()** will give us a sense of the structure
+
+```{r}
+library("gapminder")
+str(gapminder)
+```
+
+### Data Frames: Quick Look
+
+-  **head()** will show us the top 6 rows (observations)
+
+```{r}
+head(gapminder)
+```
+
+### Data Frames: Quick Look
+
+- **summary()** will give us a summary statistics of each variable (columns)
+
+```{r}
+summary(gapminder)
+```
+
+### Data Frames: Selecting Columns (Variables)
+
+- Each variable is stored as a part of a data frame that can be called with the `$` sign
+    - e.g. with the Diamonds data, price can be called with `Diamonds$price`: 
+
+\onslide<2->
+```{r}
+summary(gapminder$gdpPercap)
+mean(gapminder$gdpPercap)
+```
+
+# Quick Data Analysis Example
+
+### Summary Statistics 
+
+- Simple commands can help us learn about a dataset quickly
+
+| Function | Result | 
+|---|---|
+`min(distr)` | Find minimum value | 
+`max(distr)` | Find maximum value |
+`range(distr)` | Find the range |
+`sort(distr)` | Sort values of distribution from smallest to largest |
+|`sort(distr)[1]` | Find first value when sorted (equvalient to finding min) | 
+|`sort(distr, decreasing=TRUE)` | Sort from largest to smallest |
+|`median(distr)` | Find the median |
+|`mean(distr)` | Find the mean | 
+|`var(distr)` | Find the variance | 
+|`sd(distr)` | Find the standard deviation | 
+
+### Summary Statistics II 
+
+| Function | Result | 
+|---|---|
+|`table(distr)` | Gives frequency table of categorical variable values | 
+|`fivenum(distr)` | Five number summary (min, q1, median, q3, max) |
+|`summary(distr)` | Gives min, q1, median, mean, q3, max | 
+|`quantile(distr, 0.32)` | Find specific (e.g. 32nd) percentile | 
+|`summary(factor(distr))` | Lists all unique values in distr |
+|`sum(distr)` | Takes the sum of all values in distr | 
+
+### Summary Statistics: Example
+
+```{r}
+summary(gapminder$gdpPercap)
+mean(gapminder$pop)
+table(gapminder$continent)
+```
+
+### Plotting
+
+- Base `R` is very powerful and intuitive to plot, but not very sexy 
+
+```{r, echo=TRUE, fig.height=4, fig.width=10, warning=FALSE}
+hist(gapminder$gdpPercap)
+```
+
+### Plotting II 
+
+- This is where packages (like `ggplot2`) come in, but we'll have to learn later 
+
+```{r histogram, echo=TRUE, fig.height=2, warning=FALSE}
+library("ggplot2")
+ggplot(gapminder, aes(x=gdpPercap))+
+  geom_histogram(bins=10, color="black",fill="indianred")+
+  xlab("GDP Per Capita")+ylab("Number of Countries")+
+  theme_bw()
+```
+
+### Plotting III
+
+- Boxplots
+
+```{r boxplot.simple, fig.height=4}
+boxplot(gdpPercap~continent,data=gapminder)
+```
+
+### Plotting IV
+
+```{r boxplot, echo=TRUE, fig.height=3, fig.width=10}
+library("ggplot2")
+library("gapminder")
+ggplot(gapminder, aes(x=continent,y=gdpPercap ,fill=continent))+ 
+    geom_boxplot()+ theme_bw()  
+```

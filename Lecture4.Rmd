@@ -504,9 +504,7 @@ normals.sigma.pdf
 			\begin{tikzpicture}[scale=.8]\scriptsize 
 \begin{axis}[
   no markers, domain=-4:4, samples=100,
-  axis lines*=left, xlabel=$\sigma$, ylabel=$f(X)$,
-  every axis y label/.style={at=(current axis.above origin),anchor=south},
-  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  axis lines*=left, xlabel=$X$, ylabel=$f(X)$,
   height=5cm, width=10cm,
   xtick={-4,-3,-2,-1,0,1,2,3,4}, ytick=\empty,
   enlargelimits=false, clip=false, axis on top,
@@ -584,7 +582,7 @@ In the last quarter of 2015, a group of 64 mutual funds had a mean return of 2.4
 		\item<2-> What percent of the funds would you expect to be earning between -3.2\% and 8.0\% returns? 
 \end{itemize}
 
-### Standardizing Variables: Example III
+### Standardizing Variables: Example: $X \rightarrow Z$ 
 
 \begin{itemize}
 			\item Convert to standard normal to find $Z$-scores for 8 and -3.2. 
@@ -600,13 +598,13 @@ In the last quarter of 2015, a group of 64 mutual funds had a mean return of 2.4
 	\item<5-> $P(X \pm 1\sigma)=0.68$ 
 \end{itemize}
 
-### Standardizing Variables: Example IV
+### Standardizing Variables: Example: $X \rightarrow Z$ II 
 
 \begin{figure}
 					\begin{tikzpicture}[scale=.75]
 \begin{axis}[
   no markers, domain=-20:24.8, samples=100,
-  axis lines*=left, xlabel=$X$, ylabel={},
+  axis lines*=left, xlabel={}, ylabel={},
   every axis y label/.style={at=(current axis.above origin),anchor=south},
   every axis x label/.style={at=(current axis.right of origin),anchor=west},
   height=5cm, width=10cm,
@@ -619,11 +617,11 @@ In the last quarter of 2015, a group of 64 mutual funds had a mean return of 2.4
   \draw [yshift=-0.75cm, <->,very thick](axis cs:-3.2,0) -- node [fill=white] {\small $\mu \pm \sigma$} (axis cs:8,0);
 \draw [yshift=2cm, <->,very thick](axis cs:-3.2,0) -- node[fill=white] {\small 68\%} (axis cs:8,0);
 \end{axis}
-\end{tikzpicture}
+\end{tikzpicture}\\
 		\begin{tikzpicture}[scale=.75]
 \begin{axis}[
   no markers, domain=-4:4, samples=100,
-  axis lines*=left, xlabel=$Z$, ylabel={},
+  axis lines*=left, xlabel={}, ylabel={},
   every axis y label/.style={at=(current axis.above origin),anchor=south},
   every axis x label/.style={at=(current axis.right of origin),anchor=west},
   height=5cm, width=10cm,
