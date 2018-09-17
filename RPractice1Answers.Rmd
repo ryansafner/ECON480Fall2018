@@ -46,42 +46,42 @@ mean(x)
 
 Calculate the standard deviation "manually" using our table method. You can look at the source code of Lecture 4 for my example.  
 
-a. Creating two vectors, one called $y.i$ and one called $p.i$, with the data above. 
+### a. Creating two vectors, one called $y.i$ and one called $p.i$, with the data above. 
 ```{r}
 y.i<-c(2,4,6)
 p.i<-c(0.5,0.25,0.25)
 ```
 
-b. Merge them into a data frame called $rv$ with `data.frame(y.i,p.i)`. Call `rv` to inspect it. 
+### b. Merge them into a data frame called $rv$ with `data.frame(y.i,p.i)`. Call `rv` to inspect it. 
 ```{r}
 rv<-data.frame(y.i,p.i)
 rv
 ```
 
-c. Find the expected value of $Y$ by taking the sum of each value of `y.i` multiplied by `p.i` with the `sum()` command. 
+### c. Find the expected value of $Y$ by taking the sum of each value of `y.i` multiplied by `p.i` with the `sum()` command. 
 ```{r}
 sum(rv$y.i*rv$p.i)
 ```
 
-d. Creating a new column in `rv` called `deviations`, where you subtract the mean from each `y.i` value. Call `rv` again to make sure it's now there. 
+### d. Creating a new column in `rv` called `deviations`, where you subtract the mean from each `y.i` value. Call `rv` again to make sure it's now there. 
 ```{r}
 rv$deviations<-(rv$y.i-3.5)
 rv
 ```
 
-e. Create another column in `rv` called `devsq`, where you square the deviations from part d. Call `rv` again to make sure it's now there.
+### e. Create another column in `rv` called `devsq`, where you square the deviations from part d. Call `rv` again to make sure it's now there.
 ```{r}
 rv$devsq<-(rv$deviations^2)
 rv
 ```
 
-f. Now add another column in `rv` called `weighteddevsq`, where you multiply the squared deviations in part e. by the associated probability `p.i`. Call `rv` again to make sure it's now there.
+### f. Now add another column in `rv` called `weighteddevsq`, where you multiply the squared deviations in part e. by the associated probability `p.i`. Call `rv` again to make sure it's now there.
 ```{r}
 rv$weighteddevsq<-(rv$devsq*rv$p.i)
 rv
 ```
 
-g. Finally, take the sum of `weighteddevsq` to get variance. Square root this to get standard deviation.
+### g. Finally, take the sum of `weighteddevsq` to get variance. Square root this to get standard deviation.
 ```{r}
 sum(rv$weighteddevsq)
 sqrt(sum(rv$weighteddevsq))
@@ -89,23 +89,23 @@ sqrt(sum(rv$weighteddevsq))
 
 ### 5. The mean height of adults is 65 inches, with a standard deviation of 4 inches. Use the normal distribution to find the probabilities of the following scenarios: 
 
-a. Find the probability of someone being *at least* 60 inches tall using `pnorm()`.
+### a. Find the probability of someone being *at least* 60 inches tall using `pnorm()`.
 ```{r}
 pnorm(60, mean=65, sd=4, lower.tail=FALSE) 
 ```
 
 
-b. Find the probability of someone being *at most* 60 inches tall. 
+### b. Find the probability of someone being *at most* 60 inches tall. 
 ```{r}
 pnorm(60, mean=65, sd=4, lower.tail=TRUE) 
 ```
 
-c. Find the probability of someone being between 61 and 69 inches tall. Why is this number familiar? 
+### c. Find the probability of someone being between 61 and 69 inches tall. Why is this number familiar? 
 ```{r}
 pnorm(69, mean=65, sd=4, lower.tail=TRUE)-pnorm(61, mean=65, sd=4, lower.tail=TRUE)
 ```
 
-d. Find the probability of someone being between 57 and 73 inches tall. Why is this number familiar? 
+#### d. Find the probability of someone being between 57 and 73 inches tall. Why is this number familiar? 
 
 ```{r}
 pnorm(73, mean=65, sd=4, lower.tail=TRUE)-pnorm(57, mean=65, sd=4, lower.tail=TRUE)
@@ -115,23 +115,24 @@ pnorm(73, mean=65, sd=4, lower.tail=TRUE)-pnorm(57, mean=65, sd=4, lower.tail=TR
 
 For the following questions, use the \texttt{diamonds} dataset, included as part of `ggplot2`.
 
-### 1. Install `ggplot2`
-```
+### 6. Install `ggplot2`
+
+```{r, eval=FALSE}
 install.packages("ggplot2")
 ```
 
-### 2. Load `ggplot2` with the `library()` command
+### 7. Load `ggplot2` with the `library()` command
 
 ```{r}
 library(ggplot2)
 ```
 
-### 3. Get the structure of the diamonds data.frame. What are the different variables and what kind of data does each contain? 
+### 8. Get the structure of the diamonds data.frame. What are the different variables and what kind of data does each contain? 
 ```{r}
 str(diamonds)
 ```
 
-### 4. Get summary statistics for `carat`, `depth`, `table`, and `price`
+### 9. Get summary statistics for `carat`, `depth`, `table`, and `price`
 
 ```{r}
 summary(diamonds$carat)
@@ -140,7 +141,7 @@ summary(diamonds$table)
 summary(diamonds$price)
 ```
 
-### 5. `color`, `cut`, and `clarity` are categorical variables (factors). Use the `table()` command to generate frequency tables for each.
+### 10. `color`, `cut`, and `clarity` are categorical variables (factors). Use the `table()` command to generate frequency tables for each.
 
 ```{r}
 table(diamonds$cut)
@@ -149,17 +150,17 @@ table(diamonds$clarity)
 ```
 Note, you can also use `summary()` to get the counts of each category. 
 
-### 6. Now rerun the `summary()` command on the entire data frame
+### 11. Now rerun the `summary()` command on the entire data frame
 ```{r}
 summary(diamonds)
 ```
 
-### 7. Plot a histogram of price. 
+### 12. Plot a histogram of price. 
 ```{r}
 hist(diamonds$price)
 ```
 
-### 8. Plot a boxplot of price by diamond color.
+### 13. Plot a boxplot of price by diamond color.
 ```{r}
 boxplot(price~cut,data=diamonds)
 ```
@@ -167,3 +168,89 @@ boxplot(price~cut,data=diamonds)
 ## Execute your R Script
 
 Save the R Script you created at the beginning and (hopefully) have been pasting all of your valid commands to. This creates a *.R* file wherever you choose to save it to. Now looking at the file in the upper left pane of *R Studio* look for the button in the upper right corner that says **Run**. Sit back and watch `R` redo everything you've carefully worked on, all at once. 
+
+```{r, eval=FALSE}
+# Your R file should look something like this: 
+
+# Question 1 
+me<-c("Ryan","Safner")
+me
+class(me)
+
+# Question 2 
+x<-c(2,4,6,8,10)
+
+# Question 3
+mean(x)
+
+# Question 4
+## part a
+y.i<-c(2,4,6)
+p.i<-c(0.5,0.25,0.25)
+
+## part b
+rv<-data.frame(y.i,p.i)
+rv
+
+## part c 
+sum(rv$y.i*rv$p.i)
+
+## part d 
+rv$deviations<-(rv$y.i-3.5)
+rv
+
+## part e 
+rv$weighteddevsq<-(rv$devsq*rv$p.i)
+rv
+
+## part f
+rv$weighteddevsq<-(rv$devsq*rv$p.i)
+rv
+
+## part g
+sum(rv$weighteddevsq)
+sqrt(sum(rv$weighteddevsq))
+
+# Question 5
+## part a
+pnorm(60, mean=65, sd=4, lower.tail=FALSE) 
+
+## part b 
+pnorm(60, mean=65, sd=4, lower.tail=TRUE) 
+
+## part c 
+pnorm(69, mean=65, sd=4, lower.tail=TRUE)-pnorm(61, mean=65, sd=4, lower.tail=TRUE)
+
+## part d
+pnorm(73, mean=65, sd=4, lower.tail=TRUE)-pnorm(57, mean=65, sd=4, lower.tail=TRUE)
+
+# Question 6
+installzpackages("ggplot2")
+
+# Question 7 
+library(ggplot2)
+
+# Question 8
+str(diamonds)
+
+# Question 9 
+summary(diamonds$carat)
+summary(diamonds$depth)
+summary(diamonds$table)
+summary(diamonds$price)
+
+# Question 10 
+table(diamonds$cut)
+table(diamonds$color)
+table(diamonds$clarity)
+
+# Question 11 
+summary(diamonds)
+
+# Question 12 
+hist(diamonds$price)
+
+# Question 13 
+boxplot(price~cut,data=diamonds)
+```
+

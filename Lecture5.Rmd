@@ -410,8 +410,7 @@ x
 
 - The most important object in `R` is a \alert{data frame}, used for statistics, plots, regressions, etc
     - "Rectangular" data (i.e. "spreadsheet"): rows are observations, columns are variables 
-    - Can hold variables of different classes
-    - All vectors (columns) must have the same length! 
+    - Can hold variables of different classes, but all columns must have the same length
 
 ```{r dataframeex}
 gapminder
@@ -425,7 +424,7 @@ gapminder
 ```{r dataframe}
 v1<-c(10,20,30,45,60) # A list of integers
 v2<-LETTERS[1:5] # The first 5 letters
-v3<-round(rnorm(5),2) #5 random draws from normal distr, rounded to 2 decimal places
+v3<-round(rnorm(5),2) #5 random draws from normal distr, rounded to 2 decimals
 v4<-c("Apples","Oranges","Bananas","Kiwi","Watermelon") #Fruits 
 mydf<-data.frame(v1,v2,v3,v4) #make dataframe called mydf
 ```
@@ -440,7 +439,8 @@ class(mydf) #check it's a dataframe
 ```
 
 ### Data Frames: From Scratch
-- Note instead of making the vectors first and then combining them, we could have done it all at once:
+- Note instead of making the vectors first and then combining them into a data frame, we could have done it all at once with one command:
+    - The string in front of the `=` (e.g. `v1`, `v2`, etc.) give the **name** for each column (variable)
 
 ```{r, eval=FALSE} 
 mydf<-data.frame(v1=c(10,20,30,45,60),
@@ -449,14 +449,32 @@ mydf<-data.frame(v1=c(10,20,30,45,60),
                 v4=c("Apples","Oranges","Bananas","Kiwi","Watermelon"))
 ```
 
+### Data Frames: Viewing I
+
+- Note, once you save an object, it shows up in the **Environment Pane** in the upper right window 
+- Click the arrow button in front of the object for some more information
+
+\begin{figure}
+  \includegraphics[height=2in]{renvironmentexample}
+\end{figure}
+
+### Data Frames: Viewing II 
+- `data.frame` objects can be viewed in their own panel by clicking on the name of the object
+- Note you cannot edit anything in this pane, it is for viewing only 
+
+\begin{figure}
+  \includegraphics[height=1.5in]{rdataframeexample}
+\end{figure}
+
 ### Data Frames: Quick Look
 
-- We will use the `gapminder` dataset as a quick example
+- We will use the existing `gapminder` dataset as a quick example, note we need to load (or install it) first
   * **str()** will give us a sense of the structure
 
+\onslide<3-> 
 ```{r}
-library("gapminder")
-str(gapminder)
+library("gapminder") #load gapminder 
+str(gapminder) #examine structure of dataset
 ```
 
 ### Data Frames: Quick Look
@@ -475,10 +493,11 @@ head(gapminder)
 summary(gapminder)
 ```
 
+
 ### Data Frames: Selecting Columns (Variables)
 
 - Each variable is stored as a part of a data frame that can be called with the `$` sign
-    - e.g. with the Diamonds data, price can be called with `Diamonds$price`: 
+    - e.g. with the `gapminder` data, *GDP per capita* (coded in the dataset as `gdpPercap`) can be called with `gapminder$gdpPercap`: 
 
 \onslide<2->
 ```{r}
@@ -490,7 +509,7 @@ mean(gapminder$gdpPercap)
 
 ### Summary Statistics 
 
-- Simple commands can help us learn about a dataset quickly
+- Learn about a variable's distribution quickly (example variable called `distr`):
 
 | Function | Result | 
 |---|---|
@@ -512,7 +531,7 @@ mean(gapminder$gdpPercap)
 |`table(distr)` | Gives frequency table of categorical variable values | 
 |`fivenum(distr)` | Five number summary (min, q1, median, q3, max) |
 |`summary(distr)` | Gives min, q1, median, mean, q3, max | 
-|`quantile(distr, 0.32)` | Find specific (e.g. 32nd) percentile | 
+|`quantile(distr, 0.32)` | Find specific (e.g. 32$^{nd}$) percentile | 
 |`summary(factor(distr))` | Lists all unique values in distr |
 |`sum(distr)` | Takes the sum of all values in distr | 
 
@@ -524,17 +543,32 @@ mean(gapminder$pop)
 table(gapminder$continent)
 ```
 
-### Plotting
+### Plotting 
 
 - Base `R` is very powerful and intuitive to plot, but not very sexy 
+- Basic syntax: 
+
+\onslide<3->
+```{r, eval=FALSE}
+plottype(data.frame.name$variable)
+```
+
+- If using multiple variables, you can avoid `$` by typing the variable names and then telling `R` where the variables come from (a data frame)
+
+\onslide<4-> 
+```{r, eval=FALSE}
+plottype(variable1,variable2, data=data.frame.name)
+```
+
+### Plotting: Histogram
 
 ```{r, echo=TRUE, fig.height=4, fig.width=10, warning=FALSE}
 hist(gapminder$gdpPercap)
 ```
 
-### Plotting II 
+### Plotting: Histogram with `ggplot2`  
 
-- This is where packages (like `ggplot2`) come in, but we'll have to learn later 
+- Packages (like `ggplot2`) come in to make things prettier, but we'll have to learn later 
 
 ```{r histogram, echo=TRUE, fig.height=2, warning=FALSE}
 library("ggplot2")
@@ -544,19 +578,25 @@ ggplot(gapminder, aes(x=gdpPercap))+
   theme_bw()
 ```
 
-### Plotting III
+### Plotting: Boxplot
 
-- Boxplots
+- Boxplots are similar syntax
 
-```{r boxplot.simple, fig.height=4}
+```{r, fig.height=4}
+boxplot(gapminder$gdpPercap)
+```
+
+### Plotting: Boxplot II
+
+- If we want a boxplot for each category, use `variable.name~category.variable.name` to tell `R` to plot a boxplot **by** category 
+
+```{r, fig.height=4}
 boxplot(gdpPercap~continent,data=gapminder)
 ```
 
-### Plotting IV
+### Plotting: Boxplot with `ggplot2` 
 
-```{r boxplot, echo=TRUE, fig.height=3, fig.width=10}
-library("ggplot2")
-library("gapminder")
+```{r boxplot, echo=TRUE, fig.height=4, fig.width=10}
 ggplot(gapminder, aes(x=continent,y=gdpPercap ,fill=continent))+ 
     geom_boxplot()+ theme_bw()  
 ```

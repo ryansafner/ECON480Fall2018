@@ -1,5 +1,5 @@
 ---
-title: "R Practice Answers"
+title: "R Practice #1"
 author: "Ryan Safner"
 date: "September 12, 2018"
 output: pdf_document
@@ -35,53 +35,52 @@ Before we begin, start a new file with \texttt{File} $\rightarrow$ \texttt{New F
 
 Calculate the standard deviation "manually" using our table method. You can look at the source code of Lecture 4 for my example.  
 
-a. Creating two vectors, one called $y.i$ and one called $p.i$, with the data above. 
+### a. Creating two vectors, one called $y.i$ and one called $p.i$, with the data above. 
 
-b. Merge them into a data frame called $rv$ with `data.frame(y.i,p.i)`. Call `rv` to inspect it. 
+### b. Merge them into a data frame called $rv$ with `data.frame(y.i,p.i)`. Call `rv` to inspect it. 
 
-c. Find the expected value of $Y$ by taking the sum of each value of `y.i` multiplied by `p.i` with the `sum()` command. 
+### c. Find the expected value of $Y$ by taking the sum of each value of `y.i` multiplied by `p.i` with the `sum()` command. 
 
-d. Creating a new column in `rv` called `deviations`, where you subtract the mean from each `y.i` value. Call `rv` again to make sure it's now there. 
+### d. Creating a new column in `rv` called `deviations`, where you subtract the mean from each `y.i` value. Call `rv` again to make sure it's now there. 
 
-e. Create another column in `rv` called `devsq`, where you square the deviations from part d. Call `rv` again to make sure it's now there.
+### e. Create another column in `rv` called `devsq`, where you square the deviations from part d. Call `rv` again to make sure it's now there.
 
-f. Now add another column in `rv` called `weighteddevsq`, where you multiply the squared deviations in part e. by the associated probability `p.i`. Call `rv` again to make sure it's now there.
+### f. Now add another column in `rv` called `weighteddevsq`, where you multiply the squared deviations in part e. by the associated probability `p.i`. Call `rv` again to make sure it's now there.
 
-g. Finally, take the sum of `weighteddevsq` to get variance. Square root this to get standard deviation.
+### g. Finally, take the sum of `weighteddevsq` to get variance. Square root this to get standard deviation.
 
 ### 5. The mean height of adults is 65 inches, with a standard deviation of 4 inches. Use the normal distribution to find the probabilities of the following scenarios: 
 
-a. Find the probability of someone being *at least* 60 inches tall using `pnorm()`.
+### a. Find the probability of someone being *at least* 60 inches tall using `pnorm()`.
 
 
-b. Find the probability of someone being *at most* 60 inches tall. 
+### b. Find the probability of someone being *at most* 60 inches tall. 
 
-c. Find the probability of someone being between 61 and 69 inches tall. Why is this number familiar? 
+### c. Find the probability of someone being between 61 and 69 inches tall. Why is this number familiar? 
 
-d. Find the probability of someone being between 57 and 73 inches tall. Why is this number familiar? 
+### d. Find the probability of someone being between 57 and 73 inches tall. Why is this number familiar? 
 
 
 ## Playing with a Data Set 
 
 For the following questions, use the \texttt{diamonds} dataset, included as part of `ggplot2`.
 
-### 1. Install `ggplot2`
+### 6. Install `ggplot2`
 
-### 2. Load `ggplot2` with the `library()` command
-
-
-### 3. Get the structure of the diamonds data.frame. What are the different variables and what kind of data does each contain? 
-
-### 4. Get summary statistics for `carat`, `depth`, `table`, and `price`
-
-### 5. `color`, `cut`, and `clarity` are categorical variables (factors). Use the `table()` command to generate frequency tables for each.
+### 7. Load `ggplot2` with the `library()` command
 
 
-### 6. Now rerun the `summary()` command on the entire data frame
+### 8. Get the structure of the diamonds data.frame. What are the different variables and what kind of data does each contain? 
 
-### 7. Plot a histogram of price. 
+### 9. Get summary statistics for `carat`, `depth`, `table`, and `price`
 
-### 8. Plot a boxplot of price by diamond color.
+### 10. `color`, `cut`, and `clarity` are categorical variables (factors). Use the `table()` command to generate frequency tables for each.
+
+### 11. Now rerun the `summary()` command on the entire data frame
+
+### 12. Plot a histogram of price. 
+
+### 13. Plot a boxplot of price by diamond color.
 
 ## Execute your R Script
 

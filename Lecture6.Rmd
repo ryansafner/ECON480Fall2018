@@ -1,0 +1,399 @@
+---
+title: "Lecture 6: Correlation and Linear Regression Basics"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "September 17, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+# Covariance and Correlation
+
+### Bivariate Data and Relationships
+
+- We looked at single variables for descriptive statistics
+- Most uses of statistics in economics and business investigate relationships *between* variables
+    - \# of police & crime rates
+    - healthcare spending & life expectancy
+    - government spending & GDP growth
+    - carbon dioxide emissions & temperatures
+- We will begin with \alert{bivariate} data for relationships between $X$ and $Y$
+    - Immediate aim is to explore \alert{associations} between variables, quantified with **correlation** and **linear regression**
+    - Later we want to develop more sophisticated tools to argue for **causation** 
+    
+### Bivariate Data: Spreadsheets
+
+```{r, echo=TRUE}
+econfreedom<-read.csv("~/Dropbox/Teaching/Hood College/ECON 480 - Econometrics/Data/Economic.freedom.simple.csv")
+head(econfreedom)
+```
+
+- **Rows** are individual observations
+- **Columns** are variables on all individuals
+- Let $X$ be Economic Freedom and $Y$ be GDP per capita
+
+### Bivariate Data: Data.Frames in R
+```{r, echo=TRUE}
+str(econfreedom)
+```
+
+### Bivariate Data: Data.Frames in R II
+```{r, echo=TRUE}
+
+summary(econfreedom)
+```
+
+### Bivariate Data: Scatterplots
+
+```{r, fig.height=3}
+library("ggplot2")
+ggplot(econfreedom, aes(x=Economic.Freedom.Summary.Index,y=GDP.Per.Capita))+
+  geom_point(color="blue")+theme_bw()+
+  xlab("Economic Freedom Index (2014)")+ylab("GDP per Capita (2014 USD)")
+```
+
+- The best way to visualize an association between two variables is with a \alert{scatterplot}
+
+### Associations
+
+- Look for **association** between independent and dependent variables
+    1. *Direction*: is the trend positive or negative?
+    2. *Form*: is the trend linear, quadratic, something else, or no pattern?
+    3. *Strength*: is the association strong or weak? 
+    4. *Outliers*: do any observations break the trends above? 
+
+### Covariance
+
+- For any two variables, we can measure their \alert{sample covariance, $cov(X,Y)$ or $s_{X,Y}$} to quantify how they vary *together*\footnote{Henceforth we limit to samples, for convenience. Population covariance is denoted $\sigma_{X,Y}$}
+$$s_{X,Y}=E\big[(X-\bar{X})(Y-\bar{Y}) \big]$$
+
+- Intuition: if $X$ is above its mean, would we expect $Y$:
+    - to be *above* its mean also ($X$ and $Y$ covary *positively*)
+    - to be *below* its mean ($X$ and $Y$ covary *negatively*)
+
+- Covariance is a common measure, but the units are meaningless, thus we rarely need to use it so **don't worry about learning the formula**
+
+### Correlation
+
+- More convenient to standardize covariance into a more intuitive concept: \alert{correlation ($\rho$ or $r$)}, normalized to be between -1 and 1
+$$r_{X,Y}=\frac{s_{X,Y}}{s_X s_Y}=\frac{cov(X,Y)}{sd(X)sd(Y)}$$
+
+- Alternatively, sample correlation can be found by standardizing (finding the $Z$-score) $X$ and $Y$ and multiplying, for each $(X,Y)$ pair, and then averaging (over $n-1$, due to sampling df, again): 
+\begin{align*}
+r&=\frac{1}{n-1}\sum^n_{i=1}\bigg(\frac{X_i-\bar{X}}{s_X}\bigg)\bigg(\frac{Y_i-\bar{Y}}{s_Y}\bigg)\\
+&=\frac{1}{n-1}\sum^n_{i=1}Z_XZ_Y\\
+\end{align*}
+
+### Correlation: Example Calculation
+
+\begin{example}
+$$ (1,1), (2,2), (3,4), (4,9) $$
+
+\end{example}
+```{r, fig.height=2.5}
+corr.example<-data.frame(x=c(1,2,3,4),
+                         y=c(1,2,4,9))
+ggplot(corr.example,aes(x=x,y=y))+geom_point()
+```
+
+### Correlation: Example Calculation II 
+
+```{r}
+mean(corr.example$x) #find mean of x
+mean(corr.example$y) #find mean of y
+
+sd(corr.example$x) #find sd of x
+sd(corr.example$y) #find sd of y
+
+```
+
+### Correlation: Example Calculation III 
+
+```{r}
+#take z score of x,y for each pair and multiply them
+corr.example$z.product<-(((corr.example$x-2.5)/1.291)*
+                           ((corr.example$y-4)/3.559))
+
+corr.example 
+
+```
+
+### Correlation: Example Calculation IV
+
+```{r}
+
+(sum(corr.example$z.product)/3) #average z products over n-1
+cor(corr.example$x, corr.example$y) #compare our answer to cor() command
+cov(corr.example$x, corr.example$y) #just for kicks - covariance 
+```
+
+### Correlation: Interpretation
+
+- Correlation is standardized to $-1 \leq r \leq 1$
+    - Negative values $\implies$ negative association
+    - Positive values $\implies$ positive association
+    - Correlation of 0 $\implies$ no association
+    - As $|r| \rightarrow 1 \implies$ the stronger the association
+    - Correlation of $|r|=1 \implies$ a perfect linear relationship
+
+\begin{figure}
+		\includegraphics[height=1.5in]{correlation}	
+\end{figure}
+
+### Guess the Correlation!
+
+\begin{figure}
+		\includegraphics[height=2in]{guessthecorrelation}
+		\caption*{\href{http://guessthecorrelation.com/index.html}{\textcolor{magenta}{Guess The Correlation Game}}}
+\end{figure}
+
+### Correlation and Endogeneity
+
+- Reminder: \alert{Correlation does not imply causation!}
+- See the **Handout** for more on Covariance and Correlation
+
+### Correlation and Endogeneity II
+
+\begin{example}
+		\begin{figure}
+			\includegraphics[height=1.7in]{correlation1}	
+		\end{figure}
+\end{example}
+
+- The correlation between Life Expectancy and Doctors Per Person is 0.705.
+- So should we send more doctors to developing countries to increase their life expectancy?
+- Properly interpreting relationships requires both statistical \emph{and} economic intuition! 
+
+### Always Plot Your Data!
+
+```{r, echo=FALSE, fig.height=4}
+
+x<-seq(-3,3,.1)
+y<-(x^2)-2
+ny<-(-y)+2
+weirddata<-data.frame(x,y,ny)
+
+ggplot(weirddata)+
+  geom_jitter(aes(x,y),width=0.5,height=0.5)+
+  geom_jitter(aes(x,ny),width=0.5,height=0.5)
+
+```
+
+### Anscombe's Quartet
+
+```{r, fig.height=4.25,echo=FALSE, warning=FALSE, message=FALSE}
+summary(anscombe$x1, anscombe$y1)
+
+library("dplyr")
+tibble(set = rep(1:4, each = nrow(anscombe)) %>% factor(),
+       x = with(anscombe, c(x1, x2, x3, x4)),
+       y = with(anscombe, c(y1, y2, y3, y4))) %>% 
+  ggplot(mapping = aes(x = x, y = y, color = set)) +
+  geom_point() +
+  #geom_smooth(method = "lm", se = FALSE) +
+  facet_wrap(facets = ~ set) +
+  theme(legend.position = "none")
+```
+
+### Anscombe's Quartet: A Modern Re-interpratation 
+
+```{r, echo=FALSE}
+library("datasauRus")
+
+summary(datasaurus_dozen)
+
+```
+
+### Anscombe's Quartet: A Modern Re-interpratation II 
+
+```{r, fig.height=7, echo=FALSE}
+ggplot(data = datasaurus_dozen, aes(x = x, y = y, color = dataset)) +
+  geom_point() +
+  theme(legend.position = "none") +
+  facet_wrap(~dataset, ncol = 5)
+```
+
+See the [Datasaurus](https://www.autodeskresearch.com/publications/samestats)
+
+# Population Linear Regression Model
+
+### Linear Regression
+
+- If an association appears linear, we can estimate the equation of a line that would "fit" the data
+
+\onslide<2-> 
+$$Y = a + bX$$
+- Recall a linear equation describing a line contains: 
+    - $a$: vertical intercept
+    - $b$: slope
+    - Note we will use different symbols for $a$ and $b$, in line with standard econometric notation
+
+### Linear Regression II
+
+```{r, echo=FALSE, fig.height=4}
+set.seed=1 #makes 'random' draws reproducible 
+x<-runif(500,min=0,max=10) #500 draws from uniform distr 
+y<-2*x+rnorm(500,2,4)
+data<-data.frame(x,y)
+
+ggplot(data, aes(x=x,y=y))+
+        geom_point(alpha=0.5)+
+        geom_abline(slope=3, intercept=-4, color="purple", linetype="dashed")+
+        geom_abline(slope=2,intercept=0, color="blue", linetype="dashed")+
+        geom_abline(slope=2, intercept=1, color="red", linetype="dashed")+
+        geom_smooth(method="lm", color="green")+
+        xlim(c(0,10))
+```
+
+- How do we choose the equation that best fits the data? Process is called \alert{linear regression}
+
+### Population Linear Regression Model
+
+- Linear regression lets us estimate the slope of the population regression line between $X$ and $Y$
+- We can make **inferences** about the population slope coefficient
+    - eventually, a causal interpretation
+    - $\text{slope}=\frac{\Delta Y}{\Delta X}$: for a 1-unit change in $X$, how many units will this *cause* $Y$ to change?
+  
+### Using the Population Linear Regression Model
+
+- Statistically, we want to use the population regression model for: 
+
+1. \alert{Estimation} of the marginal effect of $X$ on $Y$ (slope of population regression line)
+2. \alert{Hypothesis Testing} of the value of the marginal effect (slope)
+3. \alert{Confidence Interval} construction of a range for the true effect (slope)
+
+### An Extended Example
+
+\begin{example}
+		What is the relationship between class size and educational performance? 	
+\end{example}
+
+- Policy question: What is the effect of reducing class sizes by 1 student per class on test scores? 10 students?
+
+\begin{figure}
+		\includegraphics[height=2in]{smallclass}	
+\end{figure}
+
+### An Extended Example: Scatterplot 
+
+```{r, echo=TRUE}
+library("foreign") #for importing .dta files
+CASchool<-read.dta("~/Dropbox/Teaching/Hood College/ECON 480 - Econometrics/Data/caschool.dta")
+
+ca.scatter<-ggplot(CASchool, aes(str,testscr))+
+  geom_point(color="blue",fill="blue")+
+  xlab("Student to Teacher Ratio")+
+  ylab("Test Score")+theme_bw()
+```
+
+### An Extended Example: Scatterplot II
+
+```{r, fig.height=4, echo=FALSE}
+ca.scatter
+```
+
+### An Extended Example: Slope
+
+- If we *change* ($\Delta$) the class size by an amount, what would we expect the *change* in test scores to be?
+
+\begin{equation*}
+		\textcolor{magenta}{\beta_{ClassSize}} = \frac{\text{change in test score}}{\text{change in class size}} = \frac{\Delta \text{test score}}{\Delta \text{class size}}	
+\end{equation*}
+
+- If we knew \alert{$\beta_{ClassSize}$}, we could say that changing class size by 1 student will change test scores by \alert{$\beta_{ClassSize}$}
+
+### An Extended Example: Slope II
+
+- Rearranging: 
+
+\begin{equation*}
+	\Delta \text{test score} = \textcolor{magenta}{\beta_{ClassSize}} \times \Delta \text{class size}	
+\end{equation*}
+
+- Suppose \alert{$\beta_{ClassSize}=-0.6$}. If we shrank class size by 2 students, our model predicts:
+
+\onslide<3->
+\begin{align*}
+	\Delta \text{test score} &= \textcolor{magenta}{-0.6} \\
+	\Delta \text{test score} & =\times -2=1.2	\\
+\end{align*}
+
+### An Extended Example: Slope III
+
+
+\begin{equation*}
+	\text{test score} = \textcolor{teal}{\beta_0} + \textcolor{magenta}{\beta_{ClassSize}} \times \text{class size}	
+\end{equation*}
+- The line relating class size and test scores has the above equation
+    - \textcolor{teal}{$\beta_0$} is the vertical-intercept, test score where class size is 0
+    - \textcolor{magenta}{$\beta_{ClassSize}$} is the \alert{slope} of the regression line 
+- This relationship only holds **on average** for all districts in the population, individual districts are also affected by other factors
+
+### An Extended Example: Marginal Effects
+
+- To get an equation that holds for *each* district, we need to include other factors
+
+\begin{equation*}
+	\text{test score} = \beta_0 + \textcolor{magenta}{\beta_{ClassSize}} \times \text{class size}+\text{other factors}
+\end{equation*}
+
+- For now, we will ignore these until the next lesson
+- Thus, $\beta_0 + \textcolor{magenta}{\beta_{ClassSize}}\times \text{class size}$ gives the **average effect** of class sizes on scores
+- Later, we will want to estimate the **marginal effect** (**causal effect**) of each factor on an individual district's test score, holding all other factors constant
+
+### Econometric Models Review 
+
+$$	\textcolor<2->{teal}{y} = \textcolor<5->{olive}{\beta_0} + \textcolor<5->{olive}{\beta_1} \textcolor<3->{blue}{x_1} + \textcolor<5->{olive}{\beta_2} \textcolor<3->{blue}{x_2} + \textcolor<6->{magenta}{\epsilon} 	$$
+	\begin{itemize}
+		\item<2-> \textcolor{teal}{$y$} is the \textcolor{teal}{dependent variable} of interest
+			\begin{itemize}
+				\item AKA ``response variable,'' ``regressand,'' ``Left-hand side (LHS) variable''
+			\end{itemize}
+		\item<3-> \textcolor{blue}{$x_1$} and \textcolor{blue}{$x_2$} are \textcolor{blue}{independent variables}
+			\begin{itemize}
+				\item AKA ``explanatory variables,'' ``regressors,'' ``Right-hand side (RHS) variables,'' ``covariates,'' ``control variables''	
+			\end{itemize}
+		\item<4-> We have observed values of $y$, $x_1$, and $x_2$ \& ``regress $y$ on $x_1$ and $x_2$''
+		\item<5-> \textcolor{olive}{$\beta_0, \beta_1,$} and \textcolor{olive}{$\beta_2$} are unknown \textcolor{olive}{parameters} to \emph{estimate}
+		\item<6-> \textcolor{magenta}{$\epsilon$} is the \textcolor{magenta}{error term}
+			\begin{itemize}
+				\item It is \textbf{stochastic} (random) 
+				\item We can never measure the error term
+			\end{itemize}
+	\end{itemize}
+
+### The Population Regression Model
+
+- How do we draw a line through the scatterplot? We do not know the true $\beta_{ClassSize}$
+- We do have data from a *sample* of class sizes and test scores\footnote{Data is student-teacher-ratio and average test scores on Stanford 9 Achievement Test for 5th grade students for 420 K-6 and K-8 school districts in California in 1999, (Stock and Watson, 2015: p. 141)}
+- So the real question is, **how can we estimate $\beta_0$ and $\beta_1$**?
+
+```{r, echo=FALSE, fig.height=3.5}
+ca.scatter
+```
+
+# OLS Estimators and Sample Regression Model
