@@ -69,14 +69,32 @@ summary(econfreedom)
 
 ### Bivariate Data: Scatterplots
 
+```{r, fig.height=3.5}
+# syntax for plotting is similar to hist() and boxplot()
+# just tell R "plot(df$x,df$y)"
+plot(econfreedom$Economic.Freedom.Summary.Index, econfreedom$GDP.Per.Capita)
+```
+
+- The best way to visualize an association between two variables is with a \alert{scatterplot}
+
+### Bivariate Data: Scatterplots II 
+
+```{r, fig.height=3.5}
+# syntax for plotting is similar to hist() and boxplot()
+# just tell R "plot(df$x,df$y)"
+plot(econfreedom$Economic.Freedom.Summary.Index, econfreedom$GDP.Per.Capita)
+```
+
+- Each point is a pair of variable values ($X_i,Y_i$) for observation $i$
+
+### Bivariate Data: A Better-Looking Scatterplot (with `ggplot2`)
+
 ```{r, fig.height=3}
 library("ggplot2")
 ggplot(econfreedom, aes(x=Economic.Freedom.Summary.Index,y=GDP.Per.Capita))+
   geom_point(color="blue")+theme_bw()+
   xlab("Economic Freedom Index (2014)")+ylab("GDP per Capita (2014 USD)")
 ```
-
-- The best way to visualize an association between two variables is with a \alert{scatterplot}
 
 ### Associations
 
@@ -397,3 +415,210 @@ ca.scatter
 ```
 
 # OLS Estimators and Sample Regression Model
+
+### The Ordinary Least Squares Estimators
+
+\begin{columns}
+		\begin{column}[c]{7cm}
+	\begin{figure}
+				\begin{tikzpicture}[scale=.5]\scriptsize 
+				\draw[->] (0,0) -- (11,0) coordinate (x axis) node[right]{$X$};
+ 				\draw[->] (0,0) -- (0,11) coordinate (y axis) node[above]{$Y$};	
+            	\draw<3>[thick, dashed, magenta] (5,5)--node[right]{$\epsilon_i = Y_i-\hat{Y}_i$}(5,6.75);
+            	\draw<3>[thick, dashed] (5,5)--(5,0)node[below]{$X_i$};
+            	\draw<3>[thick, dashed] (5,5)--(0,5)node[left]{$Y_i$};
+            	\draw<3>[thick, dashed] (5,6.75)--(0,6.75)node[left]{$\hat{Y_i}$};
+            	\draw<4->[red, dashed, fill=red!25, opacity=0.5] (4,4)--(4,6)--(6,6)--(6,4);
+            	\draw<4->[red, dashed, fill=red!25, opacity=0.5] (5,5)--(5,6.75)--(6.75,6.75)--(6.75,5);
+            	\draw<4->[red, dashed, fill=red!25, opacity=0.5] (3,8)--(3,5.5)--(0.5,5.5)--(0.5,8);
+            	\draw<4->[red, dashed, fill=red!25, opacity=0.5] (2,6)--(2,4.75)--(3.25,4.75)--(3.25,6);
+            	\draw<4->[red, dashed, fill=red!25, opacity=0.5] (4,7)--(4,6)--(5,6)--(5,7);
+            	\draw<4->[red, dashed, fill=red!25, opacity=0.5] (6,8)--(6,7.5)--(6.5,7.5)--(6.5,8);
+            	\draw<4->[red, dashed, fill=red!25, opacity=0.5] (7,9)--(7,8.25)--(7.75,8.25)--(7.75,9);
+            	\draw<4->[red, dashed, fill=red!25, opacity=0.5] (9,10)--(9,9.5)--(9.5,9.5)--(9.5,10);
+            	\draw<1->[fill=black](1,4) circle(0.125cm);
+            	\draw<1->[fill=black](2,6) circle(0.125cm);
+            	\draw<1->[fill=black](4,4) circle(0.125cm);
+            	\draw<1->[fill=black](4,7) circle(0.125cm);
+            	\draw<1>[fill=black](5,5) circle(0.125cm)node[below]{($X_i,Y_i)$};
+            	\draw<2->[fill=black](5,5) circle(0.125cm);
+            	\draw<1->[fill=black](6,8) circle(0.125cm);
+            	\draw<1->[fill=black](7,9) circle(0.125cm);
+            	\draw<1->[fill=black](8,9) circle(0.125cm);
+            	\draw<1->[fill=black](9,10) circle(0.125cm);
+            	\draw<1->[fill=black](3,8) circle(0.125cm);
+            	\draw<2->[ultra thick, blue] (1,4)--(9.5,10);
+ 			\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+		\begin{column}[c]{9cm}
+		\begin{itemize}
+			\item Suppose we have a scatter plot of points $(X_i, Y_i)$
+			\item<2-> We can draw a ``\textcolor{blue}{line of best fit}'' through our scatterplot
+			\item<3-> The \textcolor{magenta}{residual ($\epsilon_i$)} of each data point is the difference between \textbf{actual} and \textbf{predicted value} of $Y$ given $X$
+			\begin{equation*}
+			\epsilon_i = Y_i - \hat{Y}_i
+			\end{equation*}
+			\item<4-> If we were to \textbf{square} each residual and add them all up, this is \textcolor{magenta}{Sum of Squared Errors (SSE)}
+			\begin{align*}
+			SSE = \sum^n_{i=1} \epsilon_i^2
+			\end{align*}
+			\item<5-> The line of best fit \textbf{minimizes SSE}
+		\end{itemize}
+		\end{column}
+\end{columns}	
+
+### The Ordinary Least Squares Estimators II 
+
+- I coded an [example](https://ryansafner.shinyapps.io/ols_estimation_by_min_sse/) (using an application of `R` called `shiny`) to demonstrate how OLS tries to solve the problem by picking optimal line parameters 
+
+### The Ordinary Least Squares Estimators III 
+
+- The \alert{ordinary least squares (OLS) estimators} of the unknown population parameters $\beta_0$ and $\beta_1$, solve the calculus problem:
+
+\onslide<2->
+\begin{equation*}
+		\min_{\beta_0, \beta_1} \sum^n_{i=1}[Y_i-(\underbrace{\beta_0+\beta_1 X_i}_{\hat{Y_i}})]^2	
+\end{equation*}
+
+- OLS estimators minimize the average squared distance between the actual values ($Y_i$) and the predicted values ($\hat{Y}_i$) along the estimated regression line 
+
+### The OLS Regression Line
+
+- The \alert{OLS regression line} or \alert{sample regression line} is the linear function constructed using the OLS estimators:
+
+$$\hat{Y_i}=\hat{\beta_0}+\hat{\beta_1}X_i$$
+
+- $\hat{\beta_0}$ and $\hat{\beta_1}$ ("beta 0 hat" & "beta 1 hat") are the \alert{OLS estimators} of population parameters $\beta_0$ and $\beta_1$ using sample data
+- The **predicted value** of Y given X, based on the regression, is $E(Y_i|X_i)=\hat{Y_i}$ 
+- The **residual** or **prediction error** for the $i^{th}$ observation is the difference between observed $Y_i$ and its predicted value, $\hat{\epsilon_i}=Y_i-\hat{Y_i}$
+
+### The OLS Regression Estimators
+
+- The solution to the SSE minimization problem yields:\footnote{See \textbf{Handout} on Blackboard for proofs.}
+- For $\hat{\beta_0}$:
+
+\onslide<2->
+\begin{equation*}
+\hat{\beta_0}=\bar{Y}-\hat{\beta_1}\bar{X}
+\end{equation*}
+
+- For $\hat{\beta_1}$:
+
+\onslide<3->
+\begin{equation*}
+		\hat{\beta_1}=\frac{\displaystyle\sum^n_{i=1}(X_i-\bar{X})(Y_i-\bar{Y})}{\displaystyle\sum^n_{i=1}(X_i-\bar{X})^2}\onslide<4->=\frac{s_{XY}}{s^2_X}	\onslide<5->= \frac{cov(X,Y)}{var(X)}
+		\end{equation*}
+		
+### The OLS Regression Estimators II
+
+\begin{figure}
+				\begin{tikzpicture}[scale=.5]\scriptsize 
+				\draw[->] (0,0) -- (11,0) coordinate (x axis) node[right]{$X$};
+ 				\draw[->] (0,0) -- (0,11) coordinate (y axis) node[above]{$Y$};	
+            	\draw<1->[fill=black](1,4) circle(0.125cm);
+            	\draw<1->[fill=black](2,6) circle(0.125cm);
+            	\draw<1->[fill=black](4,2) circle(0.125cm);
+            	\draw<1->[fill=black](4,7) circle(0.125cm);
+            	\draw<1->[fill=black](5,5) circle(0.125cm);
+            	\draw<1->[fill=black](6,8) circle(0.125cm);
+            	\draw<1->[fill=black](7,9) circle(0.125cm);
+            	\draw<1->[fill=black](8,9) circle(0.125cm);
+            	\draw<1->[fill=black](9,10) circle(0.125cm);
+            	\draw<1->[fill=black](3,8) circle(0.125cm);
+            	\draw<1->[ultra thick, blue] (0,3)node[left]{$\hat{\beta_0}$}--(9.5,10)node[right]{$\hat{Y}=\hat{\beta_0}+\hat{\beta_1}X$};
+            	\draw<1>[thick, red, dashed] (2,4.5)--node[below]{$\Delta X$}(3.5,4.5)--node[right]{$\Delta Y$}(3.5,5.5);
+            	\draw<1>[red](2,4.5)node[above=0.25cm]{$\hat{\beta_1}=\frac{\Delta Y}{\Delta X}$};
+ 			\end{tikzpicture}	
+\end{figure}
+
+### OLS Example: Class Size 
+
+```{r, echo=FALSE, fig.height=4.5}
+ca.scatter
+```
+
+- There is some true (unknown) population relationship: 
+$$\text{Test Score}=\beta_0+\beta_1 \times STR$$ 
+- $\beta_1=\frac{\Delta \text{Test Score}}{\Delta \text{STR}}= ??$
+
+### OLS Example: Class Size: OLS Estimation 
+
+```{r, echo=FALSE, fig.height=4.5}
+#take scatterplot and add regression line in red
+ca.scatter2<-ca.scatter+geom_smooth(method=lm, color="red")
+
+#print new scatterplot 
+ca.scatter2
+```
+
+- Using OLS, we find:
+$$\widehat{\text{Test Score}}=689.9-2.28 \times STR$$ 
+
+### OLS Example: Class Size: Understanding the Model 
+
+$$\widehat{\text{Test Score}}=689.9-2.28 \times STR$$ 
+
+- Estimated slope: $\hat{\beta_1}=\frac{\Delta \text{test score}}{\Delta \text{STR}}= -2.28$
+- Estimated intercept: $\hat{\beta_0}=689.9$
+    - Not always economically meaningful
+    - Literally: "districts with 0 students have a predicted test score of 689.9"
+
+### OLS Example: Class Size: Predictions
+
+$$\widehat{\text{Test Score}}=689.9-2.28 \times STR$$ 
+
+- We can now make simple predictions with our model: 
+    - For a district with 20 students per teacher, the predicted test score is: 
+
+\onslide<2->
+\begin{equation*}
+689.9-2.28(20)=644.3
+\end{equation*}
+
+- Is this big or small? How **economically** meaningful is 644? 
+
+### OLS in `R`
+
+- Syntax for running a regression in `R` is simple: 
+```{r, eval=FALSE}
+# name an object e.g. "regression.name", "lm" stands for "linear model"
+regression.name<-lm(y~x, data=data.frame.name)
+
+# get simple (beta) coefficients by calling the object
+regression.name 
+
+# get more detailed information with summary()
+summary(regression.name)
+```
+
+### OLS Example: Class Size: In `R`
+
+```{r, echo=TRUE}
+school.regression<-lm(testscr~str, data=CASchool)
+school.regression
+```
+
+### OLS Example: Class Size: In `R` II 
+
+\scriptsize 
+
+```{r, echo=TRUE}
+summary(school.regression)
+```
+
+### The Sample OLS Regression Model: A Data Point
+
+```{r, echo=FALSE, fig.height=3.5}
+CA.Richmond<-subset(CASchool, district=="Richmond Elementary") #Look only at Richmond, CA  
+ggplot(CASchool, aes(str,testscr))+geom_point(color="blue",fill="blue")+
+  xlab("Student to Teacher Ratio")+ylab("Test Score")+theme_bw()+
+#Adds regression line
+geom_smooth(method=lm, color="red")+
+  geom_point(data=CA.Richmond, color="magenta")+ geom_text(data=CA.Richmond, color="magenta", label="Richmond",vjust=-1)+ #add just Richmond to graph in different color
+  geom_segment(x=22,y=672.4, xend=22,yend=652.4,linetype=2, color="magenta") #connect Richmond to regression line to show residual 
+```
+
+- One district in our sample is Richmond, CA with STR=22, Test Score=672
+- Predicted value: $\widehat{\text{Test Score}_{Richmond}}=698-2.28(22) \approx 647$
+- Residual: $\widehat{\epsilon_{Richmond}}=672-647=25$

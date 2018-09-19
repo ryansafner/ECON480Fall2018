@@ -1,5 +1,5 @@
 ---
-title: "R Practice Answers"
+title: "R Practice #1 Answers"
 author: "Ryan Safner"
 date: "September 12, 2018"
 output: pdf_document
@@ -162,7 +162,7 @@ hist(diamonds$price)
 
 ### 13. Plot a boxplot of price by diamond color.
 ```{r}
-boxplot(price~cut,data=diamonds)
+boxplot(price~color,data=diamonds)
 ```
 
 ## Execute your R Script
@@ -251,6 +251,6 @@ summary(diamonds)
 hist(diamonds$price)
 
 # Question 13 
-boxplot(price~cut,data=diamonds)
+boxplot(price~color,data=diamonds)
 ```
 
