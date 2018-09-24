@@ -39,7 +39,7 @@ For the following questions, please *show all work* and explain answers as neces
 
 ### a. What is the probability of getting a score between a 400 and a 700? 
 
-### b. What is the probability of getting a score between a 300 and a 80? 
+### b. What is the probability of getting a score between a 300 and a 800? 
 
 ### c. What is the probability of getting *at least* a 700? 
 

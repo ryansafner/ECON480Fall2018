@@ -1,0 +1,518 @@
+---
+title: "Lecture 7: Goodness of Fit and Bias"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "September 24, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+# Goodness of Fit
+
+### Goodness of Fit
+
+- How well does a line fit data? How tightly clustered around the line are the data points?
+- Quantify how much variation in $Y_i$ is "explained" by the model
+- Recall
+
+$$\underbrace{Y_i}_{Actual}=\underbrace{\hat{Y_i}}_{Model}+\underbrace{\hat{\epsilon_i}}_{Error}$$
+
+
+- Recall OLS estimators are chosen specifically to minimize SSE $(\displaystyle \sum^n_{i=1}\hat{\epsilon_i}^2)$
+
+## $R^2$
+
+### Goodness of Fit: $R^2$ Intuition
+
+- Primary measure\footnote{Sometimes called the "\textbf{coefficient of determination}"} is \alert{regression $R^2$}, the fraction of variation in $Y$ explained by variation in predicted values
+
+$$R^2 = \frac{\text{ variation in }\widehat{Y_i}}{\text{variation in }Y_i}$$
+
+### Goodness of Fit: $R^2$ Formula
+
+$$R^2 =\frac{ESS}{TSS}$$ 
+
+\onslide<2->
+- \alert{Explained Sum of Squares (ESS)}:\footnote{Sometimes called Model Sum of Squares (MSS) or Regression Sum of Squares (RSS)} sum of squared deviations of predicted values from their mean
+
+\onslide<2->
+\vspace{-0.25cm}
+$$ESS= \sum^n_{i=1}(\hat{Y_i}-\bar{Y})^2$$
+
+\vspace{-0.25cm}
+
+\onslide<3->
+- \alert{Total Sum of Squares (TSS)}: sum of squared deviations of actual values from their mean\footnote{It can be shown that $\bar{\hat{Y_i}}=\bar{Y}$}
+
+\vspace{-0.25cm}
+\onslide<3->
+$$TSS= \sum^n_{i=1}(Y_i-\bar{Y})^2$$
+
+
+### Goodness of Fit: $R^2$ Formula II
+
+- Equivalently, the complement of the fraction of *unexplained* variation in $Y_i$ 
+
+$$R^2=1-\frac{SSE}{TSS}$$
+
+- Equivalently, the square of the correlation coefficient between $X$ and $Y$: 
+
+\onslide<2->
+$$R^2=(r_{X,Y})^2$$
+
+## SER 
+
+### Goodness of Fit: Standard Error of the Regression
+
+- The \alert{Standard Error of the Regression}\footnote{Why standard \emph{"error"} and not standard \emph{"deviation"}? You'll know by the end of this lecture!}, \alert{$\hat{\sigma}$} or \alert{$\hat{\sigma_\epsilon}$} is an estimator of the standard deviation of $\epsilon_i$ 
+
+$$\hat{\sigma_\epsilon}=\sqrt{\frac{SSE}{n-2}}$$
+
+- Measures the average size of the residuals (distance between a data point and the line)
+    - Degrees of Freedom correction of $n-2$: we use up 2 df to first calculate $\hat{\beta_0}$ and $\hat{\beta_1}$
+- `R` calls this `Residual Standard Error`
+    - Note `R` tells you it calculates this with a df of $n-2$
+
+### Goodness of Fit: Looking at `R`
+
+```{r, echo=FALSE}
+# load data set and run regression again 
+library("foreign") #for importing .dta files
+CASchool<-read.dta("~/Dropbox/Teaching/Hood College/ECON 480 - Econometrics/Data/caschool.dta")
+school.regression<-lm(testscr~str, data=CASchool)
+```
+
+\scriptsize 
+```{r, echo=TRUE}
+summary(school.regression)
+```
+
+### Goodness of Fit: Example 
+
+- `R-squared` of this regression is `0.05124`
+    - 5% of variation in Test Scores are explained by our model
+- `Residual standard error` is `18.58`
+    - Average test score is 18.58 points above/below our model's prediction
+- Indicates there are other important factors that also influence test scores
+- **Note: it is very rare in econo(metr)ics that we get very high $R^2$ values**
+    - Lots of unobserved variables affecting economic outcomes 
+    - **Don't get discouraged!** We care about **marginal (causal) effects**, not $R^2$! 
+
+## Residuals
+
+### Measures of Fit: Looking at Residuals
+
+- A lot of regression diagnostics have to do with exploring the residuals a bit more
+
+\small
+\onslide<2->
+```{r}
+# Save the residuals as a vector called 'res'
+CASchool$res <- residuals(school.regression) # use 'res()' function
+summary(CASchool$res) # get summary stats of residuals
+```
+
+\onslide<3->
+```{r}
+# Save the predicted values of the regression as a vector called 'yhat'
+CASchool$yhat <- predict(school.regression) # use 'predict()' function
+summary(CASchool$yhat) # get summary stats of predictions
+```
+
+### Measures of Fit: Looking at Residuals II
+
+```{r}
+# Remake the scatterplot and point out the residuals
+scatterplot.res<-ggplot(CASchool, aes(x=str, y=testscr))+
+  geom_point(color="blue")+ # plot original points blue
+  geom_point(aes(y=yhat),color="red")+ # plot predicted yhat in red
+  geom_segment(aes(xend=str,yend=yhat),linetype=2, alpha=0.5) 
+# last line connects predicted (yhat) and actual points with dashed line 
+```
+
+### Measures of Fit: Looking at Residuals III
+
+```{r, fig.height=4}
+scatterplot.res 
+``` 
+
+
+### Measures of Fit: Looking at Residuals IV
+
+```{r}
+# A vector of all residuals for each observation is stored in the reg object:
+head(school.regression$residuals) #look at first 6 obs residuals
+```
+
+### Measures of Fit: Residual Plot
+
+- We often plot the residuals against $X$ in a \alert{residual plot}
+
+```{r}
+# Create a scatterplot with the residuals. 
+# Same as before, but instead of testscr, we will use residuals (res)
+school.resplot<-ggplot(CASchool, aes(str,school.regression$residuals))+
+  geom_point(color="blue",fill="blue")+
+  xlab("Student to Teacher Ratio")+
+  ylab("Residuals")+theme_bw()+
+  geom_hline(yintercept=0, color="red") #add horizontal line at y=0 to graph
+```
+
+### Measures of Fit: Residual Plot II 
+
+```{r, fig.height=4}
+school.resplot
+```
+
+# The Sampling Distributions of the OLS Estimators
+
+### Recall: The Two Big Problems with Data
+
+- We use econometrics to **identify** causal relationships and make **inferences** about them
+    1. Problem for **identification**: \alert{endogeneity}
+        - $X$ is \alert{exogenous} if its variation is *unrelated* to other factors ($\epsilon$) that affect $Y$
+        - $X$ is \alert{endogenous} if its variation is *related* to other factors ($\epsilon$) that affect $Y$
+    2. Problem for **inference**: \alert{randomness}
+        - Data is random due to **natural sampling variation**
+        - Taking one sample of a population will yield slightly different information than another sample of the same population
+
+### Distributions of the OLS Estimators
+
+- OLS estimators ($\hat{\beta_0}$ and $\hat{\beta_1}$) are computed from a specific sample of data
+- Our OLS model contains **2 sources of randomness**:
+    - \alert{Modeled randomness}: $\epsilon$ includes all factors affecting $Y$ *other* than $X$, different samples have different values of those other factors 
+    - \alert{Sampling randomness}: different samples will generate different OLS estimators
+- Thus, $\hat{\beta_0}, \hat{\beta_1}$ are also random variables, with their own **sampling distribution**
+
+## Inferential Statistics and Sampling Distributions 
+
+### Inferential Statistics and Sampling Distributions
+
+- **Inferential statistics** analyzes a **sample** to make inferences about a much larger (unobservable) **population**
+    - \alert{Population}: all possible individuals that match some well-defined criterion of interest (people, firms, cities, etc)
+        - Characteristics about (relationships between variables describing) populations are called **parameters** 
+    - \alert{Sample}: some portion of the population of interest to *represent the whole*
+        - Samples examine part of a population to generate **statistics** used to estimate population parameters
+- We almost never can directly study the population, so we *model* it with our samples 
+
+\begin{figure}
+		\includegraphics[height=1.25in]{citymodel}	
+\end{figure}
+
+### Sampling Basics
+
+\begin{example}
+		Suppose you randomly select 100 people and ask how many hours they spend on the internet each day. You take the mean of your sample, and it comes out to 5.4 hours. 
+		
+\begin{itemize}
+  \item<2-> 5.4 hours is a \textbf{sample statistic} describing the sample
+  \item<3-> We are more interested in the corresponding \textbf{parameter}	of the population (e.g. all Americans) 
+  \item<4-> If we take another sample of $n=100$ people, would we get the same number?
+  \begin{itemize}
+    \item<5-> \textbf{Roughly, but probably not exactly}
+    \item<6-> \alert{Sampling variability} describes the effect of a statistic varying somewhat from sample to sample
+    \item<7->This is normal, not the result of any error or bias
+  \end{itemize}
+\end{itemize}
+\end{example}
+
+
+### I.I.D. Samples
+
+- If we collect many samples, and each sample is randomly drawn from the population (and then replaced), then the distribution of samples is said to be \alert{independently and identically distributed (i.i.d.)}
+    - Each sample is *independent* of each other sample (due to replacement)
+    - Each sample comes from the *identical* underlying population distribution
+
+### The Sampling Distribution of OLS Estimators
+
+- So calculating OLS estimators for a sample of data makes the OLS estimators *themselves* random variables:
+    - Draw of $i$ is random $\implies$ value of each $(X_i,Y_i)$ is random $\implies$ $\hat{\beta_0},\hat{\beta_1}$ are random
+    - Taking different samples will create different values of $\hat{\beta_0},\hat{\beta_1}$
+    - Therefore, $\hat{\beta_0},\hat{\beta_1}$ have \alert{sampling distributions} across different samples 
+
+### The Central Limit Theorem
+
+- \alert{Central Limit Theorem (CLT)} says if we collect samples of size $n$ from the same population and generate a sample statistic (e.g. OLS estimator), then with large enough $n$, the distribution of the sample statistic is approximately normal IF 
+    1. $n \geq 30$
+    2. Samples come from a *known* normal distribution $\sim N(\mu,\sigma)$
+- If neither of these are true, we have other methods (coming shortly!) 
+- One of the most fundamental principles in all of statistics
+    - Allows for virtually all testing of statistical hypotheses $\rightarrow$ estimating probabilities of values on a normal distribution
+
+### The Sampling Distribution of $\hat{\beta_1}$
+
+- The CLT allows us to approximate the sampling distributions of $\hat{\beta_0}$ and $\hat{\beta_1}$ as normal
+    - Generally agreed for $n>100$
+- We care about $\hat{\beta_1}$ (slope) since it has economic meaning, rarely about $\hat{\beta_0}$ (intercept)
+
+\vspace{-0.5cm}
+
+$$\hat{\beta_1} \sim N(E[\hat{\beta_1}], \sigma_{\hat{\beta_1}})$$
+
+\vspace{-0.5cm}
+
+\begin{figure}
+		\centering 	
+			\begin{tikzpicture}[scale=0.75] 
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$\hat{\beta_1}$, ylabel={},
+		every axis x label/.style={at={(current axis.right of origin)},anchor=north west},
+		every axis y label/.style={at={(current axis.above origin)},anchor=north east},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  %grid = major
+  ]
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+  \draw [thick, dashed](axis cs:0,0)node[below]{$E[\hat{\beta_1}]$}--(axis cs:0,0.4);
+\end{axis}
+\end{tikzpicture}
+	\end{figure}
+
+### The Sampling Distribution of $\hat{\beta_1}$ II 
+
+$$\hat{\beta_1} \sim N(E[\hat{\beta_1}], \sigma_{\hat{\beta_1}})$$
+
+- We want to know: 
+      - $E[\hat{\beta_1}]$; what is the center of the distribution?
+      - $\sigma_{\hat{\beta_1}}$; how precise is our estimate? 
+
+\begin{figure}
+		\centering 	
+			\begin{tikzpicture}[scale=0.75] 
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$\hat{\beta_1}$, ylabel={},
+		every axis x label/.style={at={(current axis.right of origin)},anchor=north west},
+		every axis y label/.style={at={(current axis.above origin)},anchor=north east},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  %grid = major
+  ]
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+  \draw [thick, dashed](axis cs:0,0)node[below]{$E[\hat{\beta_1}]$}--(axis cs:0,0.4);
+\end{axis}
+\end{tikzpicture}
+	\end{figure}
+
+## Exogeneity and Unbiasedness
+
+### Assumptions about Errors
+
+- In order to talk about $E[\hat{\beta_1}]$, we need to talk about $\epsilon$
+- Recall: $\epsilon$ is a random variable, and we can never measure the error term
+- We make four critical **assumptions about $\epsilon$**:  
+    1. The expected value of the residuals is 0
+$$E[\epsilon]=0$$
+    2. The variance of the residuals is constant, written:
+$$var(\epsilon)=\sigma^2_{\epsilon}$$
+    3. Errors are not correlated across observations: 
+$$Cov(\epsilon_i,\epsilon_j)=0 \text{ or } Corr(\epsilon_i,\epsilon_j)=0 \quad \forall i \neq j$$
+    4. There is no correlation between $X$ and the error term: 
+$$Cov(X, \epsilon)=0 \text{ or } Corr(X, \epsilon)=0 \text{ or } E[\epsilon|X]=0$$
+
+
+### Assumptions about Errors II
+
+1. The expected value of the residuals is 0
+$$E[\epsilon]=0$$
+
+2. The variance of the residuals is constant, written:
+$$var(\epsilon)=\sigma^2_{\epsilon}$$
+
+- The first two assumptions simply state that errors are **i.i.d.**, drawn from the same distribution with mean 0 and variance $\sigma^2_{\epsilon}$
+- The second assumption implies that errors have the same variance across $X$, "\alert{homoskedastic}"
+    - Many times, this assumption turns out to be false, when errors are called "\alert{heteroskedastic}"
+    - This *would* be a problem (for inference), but we have a simple fix for this (coming shortly)
+
+### Assumptions about Errors III 
+
+3. Errors are not correlated across observations: 
+$$Cov(\epsilon_i,\epsilon_j)=0 \text{ or } Corr(\epsilon_i,\epsilon_j)=0 \quad \forall i \neq j$$
+
+- For simple cross-sectional data, this assumption is rarely an issue
+- Time-series & panel data nearly always contain \alert{serial correlation} in the errors, also known as \alert{autocorrelation}
+    - e.g. "this months sales look like last months's sales, which look like...etc"
+    - We have fixes to deal with autocorrelation (coming much later)
+    
+### The Zero Conditional Mean Assumption
+
+4. There is no correlation between $X$ and the error term: 
+$$Cov(X, \epsilon)=0 \text{ or } Corr(X, \epsilon)=0 \text{ or } E[\epsilon|X]=0$$
+
+- **This is the absolute killer assumption, because it assumes \alert{exogeneity}**
+- AKA the \alert{Zero Conditional Mean} assumption (third way of writing it above)
+- "Does knowing $X$ give me any useful information about $\epsilon$?"
+    - If yes, your model is \alert{endogenous}, \alert{biased} and **not-causal**! 
+
+### Exogeneity and Unbiasedness
+
+- We want to see if $\hat{\beta_1}$ is \alert{unbiased}: there is no systematic difference, on average, between sample values of $\hat{\beta_1}$ and the true population $\beta_1$, i.e.
+
+$$E[\hat{\beta_1}]=\beta_1$$
+
+- Does *not* mean any sample gives us $\hat{\beta_1}=\beta_1$, only the estimation procedure will, *on average*, yield the correct value
+    - Random errors above and below the true value cancel (so that on average, $E[\hat{\epsilon}|X]=0$)
+
+
+### Sidenote: Estimators of Statistics
+
+- In statistics, an **estimator** is simply a rule that for calculating a statistic (often about a wider population parameter)
+
+\onslide<2->
+\begin{example}
+We want to estimate the average height (H) of U.S. adults (population) and have a random sample of 100 adults. 
+
+\begin{itemize}
+  \item<3-> Calculate the mean height of our sample ($\bar{H}$) to estimate the true mean height of the population ($\mu_H$) 
+  \begin{itemize}
+    \item<4-> $\bar{H}$ is an \textbf{estimator} of $\mu_H$
+    \item<5-> There are many estimators we \emph{could} use to estimate $\mu_H$
+    \begin{itemize}
+      \item<6-> How about using the first value in our sample: $H_1$
+    \end{itemize}
+  \end{itemize}
+\end{itemize}
+\end{example}
+
+### Sidenote: Estimators of Statistics II
+
+- What makes one estimator (e.g. $\bar{H}$) better than another (e.g. $H_1$)?\footnote{Technically, we also care about **consistency**: minimizing uncertainty about the correct value, The Law of Large Numbers, similar to CLT, permits this}
+    1. **Biasedness**: does the estimator give us the correct value *on average*?  
+    2. **Efficiency** an estimator with a smaller variance is better
+
+![Bias & Efficiency](biasvariability.png){height=2in}
+
+### Exogeneity and Unbiasedness
+
+- **$\hat{\beta_1}$ is an \alert{unbiased} estimator of $\beta_1$ when $X$ is exogenous**\footnote{See \textbf{handout} of unbiasedness on Blackboard for proofs}: there is no systematic difference, on average, between sample values of $\hat{\beta_1}$ and the true population $\beta_1$
+
+$$E[\hat{\beta_1}]=\beta_1$$
+
+- Does *not* mean that each sample gives us $\hat{\beta_1}=\beta_1$, only the estimation *procedure* will, on average, yield the correct value
+
+\begin{figure}
+		\includegraphics[height=1in]{unbiased}	
+		\includegraphics[height=1in]{biased}	
+\end{figure}
+
+
+### Exogeneity and Unbiasedness
+
+- Recall, an \alert{exogenous} variables ($X$) is unrelated to other factors affecting $Y$, i.e.:
+		\begin{equation*}
+		corr(X,\epsilon)=0	
+		\end{equation*}
+
+- Again, this is called the **Zero Conditional Mean Assumption**
+		\begin{equation*}
+			E(\epsilon|X)=0
+		\end{equation*}
+
+- For any known value of $X$, the expected value of $\epsilon$ is 0.
+- Knowing the value of $X$ must tell us *nothing* about the value of $\epsilon$ (anything else relevant to $Y$ other than $X$)
+- We can then confidently assert causation: $X \rightarrow Y$
+
+### Endogeneity and Bias
+
+- Nearly all independent variables are \alert{endogenous}, they are related to the error term $\epsilon$
+		\begin{equation*}
+		corr(X,\epsilon)\neq 0	
+		\end{equation*}
+
+\onslide<2->
+\begin{example}
+  Suppose we estimate the following relationship: 
+  
+  	\begin{equation*}
+		\text{Violent crimes}_t=\beta_0+\beta_1\text{Ice cream sales}_t+\epsilon_t	
+		\end{equation*}
+  \begin{itemize}
+    \item<3-> We find $\hat{\beta_1}>0$
+    \item<4-> Does this mean Ice cream sales$\rightarrow$Violent crimes?
+  \end{itemize}
+\end{example}
+
+### Endogeneity and Bias
+
+- The true expected value of $\hat{\beta_1}$ is actually\footnote{See \textbf{handout} on unbiasedness for proof}:
+
+\begin{equation*}
+		E[\hat{\beta_1}]=\beta_1+corr(X,\epsilon)\frac{\sigma_\epsilon}{\sigma_X}	
+\end{equation*}
+
+- Takeaways:
+    - If $X$ is exogenous: $corr(X,\epsilon)=0$, we're just left with $\beta_1$
+    - The larger $corr(X,\epsilon)$ is, larger \alert{bias}: $\big(E[\hat{\beta_1}] - \beta_1$\big)
+    - We can also ``sign'' the direction of the bias based on $corr(X,\epsilon)$
+        - **Positive** $corr(X,\epsilon)$ overestimates the true $\beta_1$ ($\hat{\beta_1}$ is too high)
+        - **Negative** $corr(X,\epsilon)$ underestimates the true $\beta_1$ ($\hat{\beta_1}$ is too low)
+
+### Endogeneity and Bias
+
+\begin{example}
+  	\begin{equation*}
+	wages_i=\beta_0+\beta_1 education_i+\epsilon 	
+	\end{equation*}
+	\begin{itemize}[<+->]
+		\item Is this an accurate reflection of $educ \rightarrow wages$? 
+		\item Does $E[\epsilon|education]=0$?
+		\item What would $E[\epsilon|education]>0$ mean? 
+	 \end{itemize}
+\end{example}
+
+### Endogeneity and Bias
+
+\begin{example}
+  	\begin{equation*}
+	\text{per capita cigarette consumption}=\beta_0+\beta_1 \text{State cig tax rate}+\epsilon 	
+	\end{equation*}
+	\begin{itemize}[<+->]
+		\item Is this an accurate reflection of $tax \rightarrow cons$? 
+		\item Does $E[\epsilon|tax]=0$?
+		\item What would $E[\epsilon|tax]>0$ mean? 
+	 \end{itemize}
+\end{example}
+
+### Exogeneity and RCTs
+
+- Think about an idealized randomized controlled experiment
+- Subjects randomly assigned to treatment or control group
+    - Implies knowing whether someone is treated ($X$) tells us nothing about their personal characteristics $(\epsilon$)
+    - Random assignment makes $\epsilon$ independent of $X$, so
+
+\onslide<4->  
+
+\begin{equation*}
+			corr(X,\epsilon)=0\text{ and } E[\epsilon|X]=0 
+\end{equation*}
+
+\begin{figure}
+		\includegraphics[height=1.5in]{rct}	
+\end{figure}
