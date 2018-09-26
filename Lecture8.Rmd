@@ -366,7 +366,7 @@ $$\text{Power} = 1- \beta = P(\text{Reject }H_0|H_0 \text{ is false})$$
 ### Statistical Significance: Cautions II 
 
 \begin{itemize} 
-		\item<1-> Again, **$p$ is the probability that, assuming the null hypothesis is true, we obtain (by pure random chance) a test statistic at least as extreme as the one we estimated for our sample**
+		\item<1-> Again, \alert{$p$ is the probability that, assuming the null hypothesis is true, we obtain (by pure random chance) a test statistic at least as extreme as the one we estimated for our sample}
 		    \begin{itemize}
 		      \item This will make more sense in context, when we discuss the nature of our test statistics
 		    \end{itemize}
@@ -557,7 +557,7 @@ $$Z=\frac{\hat{\beta_1}-\beta_{1,0}}{SE(\hat{\beta_1})}$$
 
 - Instead of $Z$-scores, we use the **$t$-score**, which has the same intuition (\# of standard deviations above/below the mean)
 
-$$t \sim t_{n-1}$$
+$$t \sim t_{n-k-1}$$
 
 - $t$-scores follow a \alert{Student's $t$-distribution} with **$n-k-1$** degrees of freedom
     - $k$: number of variables (e.g. $X$'s)
