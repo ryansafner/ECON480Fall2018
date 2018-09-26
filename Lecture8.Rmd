@@ -1,0 +1,739 @@
+---
+title: "Lecture 8: Precision of OLS and Hypothesis Testing"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "September 26, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+
+# The Precision of OLS 
+
+### Recall: The Sampling Distribution of $\hat{\beta_1}$ 
+
+$$\hat{\beta_1} \sim N(E[\hat{\beta_1}], \sigma_{\hat{\beta_1}})$$
+
+
+- We want to know: 
+      - $E[\hat{\beta_1}]$; what is the center of the distribution?
+      - $\sigma_{\hat{\beta_1}}$; how precise is our estimate? 
+
+\begin{figure}
+		\centering 	
+			\begin{tikzpicture}[scale=0.75] 
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$\hat{\beta_1}$, ylabel={},
+		every axis x label/.style={at={(current axis.right of origin)},anchor=north west},
+		every axis y label/.style={at={(current axis.above origin)},anchor=north east},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  %grid = major
+  ]
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+  \draw [thick, dashed](axis cs:0,0)node[below]{$E[\hat{\beta_1}]$}--(axis cs:0,0.4);
+\end{axis}
+\end{tikzpicture}
+	\end{figure}
+
+
+### Precision: Variance or Standard Error
+
+- How precise is our estimate $\hat{\beta_1}$? 
+- We can talk of the \alert{variance $(\sigma^2_{\hat{\beta_1}})$} or the \alert{standard error ($\sigma_{\hat{\beta_1}}$)} of $\hat{\beta_1}$\footnote{The "standard \textbf{error}" is the analogue of standard \emph{deviation} for a sample statistic's sampling distribution. Recall the sampling distribution is the distribution of a statistic, like $\bar{X}$ or $\hat{\beta_1}$ over many potential samples.} 
+
+\begin{figure}
+		\centering 	
+			\begin{tikzpicture}\scriptsize 
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$\hat{\beta_1}$, ylabel={},
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  %grid = major
+  ]
+  \addplot [very thick,cyan!50!black] {gauss(0,0.5)};
+  \draw [thick, dashed](axis cs:0,0)node[below]{$\beta_1$}--(axis cs:0,0.75);
+  \draw[cyan!50!black](axis cs:1,0.8)node[above]{Small variance};
+    \addplot [very thick,red!50!black] {gauss(0,1.5)};
+  \draw[red!50!black](axis cs:2,0.2)node[above]{Large variance};
+\end{axis}
+\end{tikzpicture}
+\end{figure}
+
+### Variance of $\hat{\beta_1}$
+
+- The \alert{variance of $\hat{\beta_1}$} is 
+
+$$var(\hat{\beta_1})=\frac{(SER)^2}{n \times var(X)}$$
+
+where SER is the standard error of the regression (again):
+
+$$SER=\frac{SSE}{n-2}$$
+
+- The \alert{standard error of $\hat{\beta_1}$} is simply the square root of the variance
+
+\onslide<2->
+$$se(\hat{\beta_1})=\sqrt{var(\hat{\beta_1})}$$
+
+### What Affects Variance
+
+$$var(\hat{\beta_1})=\frac{(SER)^2}{n \times var(X)}$$
+
+- Variance is affected by three things
+    1. **Goodness of fit of the model: $SER$**
+        - Larger $SER$, larger $var(\hat{\beta_1})$
+    2. **Sample size, $n$**
+        - Larger $n$, lower $var(\hat{\beta_1})$
+    3. **Variation in $X$**
+        - Larger $var(X)$, smaller $var(\hat{\beta_1})$
+        
+
+### The Relation Between Variance of $X$ and Variance of $\hat{\beta_1}$
+
+
+```{r, echo=FALSE}
+# load data set and run regression again 
+library("foreign") #for importing .dta files
+CASchool<-read.dta("~/Dropbox/Teaching/Hood College/ECON 480 - Econometrics/Data/caschool.dta")
+school.regression<-lm(testscr~str, data=CASchool)
+```
+
+```{r, echo=FALSE, fig.height=3.5}
+#Show Difference in Variances based on Sample Size
+
+#subset points only where 18<str<22
+CASchool.few <-subset(CASchool,str>20 & str<22)
+
+#create a dual scatterplot 
+scattervar<-ggplot(CASchool, aes(str,testscr))+
+  geom_point(color="blue",fill="blue")+ #normal data points 
+  xlab("Student to Teacher Ratio")+ylab("Test Score")+theme_bw()+
+  geom_smooth(method=lm, color="red")+ #normal data regression line
+  geom_point(data=CASchool.few, color="turquoise")+ #the subset data
+  geom_smooth(data=CASchool.few, method=lm,color="purple") #the subset regression line
+
+scattervar 
+```
+
+- Smaller $var(X)$ (\textcolor{cyan}{light dots only}) $\implies$ larger $var(\hat{\beta_1})$: harder to determine precise slope! 	
+- Larger $var(X)$ (\textcolor{blue}{all dots}) $\implies$ smaller $var(\hat{\beta_1})$: easier to determine precise slope! 
+
+# Hypothesis Testing About Regression
+
+### Hypothesis Testing
+
+- We have used statistics (OLS) to \alert{estimate} a relationship between $X$ and $Y$ 
+    - *Relationship is causal if $X$ is exogenous*
+- The "bread and butter" of inferential statistics is \alert{testing a hypothesis} about (a) population(s) parameter(s)
+    - Does reducing class size actually improve test scores? 
+    - Is the gender wage gap between men and women really $0.77? 
+    - What percent of American voters support legalizing marijuana? 
+- **All modern science is built upon statistical hypothesis testing, so understand it well!**
+
+### Hypothesis Testing II
+
+- Note, we can test a lot of hypotheses about a lot of population parameters, e.g.
+    - A population mean $\mu$ (e.g. average height of adults)
+    - A population proportion $p$ (e.g. percent of voters who voted for Trump)
+    - A difference in population means $\mu_A-\mu_B$ (e.g. difference in average wages of men vs. women)
+    - A difference in population proportions $p_A-p_B$ (e.g. difference in percent of patients reporting symptoms of drug A vs B)
+    - See all the possibilities in glorious detail in the **handout** on Inferential Statistics 
+- We will focus on hypotheses about the population regression slope ($\hat{\beta_1}$) between $X$ and $Y$
+    - i.e. if/when we've done our model right, the \alert{causal effect of $X$ on $Y$}
+
+### Null and Alternative Hypotheses
+
+- All scientific inquiries begin with a \alert{null hypothesis ($H_0$)} that proposes a specific value of a population parameter 
+    - Notation: add a subscript 0: $\beta_{1,0}$ (or $\mu_0$, $p_0$, etc)
+- We suggest an \alert{alternative hypothesis ($H_a$)}, often the one we hope to verify
+    - Note, can be multiple alternative hypotheses: $H_1, H_2, \ldots , H_n$
+- Ask: **"Does our data (sample) give us sufficient evidence to reject $H_0$ in favor of $H_a$?"**
+    - Note: the test is *always* about **$H_0$**! See if we have sufficient evidence to reject the status quo
+
+### Null and Alternative Hypotheses II
+
+- Null hypothesis assigns a value (or a range) to a population parameter
+    - e.g. $\beta_1=2$ or $\beta_1 \leq 20$
+    - **Most common null hypothesis is $\beta_1=0$** $\implies$ $X$ has no effect on $Y$ (no slope for a line)
+    - Note: always an equality! 
+- Alternative hypothesis must mathematically *contradict* the null hypothesis
+    - e.g. $\beta_1 \neq 2$ or $\beta_1 > 20$ or $\beta_1 \neq 0$
+    - Note: always an inequality!
+- Alternative hypotheses come in two forms:
+    1. **One-sided alternative**: $\beta_1 >H_0$ or $\beta_1< H_0$
+    2. **Two-sided alternative**: $\beta_1 \neq H_0$
+        - Note this means either $\beta_1 < H_0$ or $\beta_1 > H_0$
+
+### Components of a Valid Hypothesis Test
+
+- All statistical hypothesis tests have the following components:
+
+1. A **null hypothesis, $H_0$**
+2. An **alternative hypothesis, $H_a$**
+3. A **test statistic** to determine if we reject $H_0$ when the statistic reaches a "critical value"
+    - Beyond the critical value is the "rejection region", sufficient evidence to reject $H_0$
+4. A **conclusion** whether or not to reject $H_0$ in favor of $H_a$
+
+## Type I and Type II Errors
+
+### Type I and Type II Errors
+
+- Any sample statistic (e.g. $\hat{\beta_1}$) will rarely be exactly equal to the hypothesized population parameter (e.g. $\beta_1$)
+- Difference between observed statistic and true paremeter could be because:
+
+    1. Parameter is *not* the hypothesized value ($H_0$ is false)
+    
+    2. Parameter is truly the hypothesized value ($H_0$ is true) but *sampling variability* gave us a different estimate 
+    
+- **We cannot distinguish between these two possibilities with any certainty**
+
+### Type I and Type II Errors II
+
+- We can interpret our estimates probabilistically as commiting one of two types of error:
+
+1. \alert{Type I error (false positive)}: rejecting $H_0$ when it is in fact true
+    - Believing we found an important result when there is truly no relationship
+    
+2. \alert{Type II error (false negative)}: failing to reject $H_0$ when it is in fact false
+    - Believing we found nothing when there was truly a relationship to find
+    
+### Type I and Type II Errors III
+
+\begin{table}
+		\begin{tabular}{ccc}
+		& $H_0$ is True & $H_0$ is False\\ \toprule
+		Reject $H_0$ & \textcolor{magenta}{Type I Error} & \textcolor{teal}{Correct Outcome}\\
+		& False Positive & True Positive\\\midrule
+		Don't Reject $H_0$ & \textcolor{teal}{Correct Outcome} & \textcolor{magenta}{Type II Error}\\
+		& True Negative & False Negative\\\bottomrule 
+		\end{tabular}
+\end{table}
+
+### Type I and Type II Errors IV
+
+\begin{table}
+		\begin{tabular}{ccc}
+		& Defendant is & Defendant is\\
+		& Innocent & Guilty\\ \toprule
+		Convict & \textcolor{magenta}{Type I Error} & \textcolor{teal}{Correct Outcome}\\
+		``I think he's guilty'' & False Positive & True Positive\\ \midrule
+		Don't Convict & \textcolor{teal}{Correct Outcome} & \textcolor{magenta}{Type II Error}\\
+		``I think he's innocent'' & True Negative & False Negative\\\bottomrule 
+		\end{tabular}
+\end{table}
+
+- Depending on context, committing one type of error may be more serious than the other
+- Common law *presumes* the defendant is innocent and a jury judges whether the evidence presented against the defendant would be plausible \emph{if the defendant were in fact innocent}
+
+### Type I and Type II Errors V
+
+\begin{example}
+For each of the following scenarios, identify the Type I error, Type II error, $\alpha$ and $\beta$, and which error is of greater consequence?
+
+\begin{itemize}
+  \item<2-> $H_0:$ the victim of an automobile accident is alive when he arrives at the Emergency Room
+  \item<3-> $H_0$: a rock climber's equipment is safe
+  \item<4-> $H_0$: a woman is not pregnant
+  \item<5-> $H_0$: a highway project will cost no more than \$10 million
+  \item<6-> $H_0$: an experimental cancer drug has a cure rate of at least 75\% 
+\end{itemize}
+
+\end{example}
+
+### Significance Level, $\alpha$
+
+- The \alert{significance level, $\alpha$}, is the probability of a **Type I error** 
+
+$$\alpha=P(\text{Reject } H_0 | H_0 \text{ is true})$$
+
+- The \alert{confidence level} is defined as $1-\alpha$
+- We often specify in advance an $\alpha$-level (0.10,0.05,0.01) with associated confidence level (90%, 95%, 99%)
+- The probability of a **Type II error** is defined as $\beta$:
+
+$$\beta=P(\text{Don't reject} H_0 | H_0 \text{ is false})$$
+
+
+### $\alpha$ and $\beta$
+
+\begin{table}
+		\begin{tabular}{ccc}
+		& $H_0$ is True & $H_0$ is False\\ \toprule
+		Reject $H_0$ & \textcolor{magenta}{Type I Error} & \textcolor{teal}{Correct Outcome}\\
+		& $\alpha$ & $(1-\beta$)\\\midrule
+		Don't Reject $H_0$ & \textcolor{teal}{Correct Outcome} & \textcolor{magenta}{Type II Error}\\
+		& $(1-\alpha)$ & $\beta$\\\bottomrule 
+		\end{tabular}
+\end{table}
+
+### Power and $p$-values
+
+- The statistical \alert{power of the test} is $1-\beta$, the probability of correctly rejecting $H_0$ when $H_0$ is in fact false (e.g. not convicting an innocent person)
+
+$$\text{Power} = 1- \beta = P(\text{Reject }H_0|H_0 \text{ is false})$$
+
+- The \alert{$p$-value} or \alert{significance probability} is the probability that, given the null hypothesis is true, the test statistic from a random sample will be at least as extreme as the test statistic of our sample
+- If $p<\alpha$, the results are "**statistically significant**"
+
+### $p$-Values and Statistical Significance 
+ 
+- After running our test, we need to make a *decision* between the competing hypotheses
+- Compare $p$-value with *pre-determined* $\alpha$ (commonly, $\alpha=0.05$, 95% confidence level)
+    - If $p<\alpha$: **statistically significant** evidence sufficient to *reject* $H_0$ in favor of $H_a$
+    - If $p \geq \alpha$: *insufficient* evidence to reject $H_0$
+        - Note this does **not** mean $H_0$ is true! We merely have *failed* to *reject* $H_0$
+
+# Digression: $p$-Values and the Philosophy of Science 
+
+### Hypothesis Testing and the Philosophy of Science
+
+\begin{columns}
+		\begin{column}[c]{8cm}
+			``The null hypothesis is never proved or established, but is possibly disproved, in the course of experimentation. Every experiment may be said to exist only in order to give the facts a chance of disproving the null hypothesis.'' \\ \medskip (1931). \emph{The Design of Experiments}
+		\end{column}
+		\begin{column}[c]{4cm}
+			\begin{tabular}{c}
+				\includegraphics[height=2in]{rafisher2}\\
+				\small Sir Ronald A. Fisher \\
+				\small (1890-1962)
+			\end{tabular}
+		\end{column}
+\end{columns}
+
+### Hypothesis Testing and the Philosophy of Science
+
+\begin{columns}
+  \begin{column}[c]{9cm}
+    \begin{itemize}
+      \item Modern philosophy of science is largely based off of hypothesis testing and \textbf{falsifiability}, which form the "Scientific Method"
+      \item<2-> For something to be "scientific", it must be \emph{falsifiable}, or at least \emph{testable}
+      \item<3-> Hypotheses can be corroborated with evidence, but always \emph{tentative} until falsified by data in suggesting an alternative hypothesis  
+      \begin{itemize}
+        \item<4-> e.g. "\textbf{All swans are white}" is a hypothesis rejected upon discovery of a single black swan
+      \end{itemize}
+      \item<5-> Note: economics is a very different kind of "science" with a different methodology!
+    \end{itemize}
+  \end{column}
+  \begin{column}[c]{4cm}
+  \begin{figure}
+		\includegraphics[height=1.5in]{blackswan}
+\end{figure}
+  \end{column}
+\end{columns}
+
+
+### Statistical Significance: Cautions
+
+\begin{alertblock}{Caution}\small 
+		It is easy to misinterpret what statistical significance and $p$-values mean. \textbf{THE FOLLOWING ARE FALSE}:
+		\begin{itemize}
+			\item<2-> \textcolor{magenta}{$p$ is the probability that the alternative hypothesis is true} (We can never \emph{prove} an alternative hypothesis, only tentatively reject a null hypothesis)
+			\item<3-> \textcolor{magenta}{$p$ is the probability that the null hypothesis is false} (We are not proving the null hypothesis false, only saying that it is very unlikely that under the null hypothesis, we obtain an event as rare as our sample)
+			\item<4->\textcolor{magenta}{$p$ is the probability that the observed effects were produced purely by random chance} ($p$ is computed under a specific model (assuming $H_0$ is true)
+			\item<5->\textcolor{magenta}{$p$ tells us how significant our finding is} ($p$ tells us nothing about the \emph{size} or the \emph{real world significance} of any effect deemed ``statistically significant'')
+		\end{itemize}
+	\end{alertblock}
+
+### Statistical Significance: Cautions II 
+
+\begin{itemize} 
+		\item<1-> Again, **$p$ is the probability that, assuming the null hypothesis is true, we obtain (by pure random chance) a test statistic at least as extreme as the one we estimated for our sample**
+		    \begin{itemize}
+		      \item This will make more sense in context, when we discuss the nature of our test statistics
+		    \end{itemize}
+		\item<2-> Remember a low $p$-value means \textbf{either} that the null hypothesis is true and a highly improbable event has occurred or that the null hypothesis is false (we don't know which!)
+\end{itemize}
+
+### Statistical Significance and $p$-Values
+
+\begin{figure}
+			\includegraphics<1->[width=1.5in]{smbc1623-1}
+			\includegraphics<2->[width=1.5in]{smbc1623-2}
+			\caption*{\href{http://www.smbc-comics.com/?id=1623}{\textcolor{magenta}{SMBC 1623}}}
+\end{figure}
+
+### Statistical Significance and $p$-Values II
+
+\begin{figure}
+		\includegraphics[height=2in]{xkcdjellybeans1}
+		\caption*{\href{https://xkcd.com/882/}{\textcolor{magenta}{XKCD 882}}}	
+\end{figure}
+
+### Statistical Significance and $p$-Values III
+
+\begin{figure}
+		\includegraphics[height=2in]{xkcdjellybeans2}
+		\caption*{\href{https://xkcd.com/882/}{\textcolor{magenta}{XKCD 882}}}	
+\end{figure}
+
+### Statistical Significance and $p$-Values IV
+
+\begin{figure}
+		\includegraphics[height=2in]{xkcdjellybeans3}
+		\caption*{\href{https://xkcd.com/882/}{\textcolor{magenta}{XKCD 882}}}	
+\end{figure}
+
+### Statistical Significance and $p$-Values V
+
+\begin{figure}
+		\includegraphics[height=2in]{xkcdjellybeans4}
+		\caption*{\href{https://xkcd.com/882/}{\textcolor{magenta}{XKCD 882}}}	
+\end{figure}
+
+### Statistical Significance and $p$-Values VI
+
+- Consider what "95% significance" or $\alpha=0.05$ means: 
+    - If we repeat a procedure 20 times, we should *expect* 1/20 (5%) to produce a fluke result!
+
+\begin{figure}
+		\includegraphics[height=2in]{confidenceintervals1}
+\end{figure}
+
+### Statistical Significance and $p$-Values VII
+
+\begin{center}
+	``The widespread use of ``statistical significance'' (generally interpreted as ($p \leq 0.05$) as a license for making a claim of a scientific finding (or implied truth) leads to considerable distortion of the scientific process.'' 
+	\end{center}
+	\begin{figure}
+		\includegraphics[height=2in]{asalogo}	
+	\end{figure}
+	
+\textcolor{gray}{\tiny Wasserstein, Ronald L. and Nicole A. Lazar, (2016). ``\href{http://www.tandfonline.com/doi/full/10.1080/00031305.2016.1154108}{\textcolor{magenta}{The ASA's Statement on p-Values: Context, Process, and Purpose}}'' \emph{The American Statistician} 30(2): 129-133. }
+
+### Statistical Significance and $p$-Values VIII
+
+\begin{figure}
+		\includegraphics[height=2in]{chocolatefake}
+		\caption*{\href{https://www.washingtonpost.com/news/morning-mix/wp/2015/05/28/how-and-why-a-journalist-tricked-news-outlets-into-thinking-chocolate-makes-you-thin/?hpid=z5}{\textcolor{magenta}{Washington Post: How, and why, a journalist tricked news outlets into thinking chocolate makes you thin}}}	
+\end{figure}
+
+# Back to Our Hypothesis Test: The Test-Statistic
+
+## The $Z$-test 
+
+### Distribution of $H_0$
+
+- We next consider the population distribution **assuming $H_0$ is true** and calculate a \alert{test statistic}, which takes the following form: 
+
+$$\text{test statistic} = \frac{\text{sample statistic}-\text{hypothesized value}}{\text{standard error of the statistic}}$$
+
+- We then compare our test statistic against a **critical value** to determine if we can reject $H_0$
+- Essentially: \alert{test to see how likely a sample statistic at least as extreme as our discovery is if $H_0$ were true}
+
+### Distribution of $H_0$ II
+
+\begin{itemize}
+		\item We are testing our estimated $\hat{\beta_1}$ against a null hypothesis, e.g. $\beta_{1,0}=0$
+		\item<2-> It would be nice if we could use normal distribution, our test statistic would just be $Z$-score:
+		
+		\vspace{-0.25cm}
+		
+$$Z=\frac{\hat{\beta_1}-\beta_{1,0}}{SE(\hat{\beta_1})}$$
+
+		\item<3-> \textbf{$p$-value}: area in the tail(s) of the distr. of $\hat{\beta_1}$ under $H_0$ beyond our $Z$ score  	
+\end{itemize}
+
+\onslide<3->
+\begin{figure}
+			\begin{tikzpicture}[scale=.75]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \only{\addplot [fill=red!50, draw=none, domain=-4:-2] {gauss(0,1)} \closedcycle;}
+  \only{\addplot [fill=red!50, draw=none, domain=2:4] {gauss(0,1)} \closedcycle;}
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=-1cm, <->,very thick](axis cs:-2,0) -- node [fill=white] {\small $\beta_{1,0} \pm Z$} (axis cs:2,0);
+\draw[yshift=0cm](axis cs: -2,0)node[below]{$-Z$};
+\draw[yshift=0cm](axis cs: 2,0)node[below]{$Z$};
+\draw[yshift=0cm](axis cs: 0,0)node[below]{$\beta_{1,0}$};
+\draw[yshift=1cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small $\frac{p}{2}$} (axis cs:-4,0);
+\draw[yshift=1cm, <->,very thick](axis cs:2,0) -- node[fill=white] {\small $\frac{p}{2}$} (axis cs:4,0);
+\end{axis}
+\end{tikzpicture}
+\caption*{\footnotesize Distribution of $\beta_1$ under $H_0:\beta_1=0$; $p$-value is the area in red (two-tailed test)}
+\end{figure}
+
+### Distribution of $H_0$ III 
+
+\begin{itemize}
+		\item The \textbf{critical value $Z^*$} is determined by our $\alpha$ level (e.g. 0.05)
+		\item<2-> For a 2-sided alternative and $\alpha=0.05$, $Z^*=1.96$\footnote{As you can see, the empirical 68-95-99.7\% rule is very close, but not perfect!}
+		\item<3-> Any $Z$-score beyond $\pm 1.96$ is in \alert{rejection region}, sufficient evidence to reject $H_0$
+\end{itemize}
+	
+\begin{figure}
+			\begin{tikzpicture}[scale=.7]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \only{\addplot [fill=red!50, draw=none, domain=-4:-2] {gauss(0,1)} \closedcycle;}
+  \only{\addplot [fill=red!50, draw=none, domain=2:4] {gauss(0,1)} \closedcycle;}
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=-1cm, <->,very thick](axis cs:-2,0) -- node [fill=white] {\small $\beta_{1,0} \pm Z$} (axis cs:2,0);
+\draw[yshift=0cm](axis cs: -2,0)node[below]{$-Z^*$};
+\draw[yshift=0cm](axis cs: 2,0)node[below]{$Z^*$};
+\draw[yshift=0cm](axis cs: 0,0)node[below]{$\beta_{1,0}$};
+\draw[yshift=1cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small $\frac{\alpha}{2}$} (axis cs:-4,0);
+\draw[yshift=1cm, <->,very thick](axis cs:2,0) -- node[fill=white] {\small $\frac{\alpha}{2}$} (axis cs:4,0);
+\end{axis}
+\end{tikzpicture}
+\caption*{Critical values of $Z^*$ with rejection regions in red}
+\end{figure}
+
+### Distribution of $H_0$ IV
+
+- It would be nice if we *could* just use the normal distribution, and run a \alert{$Z$-test}, as described above 
+- **Central Limit Theorem** lets us if $n \geq 30$ and we know the population distribution $\mu, \sigma$
+- We almost never know them...
+
+## $t$-Distribution and $t$-test
+
+### Student's $t$-distribution
+
+\begin{columns}
+		\begin{column}[c]{8cm}
+			\begin{itemize}
+				\item Worked at Guinness testing beer quality 
+				\item<2-> Using normal distributions with small sample sizes did not yield accurate estimates
+				\item<3-> Developed a new distribution, using the pseudonym ``Student,'' to publish, the \alert{Student's $t$-distribution}  
+			\end{itemize}
+			\begin{figure}
+				\includegraphics[height=1.5in]{guinness}	
+			\end{figure}
+		\end{column}
+		\begin{column}[c]{4cm}
+			\begin{tabular}{c}
+				\includegraphics[height=2in]{gosset}\\
+				\small William Sealy Gosset \\
+				\small (1876-1937)
+			\end{tabular}
+		\end{column}
+\end{columns}
+
+### $t$-distribution
+
+- Instead of $Z$-scores, we use the **$t$-score**, which has the same intuition (\# of standard deviations above/below the mean)
+
+$$t \sim t_{n-1}$$
+
+- $t$-scores follow a \alert{Student's $t$-distribution} with **$n-k-1$** degrees of freedom
+    - $k$: number of variables (e.g. $X$'s)
+    - Formally, **degrees of freedom** ($df$ or $\nu$) are the number of independent values used for the calculation of a statistic minus the number of other statistics used as intermediate steps
+    - Here, we *first* had to calculate two statistics ($\hat{\beta_0}, \hat{\beta_1}$) with our sample *before* estimating the sampling distribution of $\hat{\beta_1}$ for hypothesis testing, thus $df=n-2$
+- $t$-distribution looks normal-ish (symmetric, unimodal, mean=0), but more mass in the tails
+- Exact shape of $t$ depends on $df$: as $\uparrow df$, $t \rightarrow$ Normal distribution
+
+### $t$-distributions
+
+```{r, echo=FALSE, fig.height=4.5}
+
+t.dists<-ggplot(data.frame(x=-4:4),aes(x=x))+
+    stat_function(fun=dt, args=list(df=1), aes(color = "t with df=1"))+
+    stat_function(fun=dt, args=list(df=5), aes(color = "t with df=5"))+
+    stat_function(fun=dt, args=list(df=25), aes(color = "t with df=25"))+
+    stat_function(fun=dt, args=list(df=100), aes(color = "t with df=100"))+
+    stat_function(fun=dnorm, args=list(mean=0, sd=1), aes(color = "Standard Normal distribution"))+
+    #scale_colour_manual("Legend")+#, values = c("red", "blue", "green", "orange", "purple"))+
+    xlab("x")+ylab("p(x)")
+t.dists
+```
+
+### Calculating $t$-scores: Old-Fashioned Way
+
+\begin{figure}
+		\includegraphics[height=3in]{ttable2}	
+\end{figure}
+
+### Calculating $t$-scores: In `R`
+
+```{r}
+
+# use pt() command, needs t value and df
+pt(2,df=5) #probability of t>2 with 5 df
+
+pt(2,df=40)# probability of t>2 with 40 df
+
+pt(2, df=100) # probability of t>2 with 100 df
+
+pnorm(2, mean=0, sd=1) # compare to normal distribution!
+```
+
+### Hypothesis Testing with $t$-distribution 
+
+- So our \alert{test statistic} is a \alert{$t$-score} (instead of $Z$-score)
+
+$$t = \frac{\hat{\beta_1}-\beta_{1,0}}{SE(\hat{\beta_1})}$$
+
+- We then compare $t$ to the critical value of $t^*$ determined by our $\alpha$-level and the $df$ for our $t$-distribution ($n-k-1$)
+    - Note: there will be a unique critical value for every value of $n-k-1$! 
+    - `R` determines the critical $t^*$ automatically with regression 
+- $p$-value$=P(t<T)$
+- Reject $H_0$ if $p$-value $< \alpha$
+
+### Hypothesis Testing with $t$-distribution II 
+
+Depending on the desired alternative hypothesis:
+
+\begin{table}
+		\begin{tabular}{ccc}
+		Alternative & $p$-value & PDF\\ \toprule 
+		$H_a: \beta_1 > \beta_{1,0}$ & $P(T \geq t$) & 
+		\begin{tikzpicture}[scale=.4]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \only{\addplot [fill=red!50, draw=none, domain=2:4] {gauss(0,1)} \closedcycle;}
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=0cm](axis cs: 2,0)node[below]{$t$};
+\draw[yshift=0cm](axis cs: 0,0)node[below]{$\mu_0$};
+\end{axis}
+\end{tikzpicture}
+\\ \midrule 
+		$H_a: \beta_1 < \beta_{1,0}$ & $P(T \leq t$) & 
+				\begin{tikzpicture}[scale=.4]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \only{\addplot [fill=red!50, draw=none, domain=-4:-2] {gauss(0,1)} \closedcycle;}
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=0cm](axis cs: -2,0)node[below]{$t$};
+\draw[yshift=0cm](axis cs: 0,0)node[below]{$\mu_0$};
+\end{axis}
+\end{tikzpicture}
+\\ \midrule 
+		$H_a: \beta_1 \neq \beta_{1,0}$ & $2P(T \geq |t|)$ & 		\begin{tikzpicture}[scale=.4]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \only{\addplot [fill=red!50, draw=none, domain=-4:-2] {gauss(0,1)} \closedcycle;}
+  \only{\addplot [fill=red!50, draw=none, domain=2:4] {gauss(0,1)} \closedcycle;}
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=0cm](axis cs: 2,0)node[below]{$|t|$};
+\draw[yshift=0cm](axis cs: 0,0)node[below]{$\mu_0$};
+\end{axis}
+\end{tikzpicture}
+\\ \bottomrule 
+		\end{tabular}
+\end{table}
+
+### Hypothesis Testing: Example
+
+\begin{example}
+	We have an estimated regression line: 
+	\vspace{-.5cm}
+		\begin{table}
+		\centering 
+	\setlength{\tabcolsep}{0cm}
+		\begin{tabular}{ccccc}
+		$\widehat{\text{Test Score}}$ = & 689.93 & $-$ & 2.28 & STR\\
+		& (9.47) & & (0.48) & \\
+	\end{tabular}
+	\end{table}
+\end{example}
+
+\vspace{-1cm}
+
+- Regression reporting format: Coefficients with their (standard errors) beneath them
+- Let **$H_0: \beta_1=0$, $H_1: \beta_1 \neq 0$** (two-sided alternative)
+- $t$-statistic: 
+
+\onslide<3->
+\begin{equation*}
+t= \frac{\hat{\beta_1}-\beta_{1,0}}{SE(\hat{\beta_1})}	\onslide<4-> =\frac{-2.28-0}{0.48} \onslide<5->=-4.75
+\end{equation*}
+
+\onslide<6->
+
+```{r}
+# calculate p-value for t=-4.75, df=418
+2*pt(-4.75,df=418) # x2 because we want both tails!  
+```
+
+### Looking at `R` Again
+
+\scriptsize 
+
+```{r, echo=TRUE}
+summary(school.regression)
+```
+
+
+### A Rule of Thumb
+
+- If $|\hat{\beta_k}| > 2 \times SE(\hat{\beta_k})$, the estimate is significant
+
+\onslide<2->
+\begin{table}
+		\centering 
+	\setlength{\tabcolsep}{0cm}
+		\begin{tabular}{ccccc}
+		$\widehat{\text{Test Score}}$ = & 689.93 & $-$ & 2.28 & STR\\
+		& (9.47) & & (0.48) & \\
+	\end{tabular}
+\end{table}
+
+- Since essentially $t = \frac{\hat{\beta_k}}{SE(\hat{\beta_k})}$ and we roughly want $t \geq 2$ for 95% confidence level ($\alpha$=0.05)
