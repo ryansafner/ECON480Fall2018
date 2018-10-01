@@ -737,3 +737,219 @@ summary(school.regression)
 \end{table}
 
 - Since essentially $t = \frac{\hat{\beta_k}}{SE(\hat{\beta_k})}$ and we roughly want $t \geq 2$ for 95% confidence level ($\alpha$=0.05)
+
+## Confidence Intervals
+
+### Confidence Intervals
+
+- Random sampling variation implies that our estimated $\hat{\beta_1}$ will vary slightly from sample to sample
+- We can also calculate a \alert{confidence interval} of $\hat{\beta_1}$ values that contain the true slope $\hat{\beta_0}$ with a specified probability ($1-\alpha$)
+- In general, a confidence interval takes the form: 
+
+\onslide<3-> 
+$$(\text{point estimate} - \text{margin of error}, \text{point estimate} + \text{margin of error})$$
+
+### Confidence Intervals: Intuition
+
+- Recall the \alert{empirical 68-95-99.7 rule}: approximately 95% of a normal distribution occurs within 2 standard deviations of the mean 
+- Thus, in 95% of samples, the true slope ($\beta_1$) is likely to fall within about two standard errors of our estimated slope ($\hat{\beta_1}$)
+
+\onslide<2->
+$$\big(\hat{\beta_1}-2se(\hat{\beta_1}), \quad\hat{\beta_1}-2se(\hat{\beta_1})\big)$$
+
+\begin{figure}
+			\begin{tikzpicture}[scale=.75]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick={-4,-3,-2,-1,0,1,2,3,4}, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = none
+  ]
+  \only{\addplot [fill=red!50, draw=none, domain=-2:2] {gauss(0,1)} \closedcycle;}
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=-1.25cm, <->,very thick](axis cs:-2,0) -- node [fill=white] {\small $\hat{beta_1} \pm 2\sigma_{\hat{beta_1}}$} (axis cs:2,0);
+\draw[yshift=1.25cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small 95\%} (axis cs:2,0);
+\end{axis}
+\end{tikzpicture}
+\end{figure}
+
+### Confidence Intervals
+
+- We need to find the $t$-score\footnote{If we knew the population distribution, and if $n\geq30$, we could just use $Z$-score and normal distribution}, $t_{\frac{\alpha}{2}}$ that puts an area equal to CL in the middle of the $t$-distribution $t \sim t_{n-k-1}$ 
+- The specific $t_{\frac{\alpha}{2}}$ is (again) the \alert{critical value} for a given confidence level 
+- \textcolor{blue}{$CL=1-\alpha$}, so \textcolor{red}{$\alpha$} is the area split equally across the two tails of the distribution $(\frac{\alpha}{2}$) in each tail 
+
+\begin{figure}
+			\begin{tikzpicture}[scale=.75]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \only{\addplot [fill=blue!50, draw=none, domain=-2:2] {gauss(0,1)} \closedcycle;}
+  \only{\addplot [fill=red!50, draw=none, domain=-4:-2] {gauss(0,1)} \closedcycle;}
+  \only{\addplot [fill=red!50, draw=none, domain=2:4] {gauss(0,1)} \closedcycle;}
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=-1cm, <->,very thick](axis cs:-2,0) -- node [fill=white] {\small $\hat{\beta_1} \pm t_{\frac{\alpha}{2}}se(\hat{\beta_1})$} (axis cs:2,0);
+\draw[yshift=0cm](axis cs: -2,0)node[below]{$-z_{\frac{\alpha}{2}}$};
+\draw[yshift=0cm](axis cs: 2,0)node[below]{$z_{\frac{\alpha}{2}}$};
+\draw[yshift=1.5cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small $1-\alpha$} (axis cs:2,0);
+\draw[yshift=1cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small $\frac{\alpha}{2}$} (axis cs:-4,0);
+\draw[yshift=1cm, <->,very thick](axis cs:2,0) -- node[fill=white] {\small $\frac{\alpha}{2}$} (axis cs:4,0);
+\end{axis}
+\end{tikzpicture}
+\end{figure}
+
+### Confidence Intervals: Example
+
+\begin{example}
+ For $\alpha=0.05$ (or CL=95\%) and large $n$, $t^*=Z^*=1.96$ 
+\end{example}
+
+
+\begin{figure}
+			\begin{tikzpicture}[scale=.75]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \only{\addplot [fill=blue!50, draw=none, domain=-2:2] {gauss(0,1)} \closedcycle;}
+  \only{\addplot [fill=red!50, draw=none, domain=-4:-2] {gauss(0,1)} \closedcycle;}
+  \only{\addplot [fill=red!50, draw=none, domain=2:4] {gauss(0,1)} \closedcycle;}
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=-1cm, <->,very thick](axis cs:-2,0) -- node [fill=white] {\small $\hat{\beta_1} \pm 1.96se(\hat{\beta_1})$} (axis cs:2,0);
+\draw[yshift=0cm](axis cs: -2,0)node[below]{$-1.96$};
+\draw[yshift=0cm](axis cs: 2,0)node[below]{$1.96$};
+\draw[yshift=1.5cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small $0.95$} (axis cs:2,0);
+\draw[yshift=1cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small $0.025$} (axis cs:-4,0);
+\draw[yshift=1cm, <->,very thick](axis cs:2,0) -- node[fill=white] {\small $0.025$} (axis cs:4,0);
+\end{axis}
+\end{tikzpicture}
+\end{figure}
+
+### Confidence Intervals: Margin of Error
+
+- The \alert{margin of error (MOE)} is the critical value of $t$ times the standard error of $\hat{\beta_1}$
+
+\onslide<2->
+$$MOE= t_{\frac{\alpha}{2}}se(\hat{\beta_1})$$
+
+- For example, for 95% confidence and large $n$: 
+
+\onslide<3->
+$$MOE= 1.96se(\hat{\beta_1})$$
+
+- A confidence interval for $\beta_1$ is then: 
+
+\onslide<4->
+$$\bigg(\hat{\beta_1} - t_{\frac{\alpha}{2}}se(\hat{\beta_1}), \quad \hat{\beta_1}+t_{\frac{\alpha}{2}}se(\hat{\beta_1})\bigg)$$
+
+- **"We estimate with [$1-\alpha$] confidence that the true population mean is between [...] and [...]."**
+
+### Common Confidence Intervals
+
+- For large $n$:
+
+\begin{table}
+  \begin{tabular}{ccc}
+  Confidence Level & Critical Value & Confidence Interval \\ \toprule
+  90\% & 1.64 & $\hat{\beta_1} \pm 1.64se(\hat{\beta_1})$\\
+  90\% & 1.96 & $\hat{\beta_1} \pm 1.96se(\hat{\beta_1})$\\
+  90\% & 2.58 & $\hat{\beta_1} \pm 2.58se(\hat{\beta_1})$\\ \bottomrule
+  \end{tabular}
+\end{table}
+
+### Confidence Intervals in `R`
+
+- Generate confidence intervals with `confint()` command
+
+\scriptsize 
+
+```{r}
+confint(school.regression, level=0.90) # 90% confidence
+confint(school.regression, level=0.95) # 95% confidence
+confint(school.regression, level=0.99) # 99% confidence
+```
+
+# Reporting Regression Outputs with `stargazer`
+
+### Reporting Regression Outputs with `stargazer` 
+
+- Regressions are reported with a \alert{regression table} (especially when we have many models!)
+- You can make this by hand, but it's much faster with a great package called `stargazer`
+
+\onslide<3->
+
+\center 
+
+```{r, echo=FALSE, message=FALSE, warning=FALSE, results='asis'}
+library("stargazer") # load stargazer (you will need to install first!)
+stargazer(school.regression, type="latex", header=FALSE, style="qje", 
+          dep.var.labels = "Test Score", covariate.labels = c("Class Size"),
+          title="Regression Results", float=FALSE, font.size = "scriptsize",
+          omit.stat=c("adj.rsq","f")) 
+# since these output slides use latex to generate pdf, type is latex
+```
+
+### `stargazer` syntax
+
+- Basic `stargazer` syntax is simple
+    - First you need to load with `library()`, and install if the first time!  
+    - First include the name of the regression object to print (e.g. `reg.name`)
+    - Then specify the type of output (`"html"`,`"latex"` (for pdf), or `"text"`)
+
+```{r, eval=FALSE}
+library("stargazer") # load stargazer (you will need to install first!)
+stargazer(reg.name,type="type")
+```
+
+
+### Customizing `stargazer` 
+
+- `stargazer` allows for a lot of customization, e.g. the code for the above table:
+
+```{r, echo=TRUE, eval=FALSE}
+library("stargazer")
+stargazer(school.regression, type="latex", header=FALSE, style="qje", 
+          dep.var.labels = "Test Score", covariate.labels = c("Class Size"),
+          title="Regression Results", float=FALSE, font.size = "scriptsize",
+          omit.stat=c(adj.rsq,f)) 
+```
+
+### `stargazer` Output 
+
+- The raw output looks confusing, code that renders directly in html or pdf (via latex)
+
+\scriptsize
+
+```{r, message=FALSE, echo=FALSE, warning=FALSE, results='markup'}
+library("stargazer")
+stargazer(school.regression, type="latex", header=FALSE, style="qje", 
+          dep.var.labels = "Test Score", covariate.labels = c("Class Size"),
+          title="Regression Results", float=FALSE, font.size = "scriptsize",
+          omit.stat=c("adj.rsq","f")) 
+```
+
+###  `stargazer`: Rendering Directly as Text
+
+\center
+\scriptsize
+
+```{r, message=FALSE, warning=FALSE,results='markup'}
+stargazer(school.regression, type="text") 
+```

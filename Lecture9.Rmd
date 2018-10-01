@@ -1,0 +1,744 @@
+---
+title: "Lecture 9: Regression Diagnostics and Plotting with `ggplot2`"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "September 26, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+```{r, echo=FALSE}
+# load data set and run regression again 
+library("foreign") #for importing .dta files
+CASchool<-read.dta("~/Dropbox/Teaching/Hood College/ECON 480 - Econometrics/Data/caschool.dta")
+school.regression<-lm(testscr~str, data=CASchool)
+```
+
+# Solvable Regression Problem \#1: Heteroskedasticity
+
+### Homoskedasticity 
+
+- Recall assumption \#2 about the regression residuals ($\epsilon$) are that they are \alert{homoskedastic}:
+
+$$var(\epsilon)=\sigma_{\epsilon}^2$$
+
+- A fancy way of saying that the **variance of the residuals is constant**, i.e. does not change over values of $X$
+- Combined with assumption \#1 (the mean of the residuals $E[\epsilon]=0$) $\implies$ residuals are i.i.d. and come from the same distribution $\sim(0,\sigma^2_{\epsilon}$)
+
+### Homoskedasticity
+
+- If residuals are \alert{heteroskedastic}, they do *not* have the same variance over values of $X$
+
+$$var(\epsilon) \neq \sigma_{\epsilon}^2$$
+
+- **This does not cause $\hat{\beta_1}$ to be biased**, but it does cause the standard error of $\hat{\beta_1}$ to be incorrect
+    - Recall, $se(\hat{\beta_1})$ is used to calculate our test statistic for hypothesis testing
+    - **May overstate the statistical significance of a finding!**
+
+### Homoskedasticity
+
+- The formula for $se(\hat{\beta_1})$ assumes homoskedasticity, recall (from Lecture 8) it was:
+
+$$se(\hat{\beta_1})=\sqrt{\frac{(SER)^2}{n \times var(X)}}$$
+
+- When errors are heteroskedastic, the formula mutates to
+
+\onslide<2-> 
+$$se(\hat{\beta_1})=\sqrt{\frac{\displaystyle\sum^n_{i=1}(X_i-\bar{X})^2\hat{\epsilon}^2}{\big[\displaystyle\sum^n_{i=1}(X_i-\bar{X})^2\big]^2}}$$
+
+- This is \alert{heteroskedasticity-robust} ("\alert{robust}") method of calculating $se(\hat{\beta_1})$
+- Don't learn formula, **do learn what heteroskedasticity is and how it affects our model!**
+
+### Visualizing Heteroskedasticity
+
+
+```{r, echo=FALSE, fig.height=4}
+# Let's make some heteroskedastic data
+
+#runif generates random numbers via a random uniform distribution (# of draws, lower lim, upper lim) 
+x<-runif(500,0,10)
+
+#rnorm generates random numbers via a normal distribution (# of draws, mean, sd)
+# we will include x as the lower and upper limit 
+y<-rnorm(500,x,x)
+
+het.data<-data.frame(x,y)
+
+# plot data 
+library(ggplot2)
+het.plot<-ggplot(het.data, aes(x,y))+
+  geom_point(color="blue")+
+  geom_smooth(method=lm, color="red")+
+  scale_x_continuous(breaks=c(0,2,4,6,8,10))+
+  theme_bw()
+
+het.plot
+
+```
+
+- The average residual (distance from point to OLS line) changes as $X$ changes
+
+### Visualizing Heteroskedasticity II 
+
+```{r,echo=FALSE,fig.height=4}
+het.plot+geom_vline(xintercept=c(0,2,4,6,8,10),linetype="dashed",color="black",size=1)
+```
+
+- We would expect the distribution of the residuals ($\hat{\epsilon}$) to be the same at every value of $X$
+- Clearly there are very different distributions of residuals across $X$
+
+### Visualizing Heteroskedasticity III 
+
+```{r,echo=FALSE,fig.height=4}
+het.reg<-lm(y~x,het.data) # run regression
+
+het.data$res<-residuals(het.reg) # generate residuals, store in het.data
+
+# define a variable called range in the het.data dataframe
+
+# make 5 groups, (called 2,4,6,8,10) for range 
+  # values are in group 2 if x is between 0 and 2
+  # etc for groups 4, 6, 8, 10
+het.data$range[het.data$x>0 & het.data$x<2] = 2
+het.data$range[het.data$x>2 & het.data$x<4] = 4
+het.data$range[het.data$x>4 & het.data$x<6] = 6
+het.data$range[het.data$x>6 & het.data$x<8] = 8
+het.data$range[het.data$x>8 & het.data$x<10] = 10
+
+# we want to make range a factor (categorical) variable
+# to plot it below as a series of groups
+
+het.data$range<-as.factor(het.data$range)
+
+# plot density by range group
+
+ggplot(het.data, aes(x=res,fill=range))+
+  geom_density()+facet_grid(cols=vars(het.data$range))+
+  xlab("Residuals by Range of X")+ylab("Probability Density")+
+  scale_fill_discrete(name="Residuals for",
+                         labels=c("0<X<2", "2<X<4", "4<X<6",
+                                  "6<X<8", "8<X<10"))
+
+```
+
+- We would expect the distribution of the residuals ($\hat{\epsilon}$) to be the same at every value of $X$
+- Clearly there are very different distributions of residuals across $X$
+
+### Visualizing Heteroskedasticity IV 
+
+```{r, echo=FALSE, fig.height=4}
+ggplot(het.data,aes(x=x,y=res))+
+  geom_point(color="red")+geom_hline(yintercept=0, color="blue")+
+  xlab("X")+ylab("Residuals")
+```
+
+- We can also see in the \alert{residual plot} that the size of residuals increases as $X$ increases
+
+### Detecting Heteroskedasticity
+
+- Several tests to check if data is heteroskedastic 
+- One common test is **Breusch-Pagan test** 
+- Can use `bptest()` with `lmtest` package in `R`
+    - $H_0$: homoskedastic
+    - If $p$-value < 0.05, reject $H_0\implies$ heteroskedastic
+
+\onslide<6->
+
+```{r, message=FALSE}
+library("lmtest") #load lmtest package, install if first time
+bptest(het.reg)
+```
+
+### Standard Errors: Technical Digression
+
+- Before we generate \alert{robust SE's}, let's look at plain SEs
+- Regression creates a **variance-covariance** matrix ('`vcov`') of OLS estimators (betas), e.g. 
+
+\onslide<2->
+
+$$\begin{bmatrix}
+cov(\hat{\beta_0},\hat{\beta_0}) & cov(\hat{\beta_0},\hat{\beta_1}) \\
+cov(\hat{\beta_0}, \hat{\beta_1}) & cov(\hat{\beta_1},\hat{\beta_1}) \\
+\end{bmatrix}$$
+
+- Why a matrix?
+    - We currently have 2 OLS estimators ($\hat{\beta_0}, \hat{\beta_1}$) for 1 $X_i$ variable 
+    - We eventually will have $k$ $X_i$ variables, so a $\big(k+1 \times k+1\big)$ matrix 
+- The 'diagonal' of the matrix contains the variance of each OLS estimator, since $cov(X,X)=var(X)$
+- Taking the diagonal and square rooting the terms gives us the SE of each estimator
+
+### Standard Errors: In `R` 
+
+\scriptsize 
+
+```{r}
+# the variance-covariance matrix
+vcov(het.reg)
+#the var(beta)'s are the diagonal of the matrix
+
+diag(vcov(het.reg)) # look at just the diagonal values
+
+#convert into standard errors by square rooting 
+sqrt(diag(vcov(het.reg)))
+```
+
+### Standard Errors: In `R` II 
+
+\scriptsize 
+
+```{r}
+# confirming the SE's match what R finds automatically with lm()
+summary(het.reg)
+```
+
+### Using Robust Standard Errors in `R` 
+
+\footnotesize 
+
+```{r, warning=FALSE, message=FALSE}
+library("sandwich") # package that allows for robust SE estimation, install if first use
+library("lmtest") # package that allows for coefficient tests, install if first use
+
+# take original regression and change standard errors to robust SEs # 
+
+# create Robust Standard Errors for regression as 'het.reg$rse' 
+het.reg$rse <-sqrt(diag(vcovHC(het.reg, type="HC1"))) 
+# same procedure as above but now we generate vcov with "HC1" method (technical)
+
+```
+
+### Using Robust Standard Errors in `R` II
+
+- Using `coeftest()` function in the `lmtest` package, hypothesis tests with robust SEs
+
+\tiny  
+
+```{r}
+coeftest(het.reg) # test with normal SEs 
+coeftest(het.reg,vcov=vcovHC(het.reg,"HC1")) # tests with robust SEs
+```
+
+
+### Using Robust Standard Errors in `R`: `stargazer` output 
+
+\center 
+
+```{r,echo=FALSE,results="asis", message=FALSE, warning=FALSE}
+
+library("stargazer")
+stargazer(het.reg, het.reg, se=list(NULL,het.reg$rse), type="latex", header=FALSE, style="qje", 
+          column.labels = c("Normal SEs", "Robust SEs"), title="Regression Results", float=FALSE, 
+          font.size = "scriptsize", omit.stat=c("adj.rsq","f")) 
+```
+
+
+# Solvable Regression Problem \#2: Outliers
+
+### Outliers Can Bias OLS
+
+```{r, echo=FALSE, fig.height=4}
+#Just to simplify the dataset, let's make a new, smaller data frame with just the variables: observation, district, testscr, and str 
+CA.simple<-subset(CASchool,select=c(observat,district,testscr,str))
+
+#Now let's create two crazy outliers 
+outlier<-c(421,"Terrible School 1",800,30)
+outlier2<-c(422,"Terrible School 2",850,28)
+outlier3<-c(423,"Terrible School 2",820,29)
+
+#And add them to a new dataframe 
+CA.outlier<-rbind(CA.simple,outlier,outlier2,outlier3)
+CA.outlier$str<-as.numeric(CA.outlier$str) #dont know why it changes class to character, change to numeric
+CA.outlier$testscr<-as.numeric(CA.outlier$testscr)
+outliers<-subset(CA.outlier, testscr>790) 
+
+#Create a scatterplot with the outlier 
+ggplot(CA.simple, aes(str,testscr))+
+  geom_point(color="blue")+ #the normal data points
+  geom_smooth(data=CA.simple,method=lm, color="red")+ #the regression line
+  geom_point(data=outliers, color="magenta")+ #the outliers (in magenta)
+  geom_smooth(data=CA.outlier, method=lm,color="purple")+ #the regression line with outliers
+  xlab("Student to Teacher Ratio")+ylab("Test Score")+theme_bw()
+```
+
+- \alert{Outliers} can affect the slope (and intercept) of the line
+
+### Outliers Can Bias OLS
+
+\center 
+
+```{r, echo=FALSE, warning=FALSE, message=FALSE, results="asis"}
+# run regression with outlier
+school.outlier.reg<-lm(testscr~str, data=CA.outlier)
+
+# output plain regression and outlier regression 
+stargazer(school.outlier.reg, school.regression, type="latex", header=FALSE, style="qje", 
+          column.labels = c("With Outliers", "Without Outliers"), title="Regression Results", float=FALSE, 
+          font.size = "scriptsize", omit.stat=c("adj.rsq","f")) 
+```
+
+
+### Detecting Outliers
+
+- Plot the data and look! 
+- A few methods to detect \alert{influence}: ability of individual observations to affect OLS estimates
+
+### Detecting Outliers with `car` Package
+
+```{r, message=FALSE, warning=FALSE}
+library("car")
+
+# Use Bonferonni test 
+outlierTest(school.outlier.reg) # will point out which obs #s seem outliers
+```
+
+### dfbetas
+
+- **dfbetas** measure how different each OLS coefficient will be without each observation
+    - Scales the measure by standard error of OLS coefficient with observation deleted
+    - Name means "difference in beta" from deleted observation
+        - e.g. $dfbeta_i=-3$: observation $i$ decreases coefficient by 3 standard errors 
+    - Downside: calculates this measure for *each* observation for *each* beta ($n \times k$ dfbetas)! 
+
+### dfbetas in R
+
+\tiny 
+```{r}
+dfbetas(school.outlier.reg)
+```
+
+### Dealing with Outliers
+
+- Often, outliers may be the result of human error (measurement, transcribing, etc)
+- Outliers may be meaningful and accurate
+- In any case, compare how including/dropping outliers affects regression and always discuss outliers! 
+
+# Advanced Plotting in `R` with `ggplot2`
+
+### ``ggplot2``
+
+\begin{columns}
+  \begin{column}[c]{9cm}
+    \begin{itemize}[<+->]
+      \item \texttt{ggplot2} is the most popular package
+      \item Created by Hadley Wickham, part of \texttt{tidyverse} (really the "Hadleyverse")
+      \item Very powerful and beautiful, but requires a bit more of a learning curve
+      \item All those "cool graphics" you've seen in the New York Times, fivethirtyeight, the Economist, Vox, etc. used ggplot2 
+      \item \texttt{gg} stands for a \textbf{grammar of graphics}
+    \end{itemize}
+  \end{column}
+  \begin{column}[c]{4cm}
+    \begin{figure}
+      \includegraphics[height=2.5in]{hadleyplot2}
+    \end{figure}
+  \end{column}
+\end{columns}
+
+### A Picture is Worth a Thousand Words
+
+\begin{figure}
+  \includegraphics[height=2.25in]{racialdotnyc}
+  \caption*{\footnotesize Dustin Cable's Racial Dot Map of NYC\footnote{1 dot = 1 person, colors: \textcolor{blue}{White}, \textcolor{green}{African-American}, \textcolor{red}{Asian}, \textcolor{orange}{Latino}, \textcolor{brown}{All Other}}, \href{https://www.wired.com/2013/08/how-segregated-is-your-city-this-eye-opening-map-shows-you/}{The Best Map Ever Made of America's Racial Segretation}; his (Python) code is open-source and available on \href{https://github.com/unorthodox123/RacialDotMap}{Github}}
+\end{figure}
+
+### `ggplot2`: All Your Figure Are Belong to Us
+
+\begin{table}
+  \begin{tabular}{ccc}
+    \includegraphics[height=1.4in]{538gg1} & \includegraphics[height=1.4in]{538gg2} & \includegraphics[height=1.4in]{nytgg}\\
+    From \href{https://fivethirtyeight.com/features/fastest-airlines-fastest-airports/}{fivethirtyyeight} & From \href{https://fivethirtyeight.com/features/fastest-airlines-fastest-airports/}{fivethirtyyeight} & From \href{https://archive.nytimes.com/www.nytimes.com/interactive/sports/football/2013-fantasy-football-tier-charts-QB.html}{New York Times} \\
+  \end{tabular}
+\end{table}
+
+### `ggplot2` figures 
+
+\begin{columns}
+  \begin{column}[c]{8cm}
+    \begin{itemize}
+      \item Figures produced are \textbf{vector-based} graphics (.pdf, .svg)
+      \begin{itemize}
+        \item Can rescale to any size and not look "pixely"
+        \item But big file size
+      \end{itemize}
+      \item<2-> Can save figures as \textbf{raster-based} graphics (.png, .jpeg, .bmp, .gif)
+      \begin{itemize}
+        \item Look \emph{awful} when blown up
+        \item But small file size, great for MS Office and Web
+      \end{itemize}
+      \item<3-> Suggestions:
+      \begin{itemize}
+        \item If printing on paper, save graphics as .pdf 
+        \item If posting to the web, save as .png and specify size 
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}[c]{4cm}
+    \begin{figure}
+      \includegraphics[height=2in]{vectorgraphics}
+    \end{figure}
+  \end{column}
+\end{columns}
+
+### Two Ways to Plot
+
+1. Just the single `ggplot` command 
+    - Will view plot right after producing it
+    - Does not save as an object
+    - Need to rerun or copy/paste full command producing plot in order to modify or view it again
+    - Can still put it in a document
+
+
+```{r, eval=FALSE}
+ggplot(...) # make and view plot
+ggplot(some.options) # remake plot with new options and view plot
+```
+
+### Two Ways to Plot II 
+
+2. Create an object (as usual in `R`)
+    - This allows you to save the plot for later (re)use
+    - Also allows you to modify it 
+    - Any time you want to view display it (i.e. for putting it in a document), just call up the plot by name
+
+```{r, eval=FALSE}
+plot.name<-ggplot(...) # make plot
+plot.name<-plot.name+some.options # add new options to existing plot
+plot.name # view plot 
+```
+
+### Grammar of Graphics
+
+```{r, eval=FALSE}
+plot.name<-ggplot(data=mydf, mapping=aes(x=xvar,y=yvar))+
+  geom_something(options)+
+  moreoptions...
+```
+
+- `gg` "grammar of graphics" implies any graphic can be built from the same components/layers:
+    1. **Data**: base-layer describes the data used
+        - `mydf` is the dataframe containing `xvar` and `yvar`
+        - `aes()` "aesthetics" identifies `xvar` (and if applicable `yvar`) from data to be "mapped" to a visual mark
+    2. **Geoms**: visual marks that represent data observations or models, common examples:
+        - e.g. `geom_point`, `geom_line`, `geom_bar`, `geom_histogram`, `geom_density`, `geom_boxplot`
+    3. **Coordinates**: Cartesian coordinates are default
+        - change scales, axes, labels, etc; advanced options like maps 
+
+### Example
+
+For our example, we'll use the [mpg dataset](https://ggplot2.tidyverse.org/reference/mpg.html) loaded with the `ggplot2` package 
+
+```{r}
+library("ggplot2") #load ggplot2
+mpg #look at dataset
+```
+
+### `gg` Histogram: Base Layer
+
+- Start with the base layer: establish the data source, define $x$ variable
+
+```{r, fig.height=3.5}
+mpg.h<-ggplot(data=mpg,mapping=aes(x=hwy))
+mpg.h
+```
+
+### `gg` Histogram: Adding Geoms
+
+- Add a histogram layer of `hwy`
+
+```{r, fig.height=3.5, message=FALSE, warning=FALSE}
+mpg.h1<-mpg.h+geom_histogram()
+mpg.h1
+```
+
+### `gg` Histogram: Customizing Geoms
+
+- Edit the histogram (\# of bins, color, etc)
+
+```{r, fig.height=3.5}
+mpg.h2<-mpg.h+geom_histogram(bins=20, color="black",fill="indianred")
+mpg.h2
+```
+
+### `gg` Histogram: Adding Other Layers
+
+- Add a vertical line for the mean with another `geom` called `vline`
+
+```{r, fig.height=3.5}
+mpg.h2<-mpg.h2+
+  geom_vline(xintercept=mean(mpg$hwy),linetype="dotted",color="blue",size=1)
+mpg.h2
+```
+
+### `gg` Histogram: Editing Coordinates (Axes)
+
+- Change the labels on the axes with `xlab()` and `ylab()`
+
+```{r, fig.height=3.5}
+mpg.h2<-mpg.h2+xlab("Miles Per Gallon (on Highway)")+ylab("Number of Cars")
+mpg.h2
+```
+
+### `gg` Other Geoms
+
+- How about a **density plot**: use `geom_density()` instead of `geom_histogram()`
+
+```{r, fig.height=3.5}
+mpg.d<-ggplot(data=mpg,aes(x=hwy))+
+  geom_density(fill="indianred")
+mpg.d
+```
+
+### `gg` Other Geoms
+
+- Let's make a separate density plot for each `class`, set `aes` to `fill` by `class`
+
+```{r, fig.height=3.5}
+mpg.d<-ggplot(data=mpg,aes(x=hwy,fill=class))+
+  geom_density(alpha=0.5) # alpha adds transparency
+mpg.d
+```
+
+### `gg` Boxplot
+
+- Instead of a density plot, a `boxplot` by `class` (note now `x` is `class` and `y` is `hwy`): 
+
+```{r, fig.height=3.5}
+mpg.b<-ggplot(data=mpg,aes(x=class,y=hwy,fill=class))+
+  geom_boxplot()
+mpg.b
+```
+
+
+### Scatterplot
+
+- Start with the base layer: establish data source, define $x$ and $y$ variables
+
+```{r, fig.height=3.5}
+mpg.p<-ggplot(data=mpg,aes(x=displ, y=hwy)) #use mtcars df, let x=displ, y=hwy
+
+mpg.p
+```
+
+### Scatterplot: Geom Layer
+
+```{r, fig.height=3.5}
+mpg.p<-mpg.p+geom_point() # specify observations as points on graph
+
+mpg.p
+```
+
+### Scatterplot: Geom Layer Options
+
+```{r, fig.height=3.5}
+mpg.p<-mpg.p+geom_point(aes(color=manufacturer)) # color data points by manuf.
+
+mpg.p
+```
+
+
+### Scatterplot: Geom Layer II 
+
+```{r, fig.height=3.5}
+mpg.p<-mpg.p+geom_smooth(method="lm", color="black") # add a black OLS line 
+
+mpg.p
+```
+
+### Scatterplot: Coordinate Layer
+
+```{r, fig.height=3.5}
+mpg.p<-mpg.p+xlab("Engine Displacement (Liters)")+
+  ylab("Miles Per Gallon on Highway")
+mpg.p
+```
+
+### Scatterplot: Coordinate Options
+
+- Let's have some fun changing the theme 
+
+```{r, fig.height=3.5}
+library("ggthemes") # need ggthemes package (install if first use)
+mpg.p<-mpg.p+theme_economist_white() #make it look like The Economist magazine
+mpg.p
+```
+
+
+### Scatterplot: Coordinate Options II 
+
+```{r, fig.height=3.5}
+mpg.p<-mpg.p+theme_fivethirtyeight() #make it look like fivethirtyeight
+mpg.p
+```
+
+### Scatterplot: Coordinate Options: Facetting
+
+```{r, fig.height=3.5}
+# make columns of separate 'facet' figures for each class of car
+mpg.p<-mpg.p+facet_grid(cols = vars(class)) # make 'columns' by variable 'class'
+mpg.p
+```
+
+### All Together Now
+
+```{r, fig.height=3.5}
+ggplot(data=mpg,aes(x=displ, y=hwy))+geom_point(aes(color=manufacturer))+
+  geom_smooth(color="black",method="lm")+
+  xlab("Engine Displacement (Liters)")+ylab("Miles Per Gallon on Highway")+
+  theme_fivethirtyeight()+facet_grid(cols = vars(class)) 
+```
+
+### Advanced Uses of `ggplot2`: Maps (See Rmd for Code)
+
+```{r,echo=FALSE,fig.height=5.5,message=FALSE}
+# requires packages "maps" and "reshape2", in addition to ggplot2
+crimes <- data.frame(state = tolower(rownames(USArrests)),USArrests)
+library(reshape2) # for melt
+crimesm <- melt(crimes, id = 1)
+# Get map data
+require(maps) 
+map_data <- map_data("state")
+# Plot the map with Murder data
+ggplot(crimes, aes(map_id = state)) + 
+  geom_map(aes(fill = UrbanPop), map = map_data) + 
+  expand_limits(x = map_data$long, y = map_data$lat)+
+  xlab("Longitude")+ylab("Longitude")
+```
+
+
+### Advanced Uses of `ggplot2`: Maps (See Rmd for Code) II 
+
+```{r, echo=FALSE, message=FALSE,warning=FALSE,fig.height=5.5}
+dat <- read.csv("../Data/EconomistData.csv")
+library("tidyverse")
+library("ggrepel") # to push text labels away from actual point
+
+mR2 <- summary(lm(HDI ~ CPI + log(CPI), data = dat))$r.squared
+mR2 <- paste0(format(mR2, digits = 2), "%")
+
+p <- ggplot(dat,
+            mapping = aes(x = CPI, y = HDI)) +
+  geom_smooth(mapping = aes(linetype = "r2"),
+              method = "lm",
+              formula = y ~ x + log(x), se = FALSE,
+              color = "red") +
+  geom_point(mapping = aes(color = Region),
+             shape = 1,
+             size = 4,
+             stroke = 1.5) +
+  geom_text_repel(mapping = aes(label = Country, alpha = labels),
+                  color = "gray20",
+                  data = transform(dat,
+                                   labels = Country %in% c("Russia",
+                                                           "Venezuela",
+                                                           "Iraq",
+                                                           "Mayanmar",
+                                                           "Sudan",
+                                                           "Afghanistan",
+                                                           "Congo",
+                                                           "Greece",
+                                                           "Argentinia",
+                                                           "Italy",
+                                                           "Brazil",
+                                                           "India",
+                                                           "China",
+                                                           "South Africa",
+                                                           "Spain",
+                                                           "Cape Verde",
+                                                           "Bhutan",
+                                                           "Rwanda",
+                                                           "France",
+                                                           "Botswana",
+                                                           "France",
+                                                           "US",
+                                                           "Germany",
+                                                           "Britain",
+                                                           "Barbados",
+                                                           "Japan",
+                                                           "Norway",
+                                                           "New Zealand",
+                                                           "Sigapore"))) +
+  scale_x_continuous(name = "Corruption Perception Index, 2011 (10=least corrupt)",
+                     limits = c(1.0, 10.0),
+                     breaks = 1:10) +
+  scale_y_continuous(name = "Human Development Index, 2011 (1=best)",
+                     limits = c(0.2, 1.0),
+                     breaks = seq(0.2, 1.0, by = 0.1)) +
+  scale_color_manual(name = "",
+                     values = c("#24576D",
+                                "#099DD7",
+                                "#28AADC",
+                                "#248E84",
+                                "#F2583F",
+                                "#96503F"),
+                     guide = guide_legend(nrow = 1, order=1)) +
+  scale_alpha_discrete(range = c(0, 1),
+                       guide = FALSE) +
+  scale_linetype(name = "",
+                 breaks = "r2",
+                 labels = list(bquote(R^2==.(mR2))),
+                 guide = guide_legend(override.aes = list(linetype = 1, size = 2, color = "red"), order=2)) +
+  ggtitle("Corruption and human development") +
+  labs(caption="Sources: Transparency International; UN Human Development Report") +
+  theme_bw() +
+  theme(panel.border = element_blank(),
+        panel.grid = element_blank(),
+        panel.grid.major.y = element_line(color = "gray"),
+        text = element_text(color = "gray20"),
+        axis.title.x = element_text(face="italic"),
+        axis.title.y = element_text(face="italic"),
+        legend.position = "top",
+        legend.direction = "horizontal",
+        legend.box = "horizontal",
+        legend.text = element_text(size = 12),
+        plot.caption = element_text(hjust=0),
+        plot.title = element_text(size = 16, face = "bold"))
+p
+
+```
+
+### Getting Help and Customizing to Your Heart's Content
+
+\begin{columns}
+  \begin{column}[c]{9cm}
+    \begin{itemize}
+      \item Every single command and option has \href{https://ggplot2.tidyverse.org/reference/index.html}{extensive documentation with examples}
+      \begin{itemize}
+        \item<2-> Can type \texttt{?} in front of any function to get help and examples (e.g. \texttt{?aes()}, \texttt{?geom\_smooth()})
+      \end{itemize}
+      \item<3-> Data work is a science, but it should also be \textbf{art}!
+      \item<4-> I will \emph{not}  grade you on the beauty of your graphics (but we're all secretly judging!)
+      \begin{itemize}
+        \item<5-> \texttt{hist()} and \texttt{plot()} are fine, you are not required to use \texttt{ggplot2} (but you really should! )
+      \end{itemize}
+    \end{itemize}
+  \end{column}
+  \begin{column}[c]{4cm}
+    \begin{figure}
+      \includegraphics[height=2.5in]{hadleyplot2}
+    \end{figure}
+  \end{column}
+\end{columns}
+
