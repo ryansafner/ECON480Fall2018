@@ -446,6 +446,19 @@ plot.name<-ggplot(data=mydf, mapping=aes(x=xvar,y=yvar))+
     3. **Coordinates**: Cartesian coordinates are default
         - change scales, axes, labels, etc; advanced options like maps 
 
+### Grammar of Graphics II
+
+- Most important idea to master is `aes()` **aesthetics** that map data to visual markings
+- Aesthetics come in many forms and many options, depending on the context of the data
+    - Must identify position (e.g. what is `x` and `y`) 
+    - Determine the marking with various `geoms` (points, bars, lines, boxes, etc)
+    - Can pass additional options into `geom` (color, size, shape, etc) 
+        - Particularly important if we want color, size, or shape to depend on a particular variable in dataset
+
+\begin{figure}
+  \includegraphics[height=1.5in]{ggplotaes}
+\end{figure}
+
 ### Example
 
 For our example, we'll use the [mpg dataset](https://ggplot2.tidyverse.org/reference/mpg.html) loaded with the `ggplot2` package 
@@ -558,7 +571,6 @@ mpg.p<-mpg.p+geom_point(aes(color=manufacturer)) # color data points by manuf.
 mpg.p
 ```
 
-
 ### Scatterplot: Geom Layer II 
 
 ```{r, fig.height=3.5}
@@ -624,7 +636,7 @@ map_data <- map_data("state")
 ggplot(crimes, aes(map_id = state)) + 
   geom_map(aes(fill = UrbanPop), map = map_data) + 
   expand_limits(x = map_data$long, y = map_data$lat)+
-  xlab("Longitude")+ylab("Longitude")
+  xlab("Longitude")+ylab("Latitude")
 ```
 
 
@@ -727,11 +739,12 @@ p
       \item Every single command and option has \href{https://ggplot2.tidyverse.org/reference/index.html}{extensive documentation with examples}
       \begin{itemize}
         \item<2-> Can type \texttt{?} in front of any function to get help and examples (e.g. \texttt{?aes()}, \texttt{?geom\_smooth()})
+        \item<3-> More help and examples from Wickham's \href{http://r4ds.had.co.nz/data-visualisation.html}{R for Data Science book chapter on ggplot2}
       \end{itemize}
-      \item<3-> Data work is a science, but it should also be \textbf{art}!
-      \item<4-> I will \emph{not}  grade you on the beauty of your graphics (but we're all secretly judging!)
+      \item<4-> Data work is a science, but it should also be \textbf{art}!
+      \item<5-> I will \emph{not}  grade you on the beauty of your graphics (but we're all secretly judging!)
       \begin{itemize}
-        \item<5-> \texttt{hist()} and \texttt{plot()} are fine, you are not required to use \texttt{ggplot2} (but you really should! )
+        \item<6-> \texttt{hist()} and \texttt{plot()} are fine, you are not required to use \texttt{ggplot2} (but you really should! )
       \end{itemize}
     \end{itemize}
   \end{column}
@@ -742,3 +755,48 @@ p
   \end{column}
 \end{columns}
 
+### More Help
+
+![[Rstudio's Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)](ggplot2cheat.png)
+
+
+### Beautiful Graphics: Less is More 
+
+\begin{figure}
+  \includegraphics[height=2.5in]{badfigure}
+  \caption*{"Kill me now"}
+\end{figure}
+
+### Beautiful Graphics: Less is More II 
+
+\begin{figure}
+  \includegraphics[height=2.5in]{goodfigure}
+\end{figure}
+
+### Beautiful Graphics: Less is More III  
+
+\begin{figure}
+  \includegraphics[height=2in]{goodfigure2}
+\end{figure}
+
+### Beautiful Graphics: Less is More IV
+
+[Less is More: Example Gif](http://stat545.com/img/less-is-more-darkhorse-analytics.gif)
+
+### Resources (Best are **Bolded**)
+
+On `ggplot2`
+
+- **R Studio's [ggplot2 Cheat Sheet](https://www.rstudio.com/wp-content/uploads/2015/03/ggplot2-cheatsheet.pdf)**
+- **`ggplot2`'s website [reference section](https://ggplot2.tidyverse.org/reference/index.html)**
+- STHDA's [be awesome in ggplot2](http://www.sthda.com/english/wiki/be-awesome-in-ggplot2-a-practical-guide-to-be-highly-effective-r-software-and-data-visualization)
+- r-statistic's [top 50 ggplot2 visualizations](http://r-statistics.co/Top50-Ggplot2-Visualizations-MasterList-R-Code.html)
+- Hadley Wickham's \href{http://r4ds.had.co.nz/data-visualisation.html}{R for Data Science book chapter on ggplot2}
+
+On data visualization
+
+- **Kieran Healy's [Data Visualization: A Practical Guide](http://socviz.co/)**
+- **Claus Wilke's [Fundamentals of Data Visualization](https://serialmentor.com/dataviz)**
+- PolicyViz [Better Presentations](https://policyviz.com/) 
+- Karl Broman's [How to Display Data Badly](https://www.biostat.wisc.edu/~kbroman/presentations/IowaState2013/graphs_combined.pdf)
+- [I Want Hue](http://tools.medialab.sciences-po.fr/iwanthue/) 
