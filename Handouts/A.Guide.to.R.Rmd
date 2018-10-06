@@ -1,0 +1,366 @@
+---
+title: "A Modest Handbook for R"
+author: "Ryan Safner"
+date: "9/28/2018"
+output: 
+  html_document:
+    toc: true 
+---
+
+> "There’s an implied contract between you and R: it will do the tedious computation for you, but in return, you must be completely precise in your instructions. Typos matter. Case matters." - Hadley Wickham, [R for Data Science](http://r4ds.had.co.nz/workflow-basics.html)
+
+# Basic Concepts
+
+# Hints for Writing Code
+
+## Calculations
+
+- `R` can be used as a calculator 
+    - Basic operations `+`, `-`, `*`, `/`
+    - More advanced math operators like exponents, logarithms, trigonometric functions, etc
+
+```{r}
+2+2
+6^2 # 6 to the second power (i.e. squared)
+sqrt(100/4) # square root 
+log(5) # logarithm
+sin(2*pi) # sin
+factorial(5) # factorial (e.g. 5!)
+choose(2,6) # binomial choose function
+
+# order of operations matters
+3*3+4
+3*(3+4)
+```
+
+- `R` often reports very large (or very small) numbers in scientific notation with `e`
+    - For positive `e`: the number of zeros (or digits after the decimal point) to the right of a number 
+        - e.g. $1.25e6 = 1.25 \times 10^6 = 1,250,000$
+    - For negative `e`: one less than the number of zeros (or digits after the decimal point) to the left of a number 
+        - e.g. $1.25e-6 = 1.25 \times 10^{-6} = 0.00000125$
+        
+# Objects
+
+## Vector 
+
+- The simplest data structure in `R` is a \alert{vector}, simply a collection of objects
+- To construct a vector, use the "combine/concatenate" function "**c()**"
+- **Example**: a vector of the numbers 1 through 5
+
+```{r vector1}
+c(1,2,3,4,5)
+```
+
+- We can also build vectors via generating series
+
+\onslide<6->
+```{r vector 11}
+1:5
+```
+
+
+- We can perform mathematical operations on a vector as a whole:
+```{r vector 3}
+sum(1:5)
+mean(1:5)
+```
+
+- `R` is an \alert{object-oriented} programming language 
+- We will almost always store data in **objects** and run **functions** on objects
+    - Objects are assigned values: `objectname<-value`
+    - Functions take the form: `functionname(objectname)`
+- Storing a vector as an object called "*x*" using the assignment operator "**<-**" 
+
+```{r store.vector.as.x}
+x<-c(1,2,3,4,5)
+```
+- To inspect an object, we simply call it up by name
+
+```{r look.at.x}
+x
+```
+
+# Data Classes
+
+
+- Vectors **must** contain the same type of elements (e.g. numerical or text)
+  * Technically this refers to **atomic vectors** (nearly all vectors are atomic)
+- Vectors with "mixed" types will convert all elements to the lowest-common denominator, e.g. character
+- You can always check the type of vector using **class()**
+```{r vector.types}
+mixed<-c(5, pi, TRUE, 4.3, "cabbage")
+class(mixed)
+```
+
+### Numeric
+
+- \alert{Numeric} (aka "double"), as it sounds, can perform mathematical operations
+```{r numeric, echo=TRUE, eval=FALSE}
+numeric<-c(1,2,3,4,5)
+```
+
+- There are two **types** of numeric objects: **double** and **integer** 
+
+### Double
+
+- If numeric values contain decimal points, they are technically called \alert{floating point double} or simply \alert{double} class
+- `R` may simply call them numeric, but contrast with integer below 
+
+```{r}
+double<-c(pi,2.34,9.99)
+
+class(double)
+typeof(double) # will return the more specific type 
+
+is.double(double) # a logical test to see if object is "double" type
+is.integer(double) # a logical test to see if object is "integer" type
+```
+
+#### Integer
+
+- If numeric values are all whole numbers, they are \alert{integer} class
+
+```{r}
+integers<-c(1,2,3,4)
+class(integers)
+typeof(integers)
+
+is.double(double)
+is.integer(double)
+```
+
+### Logical
+
+- \alert{Logical} is a series of binary elements or statements that can either be TRUE or FALSE
+
+```{r logical, echo=TRUE,eval=FALSE}
+logical<-c(TRUE,FALSE,FALSE,TRUE)
+```
+
+- We can perform logical tests with common operators:
+    - `<` less than
+    - `>` greater than
+    - `<=` less than or equal to ($\leq$)
+    - `>=` greater than or equal to ($\geq$)
+    - `==` is equal to (note two equals signs are needed!)
+    - `!=` is not equal to 
+    - `%in%` is a member of a set ($\in$)
+
+```{r}
+3==4 #is 3 equal to 4?
+3<4 # is three less than 4?
+3<=4 # is three less than or equal to 4?
+3>4 # is three greater than 4?
+3!=4 # is three not equal to four?
+3 %in% c(0,1,2) # is three in the following set of numbers?
+3 %in% c(0,1,2,3) # is three in the following set of numbers?
+```
+
+- We are not limited to using numeric data, `R` can also perform logical tests on other classes of variable, like characters (which need quotes): 
+
+```{r}
+"red"=="blue" # is red the same as blue?
+"red"!="blue" # is red not equal to blue?
+political.party<-c("Republican","Democrat") # define political party as a set of Republican and Democrat
+"Libertarian" %in% political.party # check if Libertarian is in the set of political parties we created
+"Democrat" %in% political.party # check if Democrat is in our set of political parties 
+```
+
+- We can also perform more than one test at a time with multiple conditions:
+    - `&` AND 
+    - `|` OR 
+
+```{r}
+2==2 & 2>3 # is 2 equal to 2 AND greater than 3? 
+2==2 | 2>3 # is 2 equal to 2 OR greater than 3? 
+```
+
+- These commands will become very useful when we want to subset data or look at portions of our data based on some condition
+
+### Character
+
+- \alert{Character} is a string of text: letters, numbers, and symbols, cannot perform mathematical operations
+    - Character values require quotation marks around each value 
+```{r char, echo=TRUE,eval=FALSE}
+character<-c("one","two","7","orange")
+```
+
+#### Dates
+
+- Dates are a specific type of character class
+- Specific dates
+    * Can do days, weeks, months, quarters, years
+```{r dates 1}
+today<-Sys.Date() #print today's date 
+format(today, format="%B %d %Y") # specify how to report date format 
+
+months<-seq(as.Date("2010/1/1"), as.Date("2012/1/1"), "months") # generate sequence of months between Jan 2010 and Jan 2012
+months
+```
+
+### Factor 
+
+- \alert{Factor} is a special type of character variable, often used to indicate membership in one of several possible categories, called **levels** (e.g. for plotting, or conditional statistics and data work)
+```{r factors}
+students<-factor(c("freshman", "senior", "senior", "junior", "freshman", 
+                   "sophomore", "freshman"))
+levels(students) #extract unique levels 
+nlevels(students) #count the number of levels 
+```
+
+```{r factors2}
+table(students) #tabulate number of values for each level 
+```
+
+#### Ordered Factors
+
+```{r}
+o.factor<-c("freshman","sophomore","junior","senior")
+o.factor
+```
+
+- **Be advised**: when `R` stores and calls factors, it actually stores them as integers [1..k, for k categories] instead of characters (e.g. "freshman"=1, "sophomore"=2), making this a **nominal** variable. This allows for some mathematical operations.
+- An **ordered factor** is where the ordering matters (e.g. "small", "medium", "large" coded as 1, 2, 3 in order)
+
+# Other Object Types
+
+## Lists 
+
+- A \alert{list} is a non-atomic vector, meaning you can gather data elements of different classes in one object 
+
+```{r list}
+mylist<-list(5, pi, TRUE, 4.3, "cabbage")
+class(mylist)
+```
+
+- Another great property of lists is that elements of the list can themselves be vectors
+
+```{r}
+vectored.list<-list(c(1.82, 1940, 93.20, 192.917),
+     c("Orange", "Cyan", "Pink"),
+     c(TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE))
+
+str(vectored.list) # look at structure of the list
+```
+
+- We can create a **label** for each element in a list, called a `name` 
+
+```{r}
+vectored.list<-list(numbers=c(1.82, 1940, 93.20, 192.917), # first element is a vector called 'numbers'
+     colors=c("Orange", "Cyan", "Pink"), # second element is a vector called `colors`
+     logic=c(TRUE, FALSE, TRUE, TRUE, FALSE, TRUE, FALSE, FALSE)) # third element is a vector called `logic`
+
+vectored.list
+```
+
+- The `names` command prints (or changes) the name of the label of each element in the list
+
+```{r}
+names(vectored.list) # print the names of the list elements
+names(vectored.list)<-c("name1","name2","name3") # rename the lables to 'name1', 'name2', and 'name3'
+
+names(vectored.list) # print new names
+vectored.list # print list with new names
+```
+
+## Matrix
+
+- Everything thus far has been 1 dimension, but we often work with 2-dimensional data
+    - Rows are observations
+    - Columns are variables
+- A \alert{matrix} 
+    - `matrix()` command creates a matrix by column,
+        - can define number of rows with `nrow=`, `R` will divide the elements into equal number of columns 
+    
+```{r}
+matrix1<-matrix(c(1,2,3,4,5,6),nrow=3) # make a 3-row matrix
+matrix1 
+```
+
+## Data Frame
+
+- The most important object in `R` is a **data frame** (what you call a "spreadsheet"), used for statistics, plots, regressions, etc
+    - "Rectangular" data, rows are observations, columns are variables 
+    - Can hold variables of different classes (e.g. a quantitative variable like income, a character variable like name, etc)
+    - In essence, data frames are actually lists (where each list object itself is a vector)
+    - All vectors (columns) must have the same length! 
+
+```{r}
+
+df<-data.frame(x = 1:3,
+           y = c("a", "b", "c"),
+           z = c(TRUE, FALSE, TRUE))
+df
+```
+
+# Manipulating Objects
+
+### Indexing and Subsetting Objects
+
+- `R` objects store multiple values as an ordered list
+    - The order of each value is kept as an index number
+        - e.g. the first value is [1], the second value is [2], the 82nd value is [82], etc. 
+
+- Use [square brackets] to isolate elements of a vector, index starts at [1]
+
+```{r vector.index}
+print(mylist) #Our original vector 
+mylist[1] #Inspect first element 
+mylist[c(1,3)] #Inspect first and third elements
+mylist[2]<-"orange" #Change second element
+print(mylist) #Our new vector
+```
+
+- We can also ask how many elements a vector contains with **length()**
+```{r length}
+length(list)
+```
+
+- We can also include expressions when requesting an indexed value 
+```{r length.2}
+#Get second-to-last value in list (length of list minus 1 value)
+mylist[length(mylist)-1]
+```
+
+- It is often useful to label values (later, variables) by giving them "names"
+```{r names}
+myvars<-c(Var1="alpha",Var2=12,Var3="height") #Label name goes first, then =, then the value 
+myvars
+
+#We can still call specific values by index position 
+myvars[3] #Get 3rd value 
+
+#We can equivalently call up specific values by name 
+myvars["Var3"] #Get value of Var3
+names(myvars) #List names of all values
+names(myvars)[3] #Get name of third value
+```
+
+## Checking or Reclassifying Objects
+
+- We can always check the class of an object with `class()` or `typeof()`. 
+    - We can perform logical tests `is.numeric()`, `is.factor()`, etc. to see if an object is a specified type
+    - We can change the class of an object by redefining it with `as.classname()`, e.g.
+
+```{r class change}
+is.numeric(x) # check if x is numeric
+is.factor(x) # check if x is a character
+x<-as.character(x) # change vector x to a character
+class(x)
+x<-as.numeric(x) # change vector x back to numeric 
+class(x)
+```
+
+## Math Operations on Objects
+
+## Redefining Objects
+
+# Plotting 
+
+# Linear Regression
+
+```{r}
+sex<-c("Male", "Female")
+marital<-c("Married","Unmarried")
+```
+

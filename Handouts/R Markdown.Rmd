@@ -1,0 +1,117 @@
+---
+title: "R Markdown"
+author: "Ryan Safner"
+date: "9/22/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+
+
+## In LaTeX
+
+```
+# Section Heading
+
+This is normal text in a paragraph. This text is \textbf{bold}, and this text is in \emph{italics}. Note the syntax for commands to modify text looks like '\\command{text}'.  
+
+% Comments begin with a percent-sign and are not printed with the document 
+
+## Subsection 
+
+Here is more text. Let's also make a list: 
+
+\begin{itemize}
+  \item First item
+  \item Second item
+\end{itemize}
+
+This time let's make the list numbered instead of bullet points:
+
+\begin{enumerate}
+  \item First item
+  \item Second item
+\end{enumerate}
+
+The best use of \LaTeX{} is for math. We can make really fancy equations, that center on the page with: 
+
+\begin{equation}
+		\hat{\beta_1}=\frac{\displaystyle\sum^n_{i=1}(X_i-\bar{X})(Y_i-\bar{Y})}{\displaystyle\sum^n_{i=1}(X_i-\bar{X})^2}
+\end{equation}
+
+We can also put math into the same line as text with dollar signs $\frac{2}{3} \times \pi^2$. 
+
+Latex also is useful for creating tables and figures, both are called "float" environments that must be initiated with a "\\begin{floattype}" and ended with a "\\end{floattype}", e.g.: 
+
+\begin{table}[h!] % h! places the table here in the doc, instead of where latex optimizes the location
+  \begin{tabular}{lcr} %to create three columns, the first left-aligned (l), the second center-aligned (c), the third right aligned (r)\\ % all lines must end with \\
+  c & l & r \\ \hline % hline creates a horizontal line 
+  Example 1 & Example 2 & Example 3\\
+  44 & 66 & 88 \\ \hline 
+  \end{tabular}
+\end{table}
+
+```
+
+# Section Heading
+
+This is normal text in a paragraph. This text is \textbf{bold}, and this text is in \emph{italics}. Note the syntax for commands to modify text looks like '\\command{text}'.  
+
+## Subsection 
+
+Here is more text. Let's also make a list: 
+
+\begin{itemize}
+  \item First item
+  \item Second item
+\end{itemize}
+
+This time let's make the list numbered instead of bullet points:
+
+\begin{enumerate}
+  \item First item
+  \item Second item
+\end{enumerate}
+
+The best use of \LaTeX{} is for math. We can make really fancy equations, that center on the page with: 
+
+\begin{equation}
+		\hat{\beta_1}=\frac{\displaystyle\sum^n_{i=1}(X_i-\bar{X})(Y_i-\bar{Y})}{\displaystyle\sum^n_{i=1}(X_i-\bar{X})^2}
+\end{equation}
+
+We can also put math into the same line as text with dollar signs $\frac{2}{3} \times \pi^2$. 
+
+Latex also is useful for creating tables and figures, both are called "float" environments that must be initiated with a "\\begin{floattype}" and ended with a "\\end{floattype}", e.g.: 
+
+\begin{table}[h!] % h! places the table here in the doc, instead of where latex optimizes the location
+  \begin{tabular}{lcr} %to create three columns, the first left-aligned (l), the second center-aligned (c), the third right aligned (r)\\ % all lines must end with \\
+  c & l & r \\ \hline % hline creates a horizontal line 
+  Example 1 & Example 2 & Example 3\\
+  44 & 66 & 88 \\ \hline 
+  \end{tabular}
+\end{table}
+
+
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r cars}
+summary(cars)
+```
+
+## Including Plots
+
+You can also embed plots, for example:
+
+```{r pressure, echo=FALSE}
+plot(pressure)
+```
+
+Note that the `echo = FALSE` parameter was added to the code chunk to prevent printing of the R code that generated the plot.
