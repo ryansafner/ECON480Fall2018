@@ -1,0 +1,175 @@
+---
+title: "Meet *R Markdown*"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "September 17, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+# Manage Your Workflow
+
+### Your Workflow Has A Lot of Moving Parts
+
+- Writing Text
+- Managing citations and bibliography
+- Performing data analysis
+- Making figures and tables 
+- Save files for future use 
+- Monitor changes in documents 
+- Collaborate and share files with coauthors
+- Combine all elements into single document for presentation
+
+### The "Office Model"
+
+![The Office Model](msofficemodel.png)
+
+### Your Workflow Has A Lot of Moving Parts
+
+- Writing Text
+    - Done in Word, the "realest" part of your workflow 
+- Managing citations and bibliography 
+    - Often done by hand in Word, perhaps a reference manager plugin
+- Performing data analysis 
+    - Done in Excel (possibly Stata/SAS/R), then copy/pasted into Word
+- Making figures and tables 
+    - Done in Excel (possibly Stata/SAS/R), then copy/pasted into Word
+- Save files for future use
+    - Save Word .docx, Excel .xlsx, etc. 
+- Monitor changes in documents
+    - Track changes inside Word file
+- Collaborate and share files with coauthors
+    - Email Word .docx to collaborators, they email back different files, merging, resolving conflicts, etc.
+        - `paper.docx`, `paper2.docx`, `paper2comments.docx`, `paper2edits.docx`, `paperfinal?.docx`, etc.
+    - Google Docs a vast improvement but at cost of word processing sophistication
+- Combine all elements into single document for presentation
+    - Copy/paste everything into Word
+    - Possibly export as a PDF 
+    - Possibly make additional slides in Powerpoint
+
+### Caveats
+
+- "If it ain't broke, don't fix it"
+- I will only offer suggestions that I:
+    - Use myself
+    - Will make guides and tutorials for you
+    - Can answer your questions about 
+- Nothing here is mandatory: if you like your Office model, you can keep it 
+- You just probably never realized there are better alternatives
+
+![](drawanowl.jpg)
+
+### Your Workflow Has A Lot of Moving Parts
+
+- Why not have them all in a single program and file? *R Markdown* 
+    - Writing Text
+    - Managing citations and bibliography 
+    - Performing data analysis 
+    - Making figures and tables 
+    - Save files for future use
+    - Monitor changes in documents 
+    - Collaborate and share files with coauthors\footnote{Collaboration and tracking changes in a system exterto the files would require use of a **version control system** like git}
+    - Combine all elements into single document for presentation
+
+### Version Control with Git
+
+- Microsoft Word's *Track Changes* monitors changes made in the .docx file
+    - Can't go back in the history of all versions of the file, only recent unaccepted changes
+    - Does not back up your files 
+- A **version control system** keeps track of changes made in any file, folder, or project specified and backs up files
+    - Can look at historical versions saved, revert to them, fork into multiple versions
+    - Collaborators can work together on the same or different branches
+    
+# Making Your Work Reproducible
+
+### Plain Text Data Analysis
+
+- Plain text files are meant to be readable by both machines and humans
+
+### Automate Automate Automate! 
+
+- Make you computer work for you by automating as much as possible
+- Minimize error and risk of loss, especially in otherwise repetitive processes
+
+# R Markdown
+
+### Creating a Document
+
+- `File -> New File -> R Markdown...`
+- Options: 
+
+![](newrmarkdown.png)
+
+### Document Types
+
+- Two main options: `html` and `pdf`
+    - Other types, for presentations: `beamer`, `ioslides`, `slidy` (I use `beamer`)
+- `html`: renders a webpage, viewable on any browser
+    - the default, easiest to produce and share
+    - can create interactive elements (gifs, plots, animations)
+    - requires internet connection
+- `pdf`: renders a pdf document, viewable in any pdf viewer
+    - most common document format around
+    - may require `LaTeX` distribution to render 
+    - can't create interactive elements
+
+
+# Structure of a Document
+
+### YAML Header
+
+- The top of a document contains the `YAML`, separated by `---` above and below 
+- Contains the metadata about a document, at minimum the `title`, `author`, and `date` (all can be left blank), and the `output` type (which cannot be blank)
+    - `output` types: pdf document, html document, pdf slides (beamer), html slides (ioslides, slidy)
+- Can be customized extensively (just look at mine)
+    - making slides often requires more customization vs. making a pdf/html document 
+    
+### R Chunks
+
+- You can create a "chunk" of `R` code with three apostrophes above and below your code
+    - After the first pair of apostrophes, signify you want to use `R` with `{r}` 
+    - You can choose to name your chunk (for your own reference only) with a comma after `r` in the brackets, and then your name (no spaces!)
+    - You can then add additional options (with a comma after `r`), frequently used:
+        - `echo=TRUE` or `FALSE`, only displays `R` outputs if `FALSE`, also displays the code inputted if `TRUE`
+        - `eval=TRUE` or `FALSE`, if you want to display your code, but not run it 
+        - `fig.height` and/or `fig.width` = a number, for displaying figures in documents
+        - `results=asis` common for exporting tables (like `stargazer` regression outputs) into .tex or html 
+    - See [here](https://yihui.name/knitr/options/) for a full list
+- If you just want to type code into your document/slides (and not run it), one apostrophe on either side of the code, `like this`
+
+
+### Resources
+
+Resources to read in rough order of importance and level of sophistication (most important-least sophisticated to least important-most sophisticated)
+
+1. R Studio's [R Markdown Cheatsheet](https://www.rstudio.com/wp-content/uploads/2015/02/rmarkdown-cheatsheet.pdf) for a quick overview of R markdown 
+2. R Studio's [Overview of R Markdown](https://rmarkdown.rstudio.com/) for some tutorials 
+3. R Studio's [R Markdown Reference Guide](https://www.rstudio.com/wp-content/uploads/2015/03/rmarkdown-reference.pdf) for more specific options and issues
+4. Kieran Healey's [The Plain Person's Guide to Plain Text Social Science](http://plain-text.co) on managing workflow with plain text files, R, and Git
+5. Yihui Xie's (and coauthors) [R Markdown: the Definitive Guide](https://bookdown.org/yihui/rmarkdown/) on R Markdown syntax and customization options
+6. Hadley Wickham's (and Garrett Grolemund) [R for Data Science](http://r4ds.had.co.nz/) on how to use R and R Markdown for data science work
+7. Jenny Bryan's [Happy Git with R](http://happygitwithr.com/) on how to use git and GitHub with R as a version control system
