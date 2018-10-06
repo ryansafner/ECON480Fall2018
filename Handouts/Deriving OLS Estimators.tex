@@ -1,0 +1,129 @@
+\documentclass{article}
+\usepackage{amssymb, amsmath}
+\usepackage[margin=1in]{geometry}
+
+\title{Econometrics: Deriving OLS Estimators}
+\author{Ryan Safner}
+\date{}
+
+\begin{document}
+	\maketitle
+	
+\section{Deriving The OLS Estimators}
+The population linear regression model is: 
+\begin{equation*}
+Y_i=\beta_0+\beta_1 X_i + \epsilon _i
+\end{equation*}
+The errors ($\epsilon_i$) are unobserved, but for candidate values of $\hat{\beta_0}$ and $\hat{\beta_1}$, we can obtain an estimate of the residual. Algebraically, the error is: 
+\begin{equation}
+\hat{\epsilon_i}=    Y_i-\hat{\beta_0}-\hat{\beta_1}X_i
+\end{equation}
+ Recall our goal is to find $\hat{\beta_0}$ and $\hat{\beta_1}$ that \emph{minimizes} the sum of squared errors (SSE): 
+ \begin{equation}
+     SSE= \sum^n_{i=1} \hat{\epsilon_i}^2 
+ \end{equation}
+So our minimization problem is:
+
+\begin{equation}
+\min_{\hat{\beta_0}, \hat{\beta_1}} \sum^n_{i=1} (Y_i-\hat{\beta_0}-\hat{\beta_1}X_i)^2	
+\end{equation}
+
+Using calculus, we take the partial derivatives and set it equal to 0 to find a minimum. The first order conditions are: 
+\begin{equation}
+\frac{\partial SSE}{\partial \hat{\beta_0}}=-2\displaystyle\sum^n_{i=1} (Y_i-\hat{\beta_0}-\hat{\beta_1} X_i)=0 	
+\label{eq:FOC1}
+\end{equation}
+\begin{equation}
+\frac{\partial SSE}{\partial \hat{\beta_1}}=-2\displaystyle\sum^n_{i=1} (Y_i-\hat{\beta_0}-\hat{\beta_1} X_i)X_i=0 	
+\label{eq:FOC2}
+\end{equation}
+
+\subsection{Finding $\hat{\beta_0}$}
+
+Working with the first FOC, equation~\ref{eq:FOC1}, divide both sides by $-2$: 
+\begin{equation}
+\displaystyle\sum^n_{i=1} (Y_i-\hat{\beta_0}-\hat{\beta_1} X_i)=0 	
+\end{equation}
+Then expand the summation across all terms and divide by $n$: 
+\begin{equation}
+\underbrace{\frac{1}{n}\sum^n_{i=1} Y_i}_{\bar{Y}}-\underbrace{\frac{1}{n}\sum^n_{i=1}\hat{\beta_0}}_{\hat{\beta_0}}-\underbrace{\frac{1}{n}\sum^n_{i=1} \hat{\beta_1} X_i}_{\hat{\beta_1}\bar{X}}=0 	
+\end{equation}
+Note the first term is $\bar{Y}$, the second is $\hat{\beta_0}$, the third is $\hat{\beta_1}\bar{X}$.\footnote{From the rules about summation operators, we define the mean of a random variable $X$ as $\bar{X}=\frac{1}{n}\displaystyle\sum_{i=1}^n X_i$. The mean of a constant, like $\beta_0$ or $\beta_1$ is itself.} So we can rewrite as: 
+\begin{equation}
+\bar{Y}-\hat{\beta_0}-\beta_1=0
+\end{equation}
+Rearranging: 
+\begin{equation}
+\hat{\beta_0}=\bar{Y}-\bar{X}\beta_1
+\label	{eq:beta0}
+\end{equation}
+
+\subsection{Finding $\hat{\beta_1}$}
+
+To find $\hat{\beta_1}$, take the second FOC, equation~\ref{eq:FOC2} and divide by $-2$: 
+\begin{equation}
+\displaystyle\sum^n_{i=1} (Y_i-\hat{\beta_0}-\hat{\beta_1} X_i)X_i=0 	
+\end{equation}
+From equation~\ref{eq:beta0}, substitute in for $\hat{\beta_0}$: 
+\begin{equation}
+\displaystyle\sum^n_{i=1} \bigg(Y_i-[\bar{Y}-\hat{\beta_1}\bar{X}]-\hat{\beta_1} X_i\bigg)X_i=0 	
+\end{equation}
+Combining similar terms:
+\begin{equation}
+\displaystyle\sum^n_{i=1} \bigg([Y_i-\bar{Y}]-[X_i-\bar{X}]\hat{\beta_1}\bigg)X_i=0 	
+\end{equation}
+Distribute $X_i$ and expand terms into the subtraction of two sums (and pull out $\hat{\beta_1}$ as a constant in the second sum: 
+\begin{equation}
+\displaystyle\sum^n_{i=1} [Y_i-\bar{Y}]X_i-\hat{\beta_1}\displaystyle\sum^n_{i=1}[X_i-\bar{X}]X_i=0 	
+\end{equation}
+Move the second term to the righthand side: 
+\begin{equation}
+\displaystyle\sum^n_{i=1} [Y_i-\bar{Y}]X_i=\hat{\beta_1}\displaystyle\sum^n_{i=1}[X_i-\bar{X}]X_i	
+\end{equation}
+Divide to keep just $\hat{\beta_1}$ on the right: 
+\begin{equation}
+	\frac{\displaystyle\sum^n_{i=1} [Y_i-\bar{Y}]X_i}{\displaystyle\sum^n_{i=1}[X_i-\bar{X}]X_i}=\hat{\beta_1}
+\end{equation}
+Note that from the properties of summation operators: 
+\begin{equation*}
+	\displaystyle\sum^n_{i=1} [Y_i-\bar{Y}]X_i=\displaystyle\sum^n_{i=1} (Y_i-\bar{Y})(X_i-\bar{X})
+\end{equation*}
+and: 
+\begin{equation*}
+	\displaystyle\sum^n_{i=1} [X_i-\bar{X}]X_i=\displaystyle\sum^n_{i=1} (X_i-\bar{X})(X_i-\bar{X})=\displaystyle\sum^n_{i=1}(X_i-\bar{X})^2
+\end{equation*}
+Plug in these two facts: 
+\begin{equation}
+	\frac{\displaystyle\sum^n_{i=1} (Y_i-\bar{Y})(X_i-\bar{X})}{\displaystyle\sum^n_{i=1}(X_i-\bar{X})^2}=\hat{\beta_1}
+\end{equation}
+
+\section{Algebraic Properties of OLS Estimators}
+
+The OLS residuals ($\hat{\epsilon}$) and predicted values $\hat{Y}$ are chosen by the minimization problem to satisfy: 
+\begin{enumerate}
+	\item The expected value (average) error is 0: 
+	\begin{equation*}
+	E(\epsilon_i)=\frac{1}{n}\displaystyle \sum_{i=1}^n \hat{\epsilon_i}=0	
+	\end{equation*}
+	\item The covariance between $X$ and the errors is 0:
+	\begin{equation*}
+	\hat{\sigma}_{X,\epsilon}=0	
+	\end{equation*}
+Note the first two properties imply strict \emph{exogeneity}. That is, this is only a valid model if $X$ and $\epsilon$ are not correlated. 
+	\item The expected predicted value of $Y$ is equal to the expected value of $Y$:
+	\begin{equation*}
+	\bar{\hat{Y}}=\frac{1}{n} \displaystyle\sum_{i=1}^n \hat{Y_i} = \bar{Y}	
+	\end{equation*}
+	\item Total sum of squares is equal to the explained sum of squares plus sum of squared errors:
+	\begin{equation*}
+	TSS=ESS+SSE	
+	\end{equation*}
+	\begin{equation*}
+	\sum_{i=1}^n (Y_i-\bar{Y})^2=\sum_{i=1}^n (\hat{Y_i}-\bar{Y})^2 + \sum_{i=1}^n {\epsilon}^2 	
+	\end{equation*}
+	Recall $R^2$ is $\frac{ESS}{TSS}$ or $1-SSE$
+	\item The regression line passes through the point ($\bar{X},\bar{Y}$), i.e. the mean of $X$ and the mean of $Y$. 
+\end{enumerate}
+
+
+\end{document}

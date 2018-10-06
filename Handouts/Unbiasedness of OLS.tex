@@ -1,0 +1,204 @@
+\documentclass{article}
+\usepackage{amssymb, amsmath, amsthm}
+\usepackage[margin=1in]{geometry}
+
+\title{Econometrics: Deriving OLS Estimators}
+\author{Ryan Safner}
+\date{}
+
+\begin{document}
+	\maketitle
+
+\begin{proof}
+	Begin with the formula we derived for $\hat{\beta_1}$:
+\begin{equation}
+\hat{\beta_1}=\frac{\displaystyle \sum^n_{i=1} (Y_i-\bar{Y})(X_i-\bar{X})}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2}
+\end{equation}
+
+Recall from \textbf{Rule 6} of summations\footnote{See the \textbf{handout} on the summation operator}, we can rewrite the numerator as 
+
+\begin{align*}
+	=&\displaystyle \sum^n_{i=1} (Y_i-\bar{Y})(X_i-\bar{X})\\
+	=& \displaystyle \sum^n_{i=1} Y_i(X_i-\bar{X})\\
+\end{align*}
+
+\begin{equation}
+\hat{\beta_1}=\frac{\displaystyle \sum^n_{i=1} Y_i(X_i-\bar{X})}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2}
+\end{equation}
+
+We know the true population relationship is expressed as 
+
+\begin{equation*}
+Y_i=\beta_0+\beta_1 X_i+\epsilon_i
+\end{equation*}
+
+Substituting this in for $Y_i$ in equation 2:
+
+\begin{equation}
+\hat{\beta_1}=\frac{\displaystyle \sum^n_{i=1} (\beta_0+\beta_1X_i+\epsilon_i)(X_i-\bar{X})}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2}
+\end{equation}
+
+Breaking apart the sums in the numerator:
+
+\begin{equation}
+\hat{\beta_1}=\frac{\displaystyle \sum^n_{i=1} \beta_0(X_i-\bar{X})+\displaystyle \sum^n_{i=1} \beta_1X_i(X_i-\bar{X})+\displaystyle \sum^n_{i=1} \epsilon_i(X_i-\bar{X})}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2}
+\end{equation}
+
+We can simplify equation 4 using \textbf{Rules 4 and 5} of summations
+
+\begin{enumerate}
+
+\item 	The first term in the numerator $\bigg[\displaystyle \sum^n_{i=1} \beta_0(X_i-\bar{X})\bigg]$ has the constant $\beta_0$, which can be pulled out of the summation. This gives us the summation of deviations, which add up to 0 as per \textbf{Rule 4}:
+
+\begin{align*}
+\displaystyle \sum^n_{i=1} \beta_0(X_i-\bar{X})&= \beta_0 \displaystyle \sum^n_{i=1} (X_i-\bar{X})\\
+&=\beta_0 (0)\\
+&=0\\
+\end{align*}
+
+\item The second term in the numerator  $\bigg[\displaystyle \sum^n_{i=1} \beta_1X_i(X_i-\bar{X})\bigg]$ has the constant $\beta_1$, which can be pulled out of the summation. Additionally, \textbf{Rule 5} tells us $\displaystyle \sum^n_{i=1} X_i(X_i-\bar{X})=\displaystyle \sum^n_{i=1}(X_i-\bar{X})^2$:
+
+\begin{align*}
+\displaystyle \sum^n_{i=1} \beta_1X_1(X_i-\bar{X})&= \beta_1 \displaystyle \sum^n_{i=1} X_i(X_i-\bar{X})\\
+&=\beta_1\displaystyle \sum^n_{i=1}(X_i-\bar{X})^2\\
+\end{align*}
+
+When placed back in the context of being the numerator of a fraction, we can see this term simplifies to just $\beta_1$:
+
+\begin{align*}
+	\frac{\beta_1\displaystyle \sum^n_{i=1}(X_i-\bar{X})^2}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2} &=\frac{\beta_1}{1} \times \frac{\displaystyle \sum^n_{i=1}(X_i-\bar{X})^2}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2}\\
+	&=\beta_1	\\
+\end{align*}
+
+\end{enumerate}
+
+Thus, we are left with: 
+
+\begin{equation}
+\hat{\beta_1}=\beta_1+\frac{\displaystyle \sum^n_{i=1} \epsilon_i(X_i-\bar{X})}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2}
+\end{equation}
+
+Now, take the expectation of both sides:
+
+\begin{equation*}
+E[\hat{\beta_1}]=E\Bigg[\beta_1+\frac{\displaystyle \sum^n_{i=1} \epsilon_i(X_i-\bar{X})}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2} \Bigg]	
+\end{equation*}
+
+We can break this up, using properties of expectations. First, recall $E[a+b]=E[a]+E[b]$, so we can break apart the two terms. 
+
+\begin{equation*}
+	E[\hat{\beta_1}]=E[\beta_1]+E\Bigg[\frac{\displaystyle \sum^n_{i=1} \epsilon_i(X_i-\bar{X})}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2} \Bigg]	
+\end{equation*}
+
+Second, the true population value of $\beta_1$ is a constant, so $E[\beta_1]=\beta_1$.
+
+Third, since we assume $X$ is also ``fixed" and not random, the variance of $X$, $\displaystyle\sum_{i=1}^n (X_i-\bar{X})$, in the denominator, is just a constant, and can be brought outside the expectation. 
+
+\begin{equation}
+	E[\hat{\beta_1}]=\beta_1+\frac{E\bigg[\displaystyle \sum^n_{i=1} \epsilon_i(X_i-\bar{X})\bigg]	}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2} 
+\end{equation}
+
+Thus, the properties of equation 6 are primarily driven by the expectation $E\bigg[\displaystyle \sum^n_{i=1} \epsilon_i(X_i-\bar{X})\bigg]$. We now turn to this term. 
+
+Take equation 5, and use the property of summation operators to expand the numerator term: 
+
+\begin{align*}
+	\hat{\beta_1}&=\beta_1+\frac{\displaystyle \sum^n_{i=1} \epsilon_i(X_i-\bar{X})}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2} \\
+		\hat{\beta_1}&=\beta_1+\frac{\displaystyle \sum^n_{i=1} (\epsilon_i-\bar{\epsilon})(X_i-\bar{X})}{\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2} \\
+\end{align*}
+
+
+Now divide the numerator and denominator of the second term by $\frac{1}{n}$. Realize this gives us the covariance between $X$ and $\epsilon$ in the numerator and variance of $X$ in the denominator, based on their respective definitions.
+
+\begin{align*}
+	\hat{\beta_1}&=\beta_1+\cfrac{\frac{1}{n}\displaystyle \sum^n_{i=1} (\epsilon_i-\bar{\epsilon})(X_i-\bar{X})}{\frac{1}{n}\displaystyle\sum^n_{i=1} (X_i-\bar{X})^2} \\
+	\hat{\beta_1}&=\beta_1+\cfrac{cov(X,\epsilon)}{var(X)} \\
+	\hat{\beta_1}&=\beta_1+\cfrac{s_{X,\epsilon}}{s_X^2} \\
+\end{align*}
+
+By the Zero Conditional Mean assumption of OLS, $cov(X,\epsilon)=0$. 
+
+
+Alternatively, we can express the bias in terms of correlation instead of covariance:
+
+\begin{equation*}
+E[\hat{\beta_1}]=\beta_1+\cfrac{cov(X,\epsilon)}{var(X)} 
+\end{equation*}
+
+From the definition of correlation:
+
+\begin{align*}
+	 corr(X,\epsilon)&=\frac{cov(X,\epsilon)}{s_X s_\epsilon}\\
+	 corr(X,\epsilon)s_Xs_\epsilon &=cov(X,\epsilon)\\
+\end{align*}
+
+Plugging this in: 
+
+\begin{align*}
+E[\hat{\beta_1}]&=\beta_1+\frac{cov(X,\epsilon)}{var(X)} \\
+E[\hat{\beta_1}]&=\beta_1+\frac{\big[corr(X,\epsilon)s_xs_\epsilon\big]}{s^2_X} \\
+E[\hat{\beta_1}]&=\beta_1+\frac{corr(X,\epsilon)s_\epsilon}{s_X} \\
+E[\hat{\beta_1}]&=\beta_1+corr(X,\epsilon)\frac{s_\epsilon}{s_X} \\
+\end{align*}
+
+
+\end{proof}
+
+\subsection{Proof of Unbiasedness}
+
+Begin with equation:
+\begin{equation}
+\hat{\beta_1}=\frac{\sum Y_iX_i}{\sum X_i^2}
+\end{equation}
+
+Substitute for $Y_i$:
+\begin{equation}
+\hat{\beta_1}=\frac{\sum (\beta_1 X_i+\epsilon_i)X_i}{\sum X_i^2}
+\end{equation}
+
+Distribute $X_i$ in the numerator:
+\begin{equation}
+\hat{\beta_1}=\frac{\sum \beta_1 X_i^2+\epsilon_iX_i}{\sum X_i^2}
+\end{equation}
+
+Separate the sum into additive pieces:
+\begin{equation}
+\hat{\beta_1}=\frac{\sum \beta_1 X_i^2}{\sum X_i^2}+\frac{\epsilon_i X_i}{\sum X_i^2}
+\end{equation}
+
+$\beta_1$ is constant, so we can pull it out of the first sum:
+\begin{equation}
+\hat{\beta_1}=\beta_1 \frac{\sum X_i^2}{\sum X_i^2}+\frac{\epsilon_i X_i}{\sum X_i^2}
+\end{equation}
+
+Simplifying the first term, we are left with:
+
+\begin{equation}
+\hat{\beta_1}=\beta_1 +\frac{\epsilon_i X_i}{\sum X_i^2}
+\end{equation}
+
+Now if we take expectations of both sides: 
+
+\begin{equation}
+E[\hat{\beta_1}]=E[\beta_1] +E\bigg[\frac{\epsilon_i X_i}{\sum X_i^2}\bigg]
+\end{equation}
+
+$\beta_1$ is a constant, so the expectation of $\beta_1$ is itself. 
+\begin{equation}
+E[\hat{\beta_1}]=\beta_1 +E\bigg[\frac{\epsilon_i X_i}{\sum X_i^2}\bigg]
+\end{equation}
+
+Using the properties of expectations, we can pull out $\frac{1}{\sum X_i^2}$ as a constant:
+\begin{equation}
+E[\hat{\beta_1}]=\beta_1 +\frac{1}{\sum X_i^2} E\bigg[\sum \epsilon_i X_i\bigg]
+\end{equation}
+
+Again using the properties of expectations, we can put the expectation inside the summation operator (the expectation of a sum is the sum of expectations):
+\begin{equation}
+E[\hat{\beta_1}]=\beta_1 +\frac{1}{\sum X_i^2}\sum E[\epsilon_i X_i]
+\end{equation}
+
+Under the exogeneity condition, the correlation between $X_i$ and $\epsilon_i$ is 0. 
+
+\subsection{Variance of $\hat{\beta_1}$}
+\end{document}

@@ -1,0 +1,31 @@
+\frametitle{OLS Example: Class Size: In \texttt {R} II}
+
+\scriptsize
+
+\begin{Shaded}
+\begin{Highlighting}[]
+\KeywordTok{summary}\NormalTok{(school.regression)}
+\end{Highlighting}
+\end{Shaded}
+
+\begin{verbatim}
+##
+## Call:
+## lm(formula = testscr ~ str, data = CASchool)
+##
+## Residuals:
+##     Min      1Q  Median      3Q     Max
+## -47.727 -14.251   0.483  12.822  48.540
+##
+## Coefficients:
+##             Estimate Std. Error t value Pr(>|t|)
+## (Intercept) 698.9330     9.4675  73.825  < 2e-16 ***
+## str          -2.2798     0.4798  -4.751 2.78e-06 ***
+## ---
+## Signif. codes:  0 '***' 0.001 '**' 0.01 '*' 0.05 '.' 0.1 ' ' 1
+##
+## Residual standard error: 18.58 on 418 degrees of freedom
+## Multiple R-squared:  0.05124,    Adjusted R-squared:  0.04897
+## F-statistic: 22.58 on 1 and 418 DF,  p-value: 2.783e-06
+\end{verbatim}
+

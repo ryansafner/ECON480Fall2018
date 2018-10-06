@@ -1,0 +1,401 @@
+\documentclass{article}
+\usepackage[margin=1in]{geometry}
+\usepackage[utf8]{inputenc}
+\usepackage{caption, subcaption}
+\captionsetup{compatibility=false}
+\usepackage{xcolor,graphicx, fancyvrb}
+\usepackage{tikz}
+\usetikzlibrary{shapes,arrows, patterns}
+\usepackage{hyperref, booktabs}
+\graphicspath{ {../../../images/} {/}}
+
+\title{Econometrics: Introduction to Stata}
+\author{Ryan Safner}
+\date{Fall 2017}
+
+\begin{document}
+	\maketitle
+	
+Stata is an extremely powerful software package that can work with large datasets \& spreadsheets, run many high-powered statistical tests, and create detailed graphics. Its main equivalents are SPSS, SAS, and R, all of which can perform more advanced statistics than can a program you might be familiar with, like Microsoft Excel. 
+
+All of these more advanced software packages will require you to write and execute code to varying degrees. Stata is a good choice because its coding language is very succinct, precise, and intuitive, as well as the fact that nearly all commands can be executed by clicking through toolbars (though this is much less efficient!). 
+
+The main Stata screen is reproduced below, and is divided up into several main parts: 
+
+	\begin{figure}[h!]
+		\centering 
+		\begin{tikzpicture}[every pin edge/.style={<-},every pin/.style={fill=yellow!50,rectangle,rounded corners=3pt,font=\small}]
+		\pgftext{%
+		\includegraphics[height=2.5in]{statascreen}%
+		}%
+		\draw[very thick, green] (-3.5,-1.625)--node[below]{Command}(3.5,-1.625)--(3.5,-3)--(-3.5,-3)--(-3.5,-1.625);
+\draw[very thick, red] (-3.5,-1.625)--(-3.5,2.5)--node[below]{Results}(3.5,2.5)--(3.5,-1.625)--(-3.5,-1.625);
+\draw[very thick, blue] (-5.75,2.5)--node[below]{Review}(-3.5,2.5)--(-3.5,-3)--(-5.75,-3)--(-5.75,2.5);
+\draw[very thick, orange] (3.5,2.5)--node[below]{Variables}(5.75,2.5)--(5.75,-3)--(3.5,-3)--(3.5,2.5);
+	\end{tikzpicture}
+	\caption*{Stata Graphical User Interface}
+	\end{figure}
+	\begin{itemize}
+		\item \textcolor{green}{Command: input commands here}
+		\item \textcolor{red}{Results: Shows the results of your commands}
+		\item \textcolor{blue}{Review: Lists the history of all commands run}
+		\item \textcolor{orange}{Variables: Lists and describes the variables in dataset}
+	\end{itemize}
+
+\begin{itemize}
+	\item There are two ways of running Stata
+	\begin{itemize}
+			\item \textcolor{blue}{Interactive mode:} Enter individual commands and get a response one at a time
+		\item \textcolor{blue}{Batch mode:} Write (and run) a \texttt{.do} file where Stata will execute all commands and report results in order from the file
+	\end{itemize}	
+	\item You can write and edit a \texttt{.do} file in any text editor (e.g. Notepad) 
+	\item An example: 
+	\begin{Verbatim}[frame=single, numbers=left, numbersep=2pt] 
+clear*this line defines the semicolon as the line delimiter;# delimit ;*set memory for 10 MB;set memory 10m;
+*set working directory*;
+cd "/Users/ryansafner/Dropbox/Teaching/Hood College/ECON 480 - Econometrics"*write results to a log file;log using example1.log, replace;*read in raw data;use "cps87.dat";label var age "age in years";label var rac "1=white, non-hisp, 2=place, n.h, 3=hisp";\end{Verbatim}
+	\begin{itemize}
+	\item Asterisks (*) beginning a line indicate a comment
+	\begin{itemize}
+		\item Stata will ignore everything on the line 
+		\item This is for you to comment and explain what your commands are doing
+	\end{itemize}	
+\end{itemize}
+\end{itemize}
+
+%estpost sum headage hhldsize durable educexp maxmedserv PhoneInternetTV food yrcons HHincome ifremit remittamount salary adult child
+%eststo s1
+%esttab s1 using ".\Summary_Statistics_and_graphs\sumstats.rtf",replace cells("count mean sd min max") label 
+
+\section{Getting Started \& Basic Commands}
+
+\begin{itemize}
+		\item The first thing you may want to do is \textcolor{blue}{\texttt{set memory \#}}
+			\begin{itemize}
+				\item \textcolor{blue}{\texttt{\#}} represents a max MB (m) or GB (g)
+				\begin{itemize}
+					\item  e.g. \textcolor{blue}{\texttt{100m}} for 100 MB, \textcolor{blue}{\texttt{2g}} for 2 GB
+				\end{itemize} 
+				\item The default maximum memory size (default 1 MB)
+				\item Useful for large datasets
+			\end{itemize}
+		\item If you have existing data open in Stata, you should \textcolor{blue}{\texttt{clear}} to open a new dataset
+		\item Commands can be at most one line long
+		\item For multiple commands (or in particular for \textcolor{blue}{\texttt{.do}} files), you need a delimiter: \textcolor{blue}{\texttt{\#delimit ;}}
+		\begin{itemize}
+			\item Stata will break up your input into a separate command each time it reaches a \textcolor{blue}{\texttt{;}}
+			\item If you do this, you must end each line with a \texttt{\textcolor{blue}{;}}!
+		\end{itemize}
+	\item On startup, Stata assumes your preferred working directory is \textcolor{blue}{\texttt{C:/data}}, it rarely is though! 
+	\begin{itemize}
+	\item To change this, use the \textcolor{blue}{\texttt{cd "/directory/"}} (with your actual directory within the quotes) command or go through \textcolor{magenta}{\texttt{File $\rightarrow$ Change Working Directory}}
+	\end{itemize} 
+	\begin{itemize}
+	\item All files opened and saved will come from this directory unless otherwise specified
+	\item For example (Mac): 
+	\end{itemize} 
+	\begin{Verbatim}[frame=single, numbers=left, numbersep=2pt] 
+cd "/Users/ryansafner/Dropbox/Teaching/Hood College/ECON 480 - Econometrics"
+\end{Verbatim}
+	
+	\item Get in the habit of logging your work with \textcolor{blue}{\texttt{log using "filename.log",replace;}}
+		\begin{itemize}
+			\item This creates a \texttt{.log} file that you can examine in any text editor (like Notepad) 
+			\item A \texttt{.log} file lists both the commands you input as well as Stata's output for each command
+			\item \textcolor{blue}{\texttt{replace}} tells Stata to overwrite anything that may be previously on the \texttt{.log} file
+			\item At the end of your session (or \texttt{.do} file), you must include \textcolor{blue}{\texttt{log close}}!
+		\end{itemize}
+		\item To import an existing dataset
+			\begin{itemize}
+				\item Stata data files are \texttt{.dat}, open with \textcolor{blue}{\texttt{use "filename.dta"}}
+				\item For another file type (e.g. an Excel \texttt{.csv} or \texttt{.xls} spreadsheet)  use \textcolor{blue}{\texttt{insheet using "filename.csv"}}
+					\begin{itemize}
+						\item Note: Stata will assume that the first row contains the variable names 
+					\end{itemize}
+				\item Alternatively, go through \textcolor{magenta}{\texttt{File $\rightarrow$ Open}} for \texttt{.dat} files or  \textcolor{magenta}{\texttt{File $\rightarrow$ Import}} for everything else
+			\end{itemize}	
+		\item To execute an existing \texttt{.do} file (that properly specifies the file data is to be drawn from), use \textcolor{blue}{\texttt{do "filename.do"}}or \textcolor{blue}{\texttt{File $\rightarrow$ Do}}
+		\item With an existing dataset loaded in the memory, there are a number of useful operations before we even get to testing anything
+		\item Label variables with \textcolor{blue}{\texttt{label variable \emph{varname} "label"}}
+			\begin{itemize}
+				\item e.g. for an existing variable \texttt{age},  \textcolor{blue}{\texttt{label variable age "Age in Years"}}
+			\end{itemize}
+\end{itemize}
+
+\subsection{Looking at the Data \& Summary Statistics}
+	\begin{itemize}
+		\item \textcolor{blue}{\texttt{describe \emph{var1} \emph{var2}}} (or \textcolor{blue}{\texttt{desc}} for short) will describe the variable(s), telling you the type of data (integer, character, etc) and the label that (hopefully, in a well documented dataset) describes what each variable measures
+		\item \textcolor{blue}{\texttt{tabulate \emph{var1}}} (or \textcolor{blue}{\texttt{tab}} for short) will list each value in the variable's distribution
+		\begin{itemize}
+			\item Be careful, variables with many observations take a long time to tabulate! 
+		\end{itemize}
+		\item \textcolor{blue}{\texttt{summarize \emph{var1} \emph{var2}}} (or \textcolor{blue}{\texttt{summ}} for short) provides summary statistics (number of observations, mean, standard deviation, min, and max) for all variables listed
+		\item Rename a variable with  \textcolor{blue}{\texttt{rename oldname newname}}
+			\begin{itemize}
+				\item e.g. \texttt{realgdp}, \textcolor{blue}{\texttt{rename rgdp realgdp}} renames variable ``rgdp'' to ``realgdp''
+			\end{itemize} 
+		\item \textcolor{blue}{\texttt{correlate \emph{var1} \emph{var2}}} (or \textcolor{blue}{\texttt{corr}} for short) will create a table relating the correlation between 2 or more variables
+		\begin{itemize}
+			\item e.g. \textcolor{blue}{\texttt{corr wage educ exper tenure}}
+		\end{itemize}
+	\end{itemize}
+
+\subsection{Transforming Variables}
+	\begin{itemize}
+			\item To create a new variable from an existing variable(s), use the \textcolor{blue}{\texttt{generate \emph{newvar} \emph{formula}}} (or \textcolor{blue}{\texttt{gen}} for short) new variables by transforming existing variables
+			\begin{itemize}
+				\item \emph{`newvar'} is the name you give to the created variable
+				\item \emph{`formula'} is the formula for creating the new variable, using existing variables	
+			\end{itemize}
+		\item Major operators for making new variables on different conditions e.g. \textcolor{blue}{\texttt{gen var2=5 if var1==2 | var3>=7}} makes a new variable var2 if both conditions (var1 is 2 and var 3 is at least 7) are met 
+		\begin{itemize}
+			\item \textcolor{blue}{\texttt{if}}: make a new variable that equals some value \emph{IF} a condition is met
+			\item \textcolor{blue}{\texttt{&}}: make a new variable if one condition is met \emph{AND} another condition is met
+			\item \textcolor{blue}{\texttt{|}}: make a new variable if one condition is met \emph{OR} another condition is met
+			\item \textcolor{blue}{\texttt{>}}: `is greater than'
+			\item \textcolor{blue}{\texttt{<}}: `is less than'
+			\item \textcolor{blue}{\texttt{==}}: `is equal to' (note the two equals signs!) 
+			\item \textcolor{blue}{\texttt{>=}}: `is greater than or equal to
+			\item \textcolor{blue}{\texttt{<=}}: 'is less than or equal to'
+		\end{itemize}
+		\item Examples: 
+		\begin{itemize}
+			\item e.g. \textcolor{blue}{\texttt{gen wagecents=wage*100}} multiples wage (in dollars) by 100 (to get in cents) 
+			\item e.g. \textcolor{blue}{\texttt{gen lngdp=ln(gdp)}} takes the natural log of gdp
+			\item e.g. \textcolor{blue}{\texttt{gen age2=age*age}} squares age
+			\item e.g. \textcolor{blue}{\texttt{gen latino=race==3}} creates a dummy variable (=1 if latino, else =0) from race, which has multiple categories (e.g. 1 if white, 2 if black, 3 if latino, 4 if asian, etc) 
+			\item e.g. \textcolor{blue}{\texttt{gen nonwhite=((race==2)|(race==3))}} creates a dummy variable from multiple categories of race
+			\item e.g. \textcolor{blue}{\texttt{gen femaleowner=((gender==0)\&(owner==1))}} creates a dummy variable from the union of two categorical variables (gender and owner) 
+			\item e.g. \textcolor{blue}{\texttt{gen young=(age$<=$20)}} creates a dummy variable that $=1$ for those people who's age is less than or equal to 20
+		\end{itemize}	
+		\item Sometimes you want to drop a variable, use \texttt{\textcolor{blue}{drop \emph{varname}}}
+		\item Sometimes you may want to redefine and overwrite a variable that's already defined, use \texttt{\textcolor{blue}{replace \emph{var1}}}
+	\end{itemize}
+
+\subsection{Graphics}
+\begin{itemize} 
+	\item Stata can make graphs by command, or through the \textcolor{magenta}{\texttt{Graphics}} menu, allowing you to customize all sorts of things about the graph through either approach 
+	\begin{itemize}
+		\item e.g. \texttt{\textcolor{blue}{histogram \emph{var}}} creates a histogram of the variable \emph{var}
+		\item e.g. \texttt{\textcolor{blue}{scatter \emph{var1} \emph{var 2}}} creates a scatterplot of the two variables \emph{var1} and \emph{var2}
+		\begin{itemize}
+			\item Scatterplots can include a regression line by appending \textcolor{blue}{\texttt{|| line \emph{predictedvar indepvar}}} to your command (where ``\emph{predictedvar}'' is the variable storing the predicted values (see regression below) and ``\emph{indepvar}'' is the independent variable
+			\item Scatterplots can include any ordinary line for reference by its equation. This is particularly useful for residual plots, by including a horizontal line through the origin, by appending e.g. \textcolor{blue}{\texttt{, yline(0)}} to the command
+		\end{itemize}
+	\end{itemize}
+\end{itemize}
+
+\subsection{Regression}
+\begin{itemize}
+	\item The command for regression is \textcolor{blue}{\texttt{regress}} (\texttt{\textcolor{blue}{reg}} for short), followed by the dependent variables and then any/all independent variable(s)
+	\begin{itemize}
+		\item e.g. \textcolor{blue}{\texttt{reg wage educ}} regresses wage ($Y$) on educ ($X$)
+		\item e.g. \textcolor{blue}{\texttt{reg wage educ exper}} regresses wage ($Y$) on educ ($X_1$) and exper ($X_2$)
+		\item Recall we say that we ``regress the dependent variable on the independent variable(s)''
+	\end{itemize}
+	\item Stata can create a new variable that gives you the predicted values ($\hat{Y}$) of the dependent variable for each observed value of the independent variable using the \textcolor{blue}{\texttt{predict}} command, followed by the name you wish for the predicted variable, and then \textcolor{blue}{\texttt{xb}} (to tell it to use a linear regression)
+		\begin{itemize}
+		\item This must be done \emph{after} you have ran a regression! It will only work for the most recent regression!
+		\item e.g. \textcolor{blue}{\texttt{predict wage\_hat, xb}} stores the predicted values in the new variable ``wage\_hat'' from the recent regression  
+		\item You can also create a variable storing the residuals in the same way, by telling Stata to use ``\textcolor{blue}{\texttt{residuals}} instead of \textcolor{blue}{\texttt{xb}} after the comma
+		\begin{itemize}
+		\item e.g. \textcolor{blue}{\texttt{predict res\_wage, residuals}} stores the residuals in the new variable ``res\_wage''
+	\end{itemize}
+	\end{itemize}
+	\item Ensuring you use heteroskedasticity-robust standard errors, simply append \textcolor{blue}{\texttt{, robust}} (or \textcolor{blue}{\texttt{r}} for short) to the end of each regression command 
+	\begin{itemize}
+		\item e.g. \textcolor{blue}{\texttt{reg wage educ, r}}
+	\end{itemize}
+	\item You can make fancy regression tables for word processors (MS Word, LaTeX) using \textcolor{blue}{\texttt{outreg2}} after every regression you run
+	\begin{itemize}
+		\item This first requires setting a document to output them all, using the command \textcolor{blue}{\texttt{using ``filename.extension''}}, where you name the file and file extension
+		\item Run each regression, followed by \textcolor{blue}{\texttt{outreg2 using ``filename.extension'', append}}, which tells Stata to add a new column for each regression to the same document
+		\item Then open the file and voila! 
+		\item e.g. 
+	\begin{Verbatim}[frame=single, numbers=left, numbersep=2pt] 
+*Install outreg2 if you don't have it*
+ssc install outreg2
+
+*Save in Downloads folder*
+cd ~/Downloads/
+
+*Run regression 1*
+reg wage educ, r
+
+*Outreg to document called example.doc in Downloads folder*
+outreg2 using "example.doc"
+
+*Run regression 2*
+reg wage educ exper, r
+
+*Outreg it, be sure to append it*
+outreg2 using "example.doc", append
+
+*Repeat for all regressions*
+reg wage educ exper tenure, r
+outreg2 using "example.doc", append
+\end{Verbatim}
+	\end{itemize}
+\end{itemize}
+
+
+\subsection{Statistical Tests}
+While most test statistics (and confidence intervals) are automatically reported with regression outputs, sometimes it may be useful to do them manually
+	\begin{itemize}
+		\item \textbf{Confidence Intervals}: \textcolor{blue}{\texttt{ci var, level(C)}} constructs a confidence interval of level $C$ for the variable \emph{var}
+		\begin{itemize}
+			\item e.g. \textcolor{blue}{\texttt{ci wage, level(95)}} constructs a 95\% confidence interval for the variable cars
+		\end{itemize} 
+		\item \textbf{$T$-test for Sample Means}: \textcolor{blue}{\texttt{ttest var=H0}} runs a t-test for the null hypothesis that a variable equals some value ``H0'' 
+		\begin{itemize}
+			\item e.g. \textcolor{blue}{\texttt{ttest wage=20}} tests against $H_0: wage=0$
+			\item Note Stata automatically reports the results of three possible alternative hypotheses: $H_a: mean>H_0$, $H_a:mean \neq H_0$, and $H_a: mean <H_0$! 
+		\end{itemize} 
+		\item \textbf{$T$-test for Sample Proportions}: \textcolor{blue}{\texttt{prtesti N phat p0}} runs a $Z$-test for the null hypothesis that a population proportion equals some value ``p0'' for sample size N
+		\begin{itemize}
+			\item e.g. \textcolor{blue}{\texttt{prtesti 500 0.47 .50}} tests our sample finding $\hat{p}=0.47$ against $H_0: p=0.55$ with 500 observations
+			\item Note Stata automatically reports the results of three possible alternative hypotheses: $H_a: p>p_0$, $H_a:p \neq p_0$, and $H_a: p <p_0$! 
+		\end{itemize} 
+		\item\textbf{$T$-test for Difference in Sample Means}: For a two sample $t$-test, we need \textcolor{blue}{\texttt{ttest var, by(type) unequal}}, where type is a categorical variable that splits the data into different subgroups
+		\begin{itemize}
+			\item e.g. \textcolor{blue}{\texttt{ttest salary, by(league)}} tests whether there is a difference in average salary of players between the NFL or AFL  (league) 
+		\end{itemize} 
+		\item \textbf{F-test for nonlinearity}: \textcolor{blue}{\texttt{test} \emph{var1} \emph{var2}} runs an F-test on \emph{`var1'} and \emph{`var2'}
+		\begin{itemize}
+			\item \textcolor{blue}{\texttt{test educ exper}} runs an F-test on educ and exper
+		\end{itemize}	
+	\end{itemize}
+
+\subsection{An Example \texttt{.do} file}
+
+The best way to learn Stata is by doing. Run each command and figure out what Stata is doing. Then change the command slightly (or look at different data) to see what changes. For a while, you will find yourself copy-pasting code and changing it to suit your needs. Eventually, you will have enough experience to remember the main commands on your own without having to always double check. This is how you learn code--it is learning a new language.
+
+This code uses the WAGE1.DTA dataset you can find on Blackboard. 
+
+	\begin{Verbatim}[frame=single, numbers=left, numbersep=2pt] 
+clear
+
+set mem 10M 
+
+*Change directory -- I set this as Downloads, you can set it wherever you wish*
+cd ~/Downloads/
+
+*Create a log file, I'll call it 'doexample.do'*
+log using doexample.log
+
+*Load in Data -- if it not in the same folder, you may have to do this manually
+*Or it may make sense to change your working directory (above) using 'cd' to 
+*the folder where the data is stored 
+use WAGE1.DTA
+
+*What is the variable wages? (desc for short)*
+describe wage
+
+*Summary Statistics for wages (summ for short)*
+summarize wage
+
+*Get more detail*
+summarize wage, detail
+
+*You can export summary statistics in a nice neat table in MS Word
+*This is a process of 3 commands:
+*1. estpost (to collect the data
+estpost sum wage educ exper
+*notice it shows a lot of different summary statistics 
+*2. estesto (to store this information and give it a name)
+*call it 'wagedescrip'
+eststo descrip
+*3. estout (to publish it)
+*publish to a word doc called 'est'
+*and pick which summary statistics to include in the cells() command
+estout using est.doc, cells("count mean sd min max") label
+*Note you can export it to a different folder in quotes, such as 
+*estout using "/statistics/est.doc" 
+*Note also you can just look at it in Stata by removing the 'using est.doc' portion
+
+*Graph a box plot of wages*
+Graph box wage 
+
+*Create separate boxplots by years of education*
+Graph box wage, over(educ)
+
+*Plot a histogram of wages (hist for short), showing percentages instead of counts*
+histogram wage, percent
+
+*Look at distribution of education (tab for short)*
+tabulate educ
+
+*Plot a histogram of educ, showing percentages instead of counts*
+histogram educ, percent
+
+*Plot a histogram of educ*
+histogram educ, percent
+
+*Find correlation between wages and education*
+corr wage educ
+
+*Create scatterplot of wage and educ*
+scatter wage educ
+
+*Regress wages on education (reg for short)
+regress wage educ
+
+*Create a variable for the predicted values*
+predict wage_hat, xb
+
+*Create a variable for the residuals of model*
+predict res_wage, residuals
+
+*Look at OLS regression line on scatterplot
+*Note || means "also do this"*
+scatter wage educ || line wage_hat educ
+
+*Look at residual plot
+*also plot a horizontal line at y=0 to compare residuals to
+scatter res_wage educ, yline(0)
+
+*Use Robust Standard errors in our regression (r for short)*
+reg wage educ, robust
+
+*Export regression output to a MS Word document
+*I'm calling it 'example'
+*Once we are done with our regs in Stata, open this document in MS Word*
+outreg2 using example.doc
+
+*Change Wage from Dollars to Cents by generating (gen for short) a new variable*
+generate wagecents = wage*100
+
+*Label this new variable 'wage in cents'
+label variable wagecents "wage in cents"
+
+*Double check it worked
+desc wagecents
+
+*Regress Wage in Cents on Education with robust SEs*
+reg wagecents educ,r 
+
+*Add this regression to our Word output
+*append tells Stata to add another column 
+outreg2 using example.doc, append
+
+*Let's look at a regression of wage and experience and add it to our regression output
+reg wage exper, r
+outreg2 using example.doc, append
+
+*Create a dummy variable for college grads (=1 if educ is greater than or equal to 16, else=0)
+gen Collegegrad=(educ>=16)
+label variable Collegegrad "=1 if Graduated College"
+
+*Let's go overboard and generate new dummy variables for every level of schooling*
+tab educ, gen(educ_)
+
+*Create a dummy variable for new hires (=1 if tenure is 0 (note the double ==!, else=0)*
+gen newhire=(tenure==0)
+label variable newhire "=1 if New Hire"
+
+*Be sure to close the log when you're done!* 
+log close
+\end{Verbatim}
+
+
+\end{document}

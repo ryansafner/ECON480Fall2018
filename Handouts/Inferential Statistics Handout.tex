@@ -1,0 +1,449 @@
+\documentclass{article}
+\usepackage{amssymb, amsmath, booktabs}
+\usepackage[margin=1in]{geometry}
+\usepackage{tikz, pgfplots}
+\usetikzlibrary{shapes,arrows}
+\pgfmathdeclarefunction{gauss}{2}{%
+  \pgfmathparse{1/(#2*sqrt(2*pi))*exp(-((x-#1)^2)/(2*#2^2))}%
+}
+
+
+\title{Econometrics: Inferential Statistics Handout}
+\author{Ryan Safner}
+\date{Fall 2017}
+
+\begin{document}
+	
+\maketitle
+
+\section{Normal Distribution}
+	\begin{itemize}
+		\item Normal distribution is a continuous distribution of a random variable 
+		\begin{equation*}
+ 		X \sim N(\mu,  \sigma)
+		\end{equation*}
+		\begin{itemize}
+			\item Mean $\mu$
+			\item Standard deviation $\sigma$
+		\end{itemize}
+		\item 68-95-99.7\% empirical rule: 
+		\begin{itemize}
+			\item $P(\mu-1 \sigma \leq X \leq \mu+ 1\sigma) \approx 0.68$
+			\item $P(\mu-2 \sigma \leq X \leq \mu+ 2\sigma) \approx 0.95$
+			\item $P(\mu-3 \sigma \leq X \leq \mu+ 3\sigma) \approx 0.997$
+			\begin{figure}[h!]
+			\centering 
+			\begin{tikzpicture}
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$Z$, ylabel={},
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick={-4,-3,-2,-1,0,1,2,3,4}, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+ \addplot [fill=red!20, draw=none, domain=-1:1] {gauss(0,1)} \closedcycle;
+ \addplot [fill=red!50, draw=none, domain=-2:-1] {gauss(0,1)} \closedcycle;
+  \addplot [fill=red!50, draw=none, domain=1:2] {gauss(0,1)} \closedcycle;
+  \addplot [fill=red!75, draw=none, domain=-3:-2] {gauss(0,1)} \closedcycle;
+  \addplot [fill=red!75, draw=none, domain=2:3] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=-0.75cm, <->,very thick](axis cs:-1,0) -- node [fill=white] {\small $\mu \pm \sigma$} (axis cs:1,0);
+\draw[yshift=-1.25cm, <->,very thick](axis cs:-2,0) -- node [fill=white] {\small $\mu \pm 2\sigma$} (axis cs:2,0);
+\draw[yshift=2cm, <->,very thick](axis cs:-1,0) -- node[fill=white] {\small 0.68} (axis cs:1,0);
+\draw[yshift=1.25cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small 0.95} (axis cs:2,0);
+\draw [yshift=.5cm, <->,very thick](axis cs:-3,0) -- node[fill=white] {\small 0.997} (axis cs:3,0);
+\draw[yshift=-1.75cm, <->,very thick](axis cs:-3,0) -- node [fill=white] {\small $\mu \pm 3\sigma$} (axis cs:3,0);
+\end{axis}
+\end{tikzpicture}
+	\end{figure}
+	\item Can find the probability of $X$ being a certain range.
+	\begin{itemize}
+		\item $P(a \leq X \leq b)$ can be calculated using \textcolor{blue}{\texttt{normalcdf(a, b, $\mu$, $\sigma$)}}
+		\item For a right or left bound that is not a value (e.g. $P(X > a)$ or $P(b < X)$), use positive or negative infinity with \textcolor{blue}{\texttt{1E99}})
+	\end{itemize}
+	\item Can find the value of $X$ that is a certain percentile
+	\begin{itemize}
+		\item \textcolor{blue}{\texttt{InvNorm($\phi, \mu, \sigma$)}} where $\phi$ is the area under the pdf to the left of the unknown value (i.e. the cdf)	
+	\end{itemize}
+	\item Standard Normal Distribution: $X \sim N(0,1)$
+	\begin{itemize}
+		\item Standardize a random variable by calculating it's $Z$-score:
+		\begin{equation*}
+		Z=\frac{X_i - \mu}{\sigma}	
+		\end{equation*}
+		\item $Z$ is the number of standard deviations above ($+$) or below $(-)$ the mean a value is
+		\end{itemize}
+		\item We use $Z$-scores and the standard normal to find the probability between a range under the curve
+		\begin{itemize}
+			\item With standard normal distribution, only need the two boundaries: \textcolor{blue}{\texttt{normalcdf(LB, RB)}}
+		\end{itemize}
+		\item Can find the $Z$-score for a certain percentile analogous to finding the $X$ value for the percentile 
+	\begin{itemize}
+		\item \textcolor{blue}{\texttt{InvNorm($\phi$)}} where $\phi$ is the area under the pdf to the left of the unknown $Z$-score (i.e. the cdf)	
+	\end{itemize}
+	\end{itemize}
+
+\clearpage 
+
+\section{Central Limit Theorem}
+	\begin{itemize}
+		\item Inferential statistics
+		\begin{itemize}
+			\item There are unknown \emph{parameters} that describe a \emph{population} distribution that we want to know 
+			\item We use \emph{statistics} generated from a \emph{sample} to \emph{estimate} the population parameters
+		\end{itemize}	
+		\item Sampling Distributions 
+		\begin{itemize}
+			\item Conducting multiple samples and generating statistics (e.g. the sample mean, $\bar{X}$) will naturally yield slightly different values for the statistics, there is \emph{sampling variability} 
+			\item The statistics (e.g. $\bar{X}$) themselves become random variables with their own distribution, called the \emph{sampling distribution} of the sample statistic
+			\begin{itemize}
+				\item Sampling distribution has a mean, $E(\bar{X})=\mu_X$ (true population mean), and standard error $\sigma_{\bar{X}}$	
+			\end{itemize}
+		\end{itemize} 
+		\item Central Limit Theorem 
+			\begin{itemize}
+				\item With large enough sample size ($n\geq30$), the sampling distribution of a sample statistic is approximately normal 
+				\item If samples are i.i.d. (independently and identically distributed if they are drawn from the same population randomly and then replaced) we don't even need to know the population distribution to assume normality
+			\end{itemize} 
+		\item Sampling distribution of the sample mean ($\bar{X}$): 
+				\begin{equation*}
+				\bar{X} \sim \bigg(\mu_X, \frac{\sigma_X}{\sqrt{n}}\bigg)
+				\end{equation*}
+			\begin{itemize}
+				\item Standard error of the sample mean: $\sigma_{\bar{X}}=\frac{\sigma_X}{\sqrt{n}}$
+				\item Note: $\sigma_X$ is the population standard deviation of $X$ vs. $\sigma_{\bar{X}}$ is the standard deviation of the sample mean
+				\item Note: We need to know the population standard deviation $\sigma_X$
+			\end{itemize}
+		\item We can find probabilities that the sample mean is within a certain range using the standard normal distribution using \textcolor{blue}{\texttt{normalcdf(LB, RB, $\mu_X, \frac{\sigma_X}{\sqrt{n}}$)}}
+		\end{itemize}
+		\item Sampling distribution of sample sums ($\sum X$) (adding up all values in sample)
+				\begin{equation*}
+				\bar{X} \sim \bigg(n\mu_X, \sigma_X \sqrt{n}\bigg)
+				\end{equation*}
+	\end{itemize}
+
+\clearpage 
+
+\section{Confidence Intervals}
+
+\begin{itemize}
+	\item A confidence interval describes the range of estimates for a population parameter of the form: 
+	\begin{equation*}
+	(\text{point estimate} - \text{margin of error}, \text{point estimate} + \text{margin of error})
+	\end{equation*}
+	\item Our confidence level is $1-\alpha$
+	\begin{itemize}
+		\item $\alpha$: significance level, the probability the true population parameter is \emph{not} contained within our confidence interval 
+		\item Typical confidence levels: 90\%, 95\%, 99\%, especially 95\%
+	\end{itemize}
+	\item A confidence interval tells us that if we were to conduct many samples, ($1-\alpha$)\% would contain the true population parameter within the estimated range of values
+		\item We need to know the \emph{critical value} of $Z_{\frac{\alpha}{2}}$ on the pdf that puts $(1-\alpha)$ probability between $\pm Z_{\frac{\alpha}{2}}$ and $\frac{\alpha}{2}$ probability in each of the tails beyond $\pm Z_{\frac{\alpha}{2}}$
+		\begin{itemize} 
+		\item Common values: 
+		\begin{itemize}
+			\item For $\alpha=0.10$: 1.65
+			\item For $\alpha=0.05$: 1.96
+			\item For $\alpha=0.99$: 2.58
+		\end{itemize}
+		\item These values can be found with \textcolor{blue}{\texttt{InvNorm($[1-\frac{\alpha}{2}]$})}
+				\begin{figure}[h!]
+					\centering 
+			\begin{tikzpicture}[scale=1]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \addplot [fill=blue!50, draw=none, domain=-2:2] {gauss(0,1)} \closedcycle;
+  \addplot [fill=red!50, draw=none, domain=-4:-2] {gauss(0,1)} \closedcycle;
+  \addplot [fill=red!50, draw=none, domain=2:4] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=-1cm, <->,very thick](axis cs:-2,0) -- node [fill=white] {\small $\mu \pm z_{\frac{\alpha}{2}}\sigma_{\bar{X}}$} (axis cs:2,0);
+\draw[yshift=0cm](axis cs: -2,0)node[below]{$-z_{\frac{\alpha}{2}}$};
+\draw[yshift=0cm](axis cs: 2,0)node[below]{$z_{\frac{\alpha}{2}}$};
+\draw[yshift=1.5cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small $1-\alpha$} (axis cs:2,0);
+\draw[yshift=1cm, <->,very thick](axis cs:-2,0) -- node[fill=white] {\small $\frac{\alpha}{2}$} (axis cs:-4,0);
+\draw[yshift=1cm, <->,very thick](axis cs:2,0) -- node[fill=white] {\small $\frac{\alpha}{2}$} (axis cs:4,0);
+\end{axis}
+\end{tikzpicture}
+	\end{figure}
+	\end{itemize}
+	\item \textbf{Confidence intervals for \emph{means}:}
+	\begin{itemize}
+		\item \textbf{If we know the population standard deviation $\sigma_X$ AND $n\geq 30$}
+	\begin{itemize}
+		\item We can use the standard normal distribution 
+		\item The \emph{margin of error (MOE)} is the critical value of $Z$ times the standard error of the estimate: 
+		\begin{equation*}
+			MOE=Z_{\frac{\alpha}{2}}\frac{\sigma_X}{\sqrt{n}}	
+		\end{equation*}
+		\item So the full confidence interval is: 
+			\begin{equation*}
+			\bar{X} \pm Z_{\frac{\alpha}{2}}\frac{\sigma_X}{\sqrt{n}}	
+			\end{equation*}
+	\end{itemize} 
+	\item \textbf{If we don't know the population standard deviation $\sigma_X$ OR $n<30$}
+	\begin{itemize}
+		\item We need to use the Student's $t$-distribution with $n-1$ degrees of freedom ($df$)
+		\item We use sample standard deviation ($s_X$) to estimate population standard deviation $(\sigma_X)$ 
+		\item We calculate the $t$-score, analogous to $Z$-scores: 
+		\begin{equation*}
+		t= \cfrac{\bar{X}-\mu}{(\frac{s}{\sqrt{n}})}
+		\end{equation*}
+		\item We need to find the critical value of $t$ that puts $\frac{\alpha}{2}$ in each tail, this is different for each $t$ distribution based on $df$
+		\begin{itemize}
+			\item Some calculators can do \textcolor{blue}{\texttt{InvT($[1-\frac{\alpha}{2}]$})}, otherwise need a $t$-table to look up critical values
+		\end{itemize}
+	\end{itemize}
+		\item The \emph{margin of error (MOE)} is the critical value of $t$ times the standard error of the estimate: 
+		\begin{equation*}
+			MOE=t_{\frac{\alpha}{2}}\frac{s_X}{\sqrt{n}}	
+		\end{equation*}
+		\item So the full confidence interval is: 
+			\begin{equation*}
+			\bar{X} \pm t_{\frac{\alpha}{2}}\frac{s_X}{\sqrt{n}}	
+			\end{equation*}
+	\end{itemize}
+	\item \textbf{Confidence intervals for \emph{proportions}}
+	\begin{itemize}
+		\item We need to ensure the underlying distribution is binomial
+		\begin{itemize}
+			\item Recall it must be a series of $n$ identical and independent trials, with each trial resulting in either ``success'' with probability $p$ or ``failure'' with probability $(1-p)$; $X$ is the number of successes
+			\item $E(X)=np$
+			\item $\sigma_X = \sqrt{np(1-p)}$
+		\end{itemize}
+		\item We estimate the population proportion (of successes) by calculating a sample proportion $\hat{p}$:
+		\begin{equation*}
+		\hat{p}=\frac{X}{n}	
+		\end{equation*}
+		\item Under the central limit theorem, with large enough $np>5$, normal distributions approximate the binomial distribution of $X$: 
+		\begin{equation*}
+		X \sim N(np, \sqrt{np(1-p)})	
+		\end{equation*}
+		\item The sampling distribution of the sample proportion is normally distributed: 
+		\begin{equation*}
+		\hat{p} \sim N\bigg(p, \sqrt{\frac{p(1-p)}{n}}\bigg)	
+		\end{equation*}
+		\begin{itemize}
+			\item Mean: $p$ (true population proportion)
+			\item Standard deviation: $\sqrt{\frac{p(1-p)}{n}}$
+	\end{itemize}
+		\item The \emph{margin of error (MOE)} is the critical value of $Z$ times the standard error of the estimate: 
+		\begin{equation*}
+			MOE=Z_{\frac{\alpha}{2}}\sqrt{\frac{p(1-p)}{n}}	
+		\end{equation*}
+		\item So the full confidence interval is: 
+			\begin{equation*}
+			\hat{p} \pm Z_{\frac{\alpha}{2}}\sqrt{\frac{p(1-p)}{n}}
+			\end{equation*}
+	\item Can confirm calculations with calculator using \textcolor{blue}{\texttt{STAT $\rightarrow$ TESTS}} and either \textcolor{blue}{\texttt{ZInterval}} for means knowing $\sigma$ and $n>30$, \textcolor{blue}{\texttt{TInterval}} for means without knowing $\sigma$ or $n<30$, or \textcolor{blue}{\texttt{1-PropZInterval}} for proportions
+	\end{itemize}
+
+\clearpage 
+
+\section{Hypothesis Testing}
+
+\begin{itemize}
+	\item We want to test whether a population parameter is likely to be a hypothesized value (or range) vs. an alternate proposed value (or range)
+	\begin{itemize}
+			\item Null hypothesis, $H_0$: population parameter is some value or range
+			\item Alternate hypothesis, $H_A$ that must mathematically contradict $H_0$
+			\begin{itemize}
+				\item \emph{Two-sided alternative} (e.g. that the parameter $\neq H_0$ value) 
+				\item \emph{One-sided alternative} (e.g. that the parameter $>$ OR $< H_0$ value)
+			\end{itemize}
+			\item Always test whether or not our sample statistics provide sufficient evidence to reject $H_0$ in favor of $H_A$
+	\end{itemize}
+	\item Sample statistics might differ from true population parameters
+	\begin{itemize}
+		\item EITHER due to the fact that our hypothesized population parameter is false, OR that it is actually true but our sample gives us a different estimate due to natural sampling variability (we do not know which is correct)
+		\item Type I error (false positive): rejecting $H_0$ when $H_0$ is in fact true
+		\begin{itemize}
+			\item $\alpha=P(\text{Type I error})=P(\text{Reject }H_0|H_0 \text{ is true})$
+			\item $\alpha$ is the significance level (e.g. 0.01, 0.05, 0.10)
+		\end{itemize} 
+		\item Type II error (false negative): failing to reject $H_0$ when $H_0$ is in fact false 
+		\begin{itemize}
+			\item $\beta=P(\text{Type II error})=P(\text{Don't reject }H_0|H_0 \text{ is false})$
+			\item $1-\beta$= \emph{Power} of the test 
+		\end{itemize} 
+			\begin{table}[h!]
+			\centering 
+		\begin{tabular}{ccc}
+		& $H_0$ is True & $H_0$ is False\\ \toprule
+		Reject $H_0$ & \textcolor{magenta}{Type I Error} & \textcolor{teal}{Correct Outcome}\\
+		& False Positive & True Positive\\ 
+		& $\alpha$ & $1-\beta$ \\  \midrule 
+		Don't Reject $H_0$ & \textcolor{teal}{Correct Outcome} & \textcolor{magenta}{Type II Error}\\
+		& True Negative & False Negative\\
+		& $1-\alpha$ & $\beta$\\  \bottomrule 
+		\end{tabular}
+	\end{table}
+	\item $p$-value is the probability that, if the null hypothesis were true, we would obtain a result at least as extreme as the one in our sample 
+	\begin{itemize}
+		\item If $p<\alpha$, the finding is ``statistically significant,'' and we have sufficient evidence to reject $H_0$
+		\item If $p>\alpha$, the finding is not statistically significant, and we do not have sufficient evidence to reject $H_0$
+	\end{itemize}
+	\end{itemize}
+	\item All tests take the form of comparing the value of a test statistic to a critical value of a distribution (e.g. $Z$ or $t$) or computing the $p$-value from that test statistic value
+			\begin{equation*}
+			\text{test statistic} = \frac{\text{estimate}-\text{hypothesized value}}{\text{standard error of the estimate}}
+		\end{equation*}
+	\begin{table}[h!]
+		\centering 
+		\begin{tabular}{ccc}
+		Alternative & $p$-value & PDF\\ \toprule 
+		$H_a: \mu > \mu_0$ & $P(T \geq t$) & 
+		\begin{tikzpicture}[scale=.75]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+	\addplot [fill=red!50, draw=none, domain=2:4] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=0cm](axis cs: 2,0)node[below]{$t$};
+\draw[yshift=0cm](axis cs: 0,0)node[below]{$\mu_0$};
+\end{axis}
+\end{tikzpicture}
+\\ \midrule 
+		$H_a: \mu < \mu_0$ & $P(T \leq t$) & 
+				\begin{tikzpicture}[scale=.75]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \addplot [fill=red!50, draw=none, domain=-4:-2] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=0cm](axis cs: -2,0)node[below]{$t$};
+\draw[yshift=0cm](axis cs: 0,0)node[below]{$\mu_0$};
+\end{axis}
+\end{tikzpicture}
+\\ \midrule 
+		$H_a: \mu \neq \mu_0$ & $2[P(T \geq |t|)]$ & 		
+	\begin{tikzpicture}[scale=.75]
+\begin{axis}[
+  no markers, domain=-4:4, samples=100,
+  axis lines*=left, xlabel=$$, ylabel=$$,
+  every axis y label/.style={at=(current axis.above origin),anchor=south},
+  every axis x label/.style={at=(current axis.right of origin),anchor=west},
+  height=5cm, width=10cm,
+  xtick=\empty, ytick=\empty,
+  enlargelimits=false, clip=false, axis on top,
+  grid = major
+  ]
+  \addplot [fill=red!50, draw=none, domain=-4:-2] {gauss(0,1)} \closedcycle;
+  \addplot [fill=red!50, draw=none, domain=2:4] {gauss(0,1)} \closedcycle;
+  \addplot [very thick,cyan!50!black] {gauss(0,1)};
+\draw[yshift=0cm](axis cs: 2,0)node[below]{$|t|$};
+\draw[yshift=0cm](axis cs: 0,0)node[below]{$\mu_0$};
+\end{axis}
+\end{tikzpicture}
+\\ \bottomrule 
+		\end{tabular}
+	\end{table}
+	
+\clearpage 
+	
+	\item \textbf{Hypothesis testing of a sample mean}
+	\begin{equation*}
+	H_0: \mu=\mu_0	
+	\end{equation*}
+	\begin{equation*}
+	H_1: \mu \neq \mu_0
+	\end{equation*}
+	\begin{equation*}
+	H_2: \mu > \mu_0
+	\end{equation*}
+	\begin{equation*}
+	H_3: \mu <\mu_0	
+	\end{equation*}
+	\begin{itemize}
+		\item \textbf{If we know population standard deviation $\sigma$ and $n>30$}
+			\begin{itemize}
+				\item We run a $Z$-test
+						\begin{equation*}
+						z = \cfrac{\bar{X}-\mu_0}{\frac{\sigma}{\sqrt{n}}}
+						\end{equation*}
+				\item If computed test statistic $z \geq z$* (depending on alternative hypothesis and $\alpha$-level), we are in the rejection region and can reject $H_0$
+					\item Can compute the actual $p$-value for $P(Z \geq z$) using \textcolor{blue}{\texttt{normalcdf}}
+			\end{itemize} 
+				\item \textbf{If we don't know population standard deviation $\sigma$ OR $n<30$}
+			\begin{itemize}
+				\item We run a $t$-test on a $t$-distribution with $n-1$ degrees of freedom
+						\begin{equation*}
+						t = \cfrac{\bar{X}-\mu_0}{\frac{s}{\sqrt{n}}}
+						\end{equation*}
+				\item If computed test statistic $z \geq z$* (depending on alternative hypothesis and $\alpha$-level), we are in the rejection region and can reject $H_0$
+					\item Can compute the actual $p$-value for $P(Z \geq z$) using \textcolor{blue}{\texttt{normalcdf}}
+			\end{itemize} 
+	\end{itemize}
+	\item \textbf{Hypothesis testing of a sample proportion}
+		\begin{equation*}
+	H_0: p=p_0	
+	\end{equation*}
+	\begin{equation*}
+	H_1: p \neq p_0
+	\end{equation*}
+	\begin{equation*}
+	H_2: p > p_0
+	\end{equation*}
+	\begin{equation*}
+	H_3: p < p_0	
+	\end{equation*}
+	\begin{itemize}
+		\item We run a $Z$-test 
+				\begin{equation*}
+		z = \cfrac{\hat{p}-p_0}{\sqrt{\frac{p_0(1-p_0)}{n}}}
+		\end{equation*}
+		\item If computed test statistic $z \geq z$* (depending on alternative hypothesis and $\alpha$-level), we are in the rejection region and can reject $H_0$
+		\item Can compute the actual $p$-value for $P(Z \geq z$) using \textcolor{blue}{\texttt{normalcdf}}
+	\end{itemize}
+	\item \textbf{Hypothesis testing of a difference in sample means (e.g. 2 groups, $X$ and $Y$)}
+		\begin{equation*}
+	H_0: \mu_X-\mu_Y=d_0	
+	\end{equation*}
+	\begin{equation*}
+	H_1: \mu_X -\mu_Y\neq d_0
+	\end{equation*}
+	\begin{equation*}
+	H_2: \mu_X -\mu_Y > d_0
+	\end{equation*}
+	\begin{equation*}
+	H_3: \mu_X -\mu_Y < d_0
+	\end{equation*}
+	\begin{itemize}
+		\item \textbf{If we know population standard deviation $\sigma$ and $n>30$ for both $X$ and $Y$, we run a $Z$-test}
+						\begin{equation*}
+	z = \frac{(\bar{X}-\bar{Y})-d_0}{\sqrt{\frac{\sigma_X^2}{n_X}+\frac{\sigma_Y^2}{n_Y}}}
+						\end{equation*}
+		\item \textbf{If we don't know population standard deviation $\sigma$ OR $n<30$ for $X$ or $Y$, we run a $t$-test}
+						\begin{equation*}
+	t = \frac{(\bar{X}-\bar{Y})-d_0}{\sqrt{\frac{s_X^2}{n_X}+\frac{s_Y^2}{n_Y}}}
+						\end{equation*}
+		\item We run a $t$-test on a $t$-distribution with degrees of freedom according to a very complex formula that your calculator/software can calculate 
+		\item If computed test statistic $z$ (or $t$)$ \geq z$* (or $t$*) (depending on alternative hypothesis and $\alpha$-level), we are in the rejection region and can reject $H_0$
+		\item Can compute the actual $p$-value using \textcolor{blue}{\texttt{normalcdf}}
+	\end{itemize}
+	\item Can confirm calculations with calculator using \textcolor{blue}{\texttt{STAT $\rightarrow$ TESTS}} and either \textcolor{blue}{\texttt{Z-Test}} for means knowing $\sigma$ and $n>30$, \textcolor{blue}{\texttt{T-Test}} for means without knowing $\sigma$ or $n<30$, \textcolor{blue}{\texttt{1-PropZTest}} for proportions, \textcolor{blue}{\texttt{2-SampZTest}} for difference in means knowing $\sigma$ and $n>30$, \textcolor{blue}{\texttt{2-SampTTest}} for means without knowing $\sigma$ or $n<30$
+\end{itemize}
+\end{document}
