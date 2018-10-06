@@ -17,7 +17,7 @@ The *.rmd* file is compiled using "knitr" to produce a *.pdf* file. It can easil
 ### Using *R Studio* to Clone a Repository
 
 1. In *R Studio*, use the drop down menu: File -> New Project -> Version Control -> Git
-![](https://www.dropbox.com/s/kl6znh5m4nh8yvm/gitrstudio.png?dl=1)
+![](https://github.com/ryansafner/ECON480Fall2018/tree/master/R%20Practice/gitrstudio.png)
 2. In the first field, enter the repository's URL (e.g. [http://github.com/ryansafner/ECON480Fall2018](http://github.com/ryansafner/ECON480Fall2018)}\)
 3. In the second field, choose a name for the folder to be created on your computer
 4. In the third field, choose a location for the folder to be created on your computer  
