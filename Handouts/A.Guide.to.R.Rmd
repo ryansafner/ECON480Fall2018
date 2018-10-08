@@ -1,7 +1,7 @@
 ---
 title: "A Modest Handbook for R"
-author: "Ryan Safner"
-date: "9/28/2018"
+author: "Ryan Safner (safner@hood.edu)"
+date: "Last Updated: `r system('git log -1 --format=%cd',intern=TRUE)`"
 output: 
   html_document:
     theme: simplex
@@ -11,9 +11,10 @@ output:
 
 > "There’s an implied contract between you and R: it will do the tedious computation for you, but in return, you must be completely precise in your instructions. Typos matter. Case matters." - Hadley Wickham, [R for Data Science](http://r4ds.had.co.nz/workflow-basics.html)
 
-# Basic Concepts
+**Note to Students**: This is a work in progress, check the date at the top for when this was last updated. This compiles all of my instructions, advice, and examples from econometrics class lectures regarding `R`. It also contains some advanced material that I did not or will not cover in class, but will be useful to know for future data analysis and understanding or diagnosing problems.
 
-# Hints for Writing Code
+
+# Basic Concepts
 
 ## Calculations
 
@@ -41,6 +42,9 @@ choose(2,6) # binomial choose function
     - For negative `e`: one less than the number of zeros (or digits after the decimal point) to the left of a number 
         - e.g. $1.25e-6 = 1.25 \times 10^{-6} = 0.00000125$
         
+
+# Hints for Writing Code
+
 # Objects
 
 ## Vector 
