@@ -4,7 +4,9 @@ author: "Ryan Safner"
 date: "9/28/2018"
 output: 
   html_document:
+    theme: simplex
     toc: true 
+    highlight: tango
 ---
 
 > "There’s an implied contract between you and R: it will do the tedious computation for you, but in return, you must be completely precise in your instructions. Typos matter. Case matters." - Hadley Wickham, [R for Data Science](http://r4ds.had.co.nz/workflow-basics.html)
@@ -204,6 +206,7 @@ months
 ```{r factors}
 students<-factor(c("freshman", "senior", "senior", "junior", "freshman", 
                    "sophomore", "freshman"))
+students # note order is arbitrary
 levels(students) #extract unique levels 
 nlevels(students) #count the number of levels 
 ```
@@ -215,12 +218,27 @@ table(students) #tabulate number of values for each level
 #### Ordered Factors
 
 ```{r}
-o.factor<-c("freshman","sophomore","junior","senior")
-o.factor
+students.o<-ordered(students, levels=c("freshman","sophomore","junior","senior"))
+students.o
 ```
 
 - **Be advised**: when `R` stores and calls factors, it actually stores them as integers [1..k, for k categories] instead of characters (e.g. "freshman"=1, "sophomore"=2), making this a **nominal** variable. This allows for some mathematical operations.
 - An **ordered factor** is where the ordering matters (e.g. "small", "medium", "large" coded as 1, 2, 3 in order)
+
+## Checking or Reclassifying Objects
+
+- We can always check the class of an object with `class()` or `typeof()`. 
+    - We can perform logical tests `is.numeric()`, `is.factor()`, etc. to see if an object is a specified type
+    - We can change the class of an object by redefining it with `as.classname()`, e.g.
+
+```{r class change}
+is.numeric(x) # check if x is numeric
+is.factor(x) # check if x is a character
+x<-as.character(x) # change vector x to a character
+class(x)
+x<-as.numeric(x) # change vector x back to numeric 
+class(x)
+```
 
 # Other Object Types
 
@@ -295,7 +313,7 @@ df
 
 # Manipulating Objects
 
-### Indexing and Subsetting Objects
+## Indexing and Subsetting Objects
 
 - `R` objects store multiple values as an ordered list
     - The order of each value is kept as an index number
@@ -336,26 +354,59 @@ names(myvars) #List names of all values
 names(myvars)[3] #Get name of third value
 ```
 
-## Checking or Reclassifying Objects
+- 
 
-- We can always check the class of an object with `class()` or `typeof()`. 
-    - We can perform logical tests `is.numeric()`, `is.factor()`, etc. to see if an object is a specified type
-    - We can change the class of an object by redefining it with `as.classname()`, e.g.
-
-```{r class change}
-is.numeric(x) # check if x is numeric
-is.factor(x) # check if x is a character
-x<-as.character(x) # change vector x to a character
-class(x)
-x<-as.numeric(x) # change vector x back to numeric 
-class(x)
-```
 
 ## Math Operations on Objects
 
 ## Redefining Objects
 
 # Plotting 
+
+## Base `R`
+
+- Base `R` is very powerful and intuitive to plot, but not very sexy 
+- Basic syntax: 
+
+```{r, eval=FALSE}
+plottype(data.frame.name$variable)
+```
+
+- If using multiple variables, you can avoid `$` by typing the variable names and then telling `R` where the variables come from (a data frame)
+
+```{r, eval=FALSE}
+plottype(variable1,variable2, data=data.frame.name)
+```
+
+### Histogram
+
+```{r, echo=TRUE, fig.height=4, fig.width=10, warning=FALSE}
+library("gapminder")
+hist(gapminder$gdpPercap)
+```
+
+### Boxplot 
+
+- Boxplots are similar syntax
+
+```{r, fig.height=4}
+boxplot(gapminder$gdpPercap)
+```
+
+- If we want a boxplot for each category, use `variable.name~category.variable.name` to tell `R` to plot a boxplot **by** category 
+
+```{r, fig.height=4}
+boxplot(gdpPercap~continent,data=gapminder)
+```
+
+### Scatterplot 
+
+- Scatterplot syntax for plotting is similar to `hist()` and `boxplot()`: `plot(df$x,df$y)`
+```{r, fig.height=3.5}
+plot(gapminder$gdpPercap, gapminder$lifeExp)
+```
+
+## With `ggplot2`
 
 # Linear Regression
 
