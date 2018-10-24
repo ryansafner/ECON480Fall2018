@@ -1,0 +1,393 @@
+---
+title: "Lecture 10: Omitted Variable Bias"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "October 23, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(dev.args=list(bg="transparent"))
+```
+
+```{r, echo=FALSE}
+# load data set and run regression again 
+library("foreign") #for importing .dta files
+CASchool<-read.dta("../Data/caschool.dta")
+school.regression<-lm(testscr~str, data=CASchool)
+```
+
+# Omitted Variable Bias 
+
+### Review: $\epsilon$
+
+\begin{equation*}
+			\hat{Y_i}=\hat{\beta_0}+\hat{\beta_1}X_i+\epsilon_i
+\end{equation*}
+
+- Error term, $\epsilon_i$, includes **all other variables that affect $Y_i$**
+- Every regression has always \alert{omitted variables} assumed into the error term ($\epsilon_i$)
+    - Often unobservable or hard to measure (e.g. innate ability, the weather at the time, etc.) 
+- Again, we assume $\epsilon_i$ is **random** with $E[\epsilon|X]=0$ and $var(\epsilon)=\sigma_{\epsilon}^2$
+- *Sometimes* the omission of these variables can **bias** OLS estimators ($\hat{\beta_0}$ and $\hat{\beta_1}$)
+
+### Omitted Variable Bias 
+
+- \alert{Omitted variable bias} for some omitted variable **$Z$** exists if two conditions are met:
+    1. $Z$ is a determinant of $Y$ 
+        - i.e. $Z$ is included in the error term, $\epsilon_i$
+    2. $Z$ is correlated with the regressor $X$ 
+        - i.e. $corr(X,Z) \neq 0$
+- Omitted variable bias makes $X$ **endogenous**
+    - $E(\epsilon_i|X_i)\neq 0 \implies$ knowing $X$ tells you something about $\epsilon$
+	  - Thus, $X$ tells you something about $Y$ *not* by way of $X$! 
+- Therefore, $\hat{\beta_1}$ is **biased** and systematically over- or under-estimates the true relationship $\beta_1$
+    - $\hat{\beta_1}$ "picks up" *both* the effect of $X\rightarrow Y$ and the effect of $Z\rightarrow Y$ through $X$ 
+
+\onslide<8->\begin{equation*}
+		E[\hat{\beta_1}] \neq \beta_1	
+\end{equation*}
+
+### Omitted Variable Bias: Class Size Example
+
+\begin{example}
+	\begin{equation*}
+	\widehat{\text{Test Score}} = \hat{\beta_0}+\hat{\beta_1} STR_i + \epsilon_i	
+	\end{equation*}
+	\begin{itemize}
+		\item<2-> $Z_i$: Time of Day of the Test (?)
+		\item<3-> $Z_i$: Parking Space per Student (?)
+		\item<4-> $Z_i$: Percent of ESL Students (?)  
+	\end{itemize} 
+\end{example}
+
+### Recall: Endogeneity and Bias
+
+- The true expected value of $\hat{\beta_1}$ is actually\footnote{See \textbf{handout} on unbiasedness for proof}:
+
+\begin{equation*}
+		E[\hat{\beta_1}]=\beta_1+corr(X,\epsilon)\frac{\sigma_\epsilon}{\sigma_X}	
+\end{equation*}
+
+- Takeaways:
+    - If $X$ is exogenous: $corr(X,\epsilon)=0$, we're just left with $\beta_1$
+    - The larger $corr(X,\epsilon)$ is, larger \alert{bias}: $\big(E[\hat{\beta_1}] - \beta_1$\big)
+    - We can also ``sign'' the direction of the bias based on $corr(X,\epsilon)$
+        - **Positive** $corr(X,\epsilon)$ overestimates the true $\beta_1$ ($\hat{\beta_1}$ is too high)
+        - **Negative** $corr(X,\epsilon)$ underestimates the true $\beta_1$ ($\hat{\beta_1}$ is too low)
+
+### Endogeneity and Bias: Correlations
+
+- Here is where checking correlations between variables helps:  
+
+```{r}
+# Select only the three variables we want (there are many)
+CAcorr<-subset(CASchool, select=c("str","testscr","el_pct"))
+
+# Make a correlation table
+corr<-cor(CAcorr)
+corr
+```
+
+### Endogeneity and Bias: Correlations II 
+
+\center 
+
+```{r, results="asis", warning=FALSE, message=FALSE}
+library("stargazer")
+stargazer(corr, type="latex", header=FALSE, float=FALSE)
+```
+
+- \%EL is strongly correlated with Test Score (Condition 1)
+- \%EL is reasonably correlated with STR (Condition 2) 	
+
+### Endogeneity and Bias: Looking at Conditional Distributions
+
+```{r}
+summary(CASchool$testscr)
+
+# find the median of %EL
+summary(CASchool$el_pct)
+```
+
+### Endogeneity and Bias: Looking at Conditional Distributions II 
+
+```{r}
+# look at test scores for districts with more than median %EL
+summary(CASchool$testscr[CASchool$el_pct<8.7]) 
+# look at test scores for districts with median or less %EL
+summary(CASchool$testscr[CASchool$el_pct>=8.7]) 
+```
+
+- Test scores are *lower* in districts with relatively *high* \%EL!
+- Test scores are *higher* in districts with relatively *low* \%EL!
+
+### Endogeneity and Bias: Looking at Conditional Distributions III
+
+```{r}
+# Very useful function: 
+# ifelse(conditions, do.this.if.conditions.are.met, this.if.not)
+
+CASchool$EL<-ifelse(CASchool$el_pct>8.7,"High","Low")  
+
+# i.e. I am making a new variable in the dataframe called EL
+# defining it to be "High" if el_pct>8.7
+# defining it to be "Low" if el_pct is NOT >8.7 
+```
+
+### Endogeneity and Bias: Looking at Conditional Distributions IV
+
+```{r, fig.height=3.5}
+library("ggplot2")
+
+ggplot(CASchool, aes(x=testscr,fill=EL))+
+  geom_density(alpha=0.5)+theme_bw()+xlab("Test Score")+ylab("Density")
+```
+
+### Endogeneity and Bias: Looking at Conditional Distributions V
+
+```{r, fig.height=3.5}
+ggplot(CASchool, aes(x=str,y=testscr,color=EL))+
+  geom_point()+geom_smooth(method="lm")+
+  theme_bw()+xlab("Student to Teacher Ratio")+ylab("Test Score")
+```
+
+### Omitted Variable Bias in Class Size Example
+
+\begin{equation*}
+		E[\hat{\beta_1}]=\textcolor<4->{magenta}{\beta_1}+\underbrace{\textcolor<2->{teal}{corr(X,\epsilon)}\frac{\sigma_\epsilon}{\sigma_X}}_{\text{\textcolor<5->{teal}{Omitted Variable Bias}}}	
+		\end{equation*}
+	\begin{itemize}
+		\item<2-> \textcolor{teal}{$corr(STR, \epsilon)$} is positive (through \%EL) 
+		\item<3-> $corr(\epsilon,$ Test Score$)$ is negative (through \%EL)
+		\item<4-> \textcolor{magenta}{$\beta_1$} is negative (between Test Score and STR)
+		\item<5-> \textcolor{teal}{Bias} is positive, but since \textcolor{magenta}{$\beta_1$} is negative, it is made a \emph{more} negative number than it should be\footnote{Hard to think about...but you'll see when we run the different regressions below!}
+		\begin{itemize}
+			\item<6-> Implies that \textcolor{magenta}{$\beta_1$} \emph{over}states the effect of reducing STR on improving Test Scores
+		\end{itemize}
+\end{itemize}
+
+### Omitted Variable Bias: Messing with Causality
+
+- If school districts with higher Test Scores happen to have both lower STR **AND** districts with smaller STR sizes tend to have less \%EL...
+- How can we say $\hat{\beta_1}$ estimates the **marginal effect** of $\Delta STR \rightarrow \Delta \text{Test Score}$? 
+
+### Omitted Variable Bias: Messing with Causality II 
+
+- Recall our best working definition of causality: result of ideal **random controlled trials (RCTs)**
+    - **Randomly** assign experimental units (e.g. people, cities, etc) into two (or more) groups:
+        - \alert{Treatment group(s)}: gets a (certain type or level of) treatment
+        - \alert{Control group}: gets *no* treatment(s)
+    - Compare results of two groups to get the causal effect of treatment (on average) 
+
+\begin{figure}
+		\includegraphics[height=1.5in]{groupsplit}	
+\end{figure}
+
+### RCTs Neutralize Omitted Variable Bias
+
+\begin{example}
+	\begin{itemize}
+		\item Imagine an ideal RCT for measuring the effect of STR on Test Score
+		\item<2-> School districts would be \textbf{randomly assigned} a STR  
+		\item<3-> With random assignment, all factors in $\epsilon$ (parental income, family size, \#  of siblings, English proficiency, etc) are distributed \emph{independently} of class size
+		\item<4-> Thus, $corr(STR, \epsilon)=0$ and $E(\epsilon_i|STR_i)=0$: exogenity! 
+		\item<5-> The resulting $\beta_1$ is an unbiased estimate for the marginal effect of $\Delta STR \rightarrow \Delta \text{Test Score}$
+	\end{itemize}
+	\end{example}
+	\begin{figure}
+		\includegraphics[height=1.25in]{classroomdoors}	
+\end{figure}
+
+### But We Rarely Have RCTs
+
+- But our data is *not* an RCT, it is observational data!
+- "Treatment" of having a large or small class size is **NOT** randomly assigned! 
+- Again consider $\%EL$: plausibly fits the criteria of O.V. bias!
+    1. \%EL is a determinant of Test Score
+    2. \%EL is correlated with STR
+- Thus, "control" group and "treatment" group differs systematically!
+    - Small STR also tend to have lower \%EL; large STR also tend to have higher \%EL
+    - **Selection bias**: $corr(STR, \%EL) \neq 0$, $E[\epsilon_i|STR_i]\neq 0$ 
+
+\begin{figure}
+		\includegraphics[height=1in]{apples}
+				\includegraphics[height=1in]{oranges}	
+\end{figure}
+
+### There's Another Way to Neutralize OVB
+
+- Look at effect of STR on Test Score by comparing districts with the **same** \%EL.  	
+    -  Eliminates differences in \%EL between high and low STR classes
+    - "As if" we had a control group! Hold \%EL constant 
+- The simple fix is just to **not omit \%EL**!
+    - Make it *another* independent variable on the righthand side of the regression 
+
+\begin{figure}
+		\includegraphics[height=1in]{apples}	
+		\includegraphics[height=1in]{apples}	
+\end{figure}
+
+# The Multivariate Regression Model
+
+### The Population Multivariate Regression Model
+
+\begin{equation*}
+	Y_i = \textcolor<4->{magenta}{\beta_0} + \textcolor<5->{magenta}{\beta_1} \textcolor<2->{teal}{X_{1i}} + \textcolor<6->{magenta}{\beta_2} \textcolor<2->{teal}{X_{2i}}+\epsilon_i	
+	\end{equation*}
+	\begin{itemize}
+		\item<2-> \textcolor{teal}{$X_{1i}$} and \textcolor{teal}{$X_{2i}$} are two independent variables (regressors)
+		\item<3-> ($Y_i, X_{1i}, X_{2i})$ are the values of variables $Y, X_1,$ and $ X_2$ for individual $i$
+		\item<4-> \textcolor<4->{magenta}{$\beta_0$}: a population constant 
+		\item<5-> \textcolor<5->{magenta}{$\beta_1$}: marginal effect on Y of a change in $X_1$, holding $X_2$ constant
+		\item <6-> \textcolor<6->{magenta}{$\beta_2$}: marginal effect on Y of a change in $X_2$, holding $X_1$ constant
+		\item <7->$\epsilon_i$: regression error (omitted variables) 	
+\end{itemize}
+
+### Marginal Effects 
+
+\begin{equation*}
+		Y_i= \beta_0+\beta_1 X_{1i} + \beta_2 X_{2i} 	
+\end{equation*}
+
+- Consider changing $X_1$ by $\Delta X_1$ while holding $X_2$ constant:
+
+\begin{align*}
+					\only<2->{Y&= \beta_0+\beta_1 X_{1} + \beta_2 X_{2} && \text{Before the change}\\}
+					\only<3->{Y+\Delta Y&= \beta_0+\beta_1 (X_{1}+\Delta X_1) + \beta_2 X_{2} && \text{After the change}\\}
+				\only<4->{\Delta Y&= \beta_1 \Delta X_1 && \text{The difference}\\}
+				\only<5->{\frac{\Delta Y}{\Delta X_1} &= \beta_1  && \text{Solving for } \beta_1\\}
+\end{align*}
+
+### Marginal Effects II
+
+$$\beta_1 =\frac{\Delta Y}{\Delta X_1}\text{ holding $X_2$ constant}$$
+
+\onslide<2->
+
+Similarly, for $\beta_2$:
+
+$$\beta_2 =\frac{\Delta Y}{\Delta X_2}\text{ holding $X_1$ constant}$$
+
+\onslide<3->
+
+And for the constant, $\beta_0$:
+
+$$\beta_0 =\text{predicted value of Y when } X_1=0, \; X_2=0$$
+
+### If You Like Your Intutions, You Can Keep Them...But They're Wrong Now 
+
+- We have been envisioning OLS regressions as the equation of a line through a scatterplot of data on two variables, $X$ and $Y$
+    - $\beta_1$: "slope" 
+    - $\beta_0$: "y-intercept" 	
+- With 3+ variables, it OLS regressions is no longer a "line" for us to estimate
+
+	\begin{figure}
+	\begin{tikzpicture}[scale=0.7]
+	\begin{axis}[
+	xlabel=STR,
+	ylabel=\%EL,
+	zlabel=Test Score,
+	%shader=flat,
+	%xtick={14,16,...,26},
+	%ytick={0,2,4,...,20},
+	%ztick={600,625,...,700},
+	grid=major,
+	xmin=0,
+	ymin=0,
+	xmax=26,
+	ymax=20,
+	%zmin=600,
+	legend pos=outer north east,
+	view/h=315,
+]
+	\addplot3[surf,samples=20, opacity=0.5] 
+		{686-1.10*x-0.65*y};
+	\addlegendentry{$\widehat{\text{Test Score}}=686-1.10STR-0.65\%EL$}
+\end{axis}
+\end{tikzpicture}
+	\end{figure}
+
+### The "Constant"
+
+- Alternatively, we can write the population regression equation as:
+		\begin{equation*}
+			Y_i=\beta_0\textcolor<2->{magenta}{X_{0i}}+\beta_1X_{1i}+\beta_2X_{2i}+u_i
+		\end{equation*}
+- Here, we added \alert{$X_{0i}$} to $\beta_0$
+- $X_{0i}$ is a \alert{constant regressor}, as we define $X_{0i}=1$ for all $i$ observations
+- Likewise, $\beta_0$ is more generally called the \alert{constant} term in the regression (instead of the "intercept")
+- This may seem silly and trivial, but this will be important soon!  
+
+### The Population Multiple Regression Model
+
+$$Y_i= \beta_0+\beta_1 X_{1i} + \beta_2 X_{2i} + ... + \beta_{\textcolor{magenta}{k}} X_{\textcolor{magenta}{k}i} + \epsilon_i$$
+
+- In general, a multivariate model has \alert{$k$} regressor variables
+- We estimate \alert{$k+1$} parameters (including $\beta_0$, the constant, when $\beta_1=\beta_2=...=\beta_k=0$)\footnote{\tiny Note your Bailey textbook defines $k$ to include both the number of variables plus the constant}
+
+### The Population Multiple Regression Model: Example
+
+\begin{example}
+			\begin{equation*}
+			\widehat{Consumption_i}=\beta_0+\beta_1Price_i+\beta_2Income_i+CompsPrice_i+SubsPrice+\epsilon_i
+			\end{equation*}
+		\begin{itemize}[<+->]
+			\item Let's see what you remember from micro(econ)! 
+			\item What measures the \textbf{price effect}? What sign should it have? 
+			\item What measures the \textbf{income effect}? What should inferior, necessities, and luxuries look like? 
+			\item What measures the \textbf{cross-price effect}? What should substitutes and complements look like? 
+		\end{itemize} 
+\end{example}
+
+### The Population Multiple Regression Model: Example II
+
+\begin{example}\small 
+			\begin{equation*}
+			\widehat{BeerCons_i}=20-1.5Price_i+1.25Income_i-0.75WingsPrice_i+1.3WinePrice_i
+			\end{equation*}
+	\end{example}
+	\begin{itemize}
+		\item Interpret each $\hat{\beta}$	
+\end{itemize}
+
+
+### Multivariate Regression In `R`
+
+```{r}
+# syntax: reg.object<-(y~x1+x2, data=mydf)
+# y goes first, then all of your x's after the ~, separated by +'s 
+```
+Remember, we "regress $Y$ on $X$'s"
+
+### Multivariate Regression In `R` II 
+
+\tiny 
+
+```{r}
+
+multireg<-lm(testscr~str+el_pct, data=CASchool)
+summary(multireg)
+
+```
