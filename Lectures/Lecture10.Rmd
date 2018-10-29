@@ -134,9 +134,9 @@ summary(CASchool$el_pct)
 ### Endogeneity and Bias: Looking at Conditional Distributions II 
 
 ```{r}
-# look at test scores for districts with more than median %EL
+# look at test scores for districts with less than median %EL
 summary(CASchool$testscr[CASchool$el_pct<8.7]) 
-# look at test scores for districts with median or less %EL
+# look at test scores for districts with median or more %EL
 summary(CASchool$testscr[CASchool$el_pct>=8.7]) 
 ```
 
@@ -351,7 +351,7 @@ $$Y_i= \beta_0+\beta_1 X_{1i} + \beta_2 X_{2i} + ... + \beta_{\textcolor{magenta
 
 \begin{example}
 			\begin{equation*}
-			\widehat{Consumption_i}=\beta_0+\beta_1Price_i+\beta_2Income_i+CompsPrice_i+SubsPrice+\epsilon_i
+			\widehat{Consumption_i}=\beta_0+\beta_1Price_i+\beta_2Income_i+\beta_3CompsPrice_i+\beta_4SubsPrice+\epsilon_i
 			\end{equation*}
 		\begin{itemize}[<+->]
 			\item Let's see what you remember from micro(econ)! 
@@ -376,7 +376,7 @@ $$Y_i= \beta_0+\beta_1 X_{1i} + \beta_2 X_{2i} + ... + \beta_{\textcolor{magenta
 ### Multivariate Regression In `R`
 
 ```{r}
-# syntax: reg.object<-(y~x1+x2, data=mydf)
+# syntax: reg.object<-lm(y~x1+x2, data=mydf)
 # y goes first, then all of your x's after the ~, separated by +'s 
 ```
 Remember, we "regress $Y$ on $X$'s"
@@ -391,3 +391,26 @@ multireg<-lm(testscr~str+el_pct, data=CASchool)
 summary(multireg)
 
 ```
+
+### Multivariate Regression In `R` III
+
+\columnsbegin
+\column{.5\textwidth}
+
+\tiny 
+```{r, eval=FALSE}
+library("stargazer")
+stargazer(school.regression, multireg, header=FALSE, type="latex", 
+          float=FALSE, font.size="tiny",
+          dep.var.labels = c("Test Score"),
+          covariate.labels = c("Student Teacher Ratio",
+                               "Pct ESL Students"))
+```
+
+\column{.5\textwidth}
+```{r, echo=FALSE, results="asis"}
+library("stargazer")
+stargazer(school.regression, multireg, header=FALSE, type="latex", float=FALSE, font.size="tiny", dep.var.labels = c("Test Score"), covariate.labels = c("Student Teacher Ratio", "Pct ESL Students"))
+```
+
+\columnsend
