@@ -1,0 +1,568 @@
+---
+title: "Lecture 12: Model Specification Strategies"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "October 31, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, dev.args=list(bg="transparent"))
+```
+
+```{r, echo=FALSE}
+# load data set and run regression again 
+
+library("foreign") #for importing .dta files
+CASchool<-read.dta("../Data/caschool.dta")
+
+# run miltivariate regression again 
+multireg<-lm(testscr~str+el_pct, data=CASchool)
+```
+
+# Model Specification
+
+### Model Specification
+
+- The big challenge in applied econometrics is choosing how to \alert{specify a model} to regress
+- Every dataset is different, every study has a different goal
+    - there is no bright line rule, only a set of guidelines and skills that you can only learn by doing! 
+- But here are some helpful tips and frequent problems (and solutions)	
+
+### Model Specification: Process
+
+1. **Identify your question of interest:** what do you want to know? What marginal effect(s) do you want to estimate?
+2. **Think about possible sources of endogeneity:** what *other* variables would cause  \alert{omitted variable bias} if we left them out? Can we get data on them too? 
+    - Again: must BOTH (1) affect $Y$ AND (2) be correlated with $X$
+    - This requires much of your economic intuitions: $R^2$ and statistical measures cannot tell you everything!
+3. **Run multiple models and check the robustness of your results:** does the size (or direction) of your marginal effect(s) of interest change as you change your model (i.e. add more variables)?
+4. **Interpret your results**
+    - Are they statistically significant? 
+    - Regardless of *statistical* significance, are they **economically meaningful**? 
+        - Why should we care? 
+        - How big is "big"? 
+
+### Proxy Variables
+
+- Ideally, we would want a randomized control experiment to assign individuals to treatment
+- But with observational data, $\epsilon_i$ depends on other factors
+    - *If* we can observe and measure these factors, then include them in the regression
+- If we can't directly measure them, often we can include variables *correlated* with these variables to \alert{proxy} for the effects of them!
+
+### Proxy Variables: Example
+
+\begin{example}
+	Consider test scores and class sizes again. What about learning opportunities outside of school? 	
+	\begin{itemize}[<+->]
+		\item Probably a bias-causing omitted variable (affects test score and correlated with class size) but we can't measure it! 
+		\item But suppose we \emph{can} measure a variable $V$, and significantly, $corr(V,Z)\neq 0$	
+		\item e.g. we have data on the percent of students who get a free or subsidized lunch (`meal\_pct`)
+		\item This is a good \textbf{proxy} for income-determined learning opportunities outside of school
+		\begin{itemize}
+			\item \%meal is correlated with Income, which is correlated with both class size and test score
+			\item So this is a good \emph{indirect} measure of Income 
+		\end{itemize} 
+	\end{itemize}
+\end{example}
+
+### Proxy Variables: Example II 
+
+- We've been assuming we don't have data on average district income, we would expect `meal_pct` to be strongly negatively correlated with income
+- Just kidding, we do have data on `avginc`, but we'll only use it to confirm our suspicion: 
+
+```{r, echo=FALSE, results="asis"}
+CAproxy<-subset(CASchool, select=c("testscr", "str", "el_pct", "avginc","meal_pct"))
+
+corrproxy<-cor(CAproxy)
+
+library("stargazer")
+stargazer(corrproxy, type="latex", header=FALSE, float=FALSE)
+```
+
+- We can see `meal_pct` is strongly (negatively) correlated with income, as expected
+
+### Proxy Variables: Example III 
+
+\columnsbegin
+\column{.45\textwidth}
+
+\tiny 
+```{r}
+proxyreg<-lm(testscr~str+el_pct+meal_pct, data=CAproxy)
+summary(proxyreg)
+```
+
+\column{.55\textwidth}
+
+
+\begin{table} 
+	\centering 
+				\setlength{\tabcolsep}{0cm}
+	\onslide<2->\begin{tabular}{ccccccccccc}\small 
+	  $\widehat{\text{Test Score}}=$ & 700.15& $-$ & $1.00$ & $STR$ & $-$ & $0.122$ & $el\_pct$ & $-$ &$0.547$ & $meal\_pct$\\
+	& \scriptsize (4.68) & & \scriptsize (0.24) & & & \scriptsize (0.03) & & & \scriptsize (0.02) & \\
+	\end{tabular}
+\end{table} 
+
+\columnsend
+
+### Interpretting Control Variables 
+
+\begin{table} 
+	\centering 
+				\setlength{\tabcolsep}{0cm}
+	\onslide<2->\begin{tabular}{ccccccccccc}\small 
+	  $\widehat{\text{Test Score}}=$ & 700.15& $-$ & $1.00$ & $STR$ & $-$ & $0.122$ & $el\_pct$ & $-$ &$0.547$ & $meal\_pct$\\
+	& \scriptsize (4.68) & & \scriptsize (0.24) & & & \scriptsize (0.03) & & & \scriptsize (0.02) & \\
+	\end{tabular}
+\end{table} 
+
+- Is `meal_pct` causal? 
+- Getting rid of programs in districts where a large percentage of students need them would boost test scores A LOT! (So probably not causal...) 
+- `meal_pct` likely correlated with other things in $\epsilon$ (like outside learning opportunities!). 
+    - In fact, that's *exactly why* we included it as a variable! 
+- We don't need the OLS estimate on `meal_pct` to be unbiased! 
+    - We only care about getting the estimate on `str` to be unbiased! 
+
+### Control Variables
+
+- A \alert{control variable} is a regressor variable **note** of interest, but included to hold factors constant that, if omitted, would bias the causal effect of interest
+- The control variable may still be correlated with omitted causal factors in $\epsilon$
+    - Estimators ($\hat{\beta}$'s) on control variables can be biased and that is OK!
+    - So long as we have unbiased estimators ($\hat{\beta}$'s) on the regressors we do care about!
+- Control variables allow us to proceed \emph{as if} $X$ were randomly assigned 
+
+### Model Specification Warning
+
+\begin{alertblock}{Do NOT just try to maximize $R^2$ or $\bar{R}^2$}
+		\begin{itemize}[<+->]
+			\item A high $R^2$ or $\bar{R}^2$ means that the regressors explain variation in $Y$
+			\item A high $R^2$ or $\bar{R}^2$ does \emph{NOT} mean you have eliminated omitted variable bias
+			\item A high $R^2$ or $\bar{R}^2$ does \emph{NOT} mean you have an unbiased estimate of a causal effect
+			\item A high $R^2$ or $\bar{R}^2$ does \emph{NOT} mean included variables are statistically significant
+		\end{itemize}
+\end{alertblock}
+
+# Applications of Simple Multivariate OLS Models 
+
+## Sacerdote (2004) on Peer Effects
+
+### Sacerdote (2004) on Peer Effects
+
+Sacerdote, Bruce, (2004), "Peer Effects with Random Assignment: Results from Dartmouth Roommates" *Quarterly Journal of Economics* 116(2):681-704
+
+\begin{figure}
+		\includegraphics[height=2in]{universitypeers}	
+\end{figure}
+
+### Paper Motivation
+
+- What determines student outcomes in college? (GPAs, fraternity enrollment, alcohol/drug use, etc) 
+- Effects of peer groups
+
+\begin{figure}
+		\includegraphics[height=2in]{universitypeers}	
+\end{figure}
+
+### Paper Motivation II
+
+- "Standard" way to estimate peer effects: regress student $i$'s outcomes/behavior on *other students'* outcomes/behavior
+
+$$GPA_i = \beta_0+\beta_1 OwnBehavior_i + \beta_2 RoommateBehavior_i + \epsilon_i $$
+
+- Problems with this approach: 
+    1. Individuals **self-select** into peer groups
+    2. If two roommates $A$ and $B$ influence each other, how do we disentangle causal effect of $B \rightarrow A$ vs. $A \rightarrow B$?
+    3. Are peer effects actually driven by students' own backgrounds, or by their actual choices? 
+
+### Paper Motivation III
+
+\begin{align*}
+			corr(OwnBehavior, \epsilon) &\neq 0	\\
+			corr(RoomateBehavior, \epsilon)& \neq 0 \\
+			E[\epsilon|OwnBehavior,RoommateBehavior] & \neq 0 	\\
+\end{align*}
+
+\begin{figure}
+		\includegraphics[height=2in]{universitypeers}	
+\end{figure}
+
+### Sacerdote's Identification Strategy
+
+- Freshmen entering Dartmouth College are **randomly** assigned to dorms & roommates
+- Removes self-selection of peer groups by shared characteristics	
+- Random assignment: roommate A's background characteristics are uncorrelated with roommate B's background characteristics
+
+\begin{figure}
+		\includegraphics[height=2in]{universitypeers}	
+\end{figure}
+
+### The Relevant Institutions
+
+- Freshmen entering Dartmouth College are randomly assigned to dorms & roommates
+- Each incoming freshman fills out a questionnaire:
+    1. I smoke. (Y/N)
+    2. I like to listen to music while studying. (Y/N)
+    3. I keep late hours. (Y/N)
+    4. I am more neat than messy. (Y/N)
+    5. I am (Male/Female). 	
+- There are $2^5=32$ combinatorial possibilities of answers to the questions
+- Students are assigned to roommates/dorms **at random**, conditional on their combination of answers to the 5 survey answers
+
+### The Data
+
+- Data from Dartmouth's database of students: history of dorm assignments \& term-by-term academic performance
+- Data on pre-treatment characteristics (SAT scores, high school class rank, private/public HS, home state, academic index)
+- Outcome variables: GPA, time to graduation, frat membership, major choice, participation in athletics
+- Survey of Incoming Freshman: if student drank beer in last year and expectation of graduating with honors
+- Sample of 1589 students	
+- Create dummy variable for each block to control for covariates (we'll talk later about \alert{dummy variables} and \alert{fixed effects} like this)
+
+### The Data: Summary Statistics
+
+\begin{figure}
+		\includegraphics[height=3in]{sacerdote1}	
+\end{figure}
+
+### The Data: Summary Statistics II 
+
+\begin{figure}
+		\includegraphics[height=3in]{sacerdote2}	
+\end{figure}
+
+### The Data: Demonstrating Random Assignment
+
+\begin{figure}
+		\includegraphics[height=3in]{sacerdote3}	
+\end{figure}
+
+### The Data: Demonstrating Random Assignment II 
+
+\begin{figure}
+		\includegraphics[height=3in]{sacerdote3c}	
+\end{figure}
+
+### Sacerdote's Empirical Model (Basically)
+
+$$GPA_i=\beta_0+\beta_1ACA_i+\beta_2ACA_j+\epsilon_i$$
+
+- Student $i$ and roommate $j$
+- $ACA$: Index of academic performance (broken down into different metrics)  
+- Other outcomes of interest (besides $GPA$: graduation, major, fraternity, athlete
+
+### Regression Results
+
+\begin{figure}
+		\includegraphics[height=2in]{sacerdote5}	
+\end{figure}
+\scriptsize 
+
+- For every 1 point increase (decrease) in the roommate's GPA, a student's GPA increased (decreased) about .12 points
+- If you would have been a 3.0 student with a 3.0 roommate, but you were assigned to a 2.0 roommate, your GPA would be 2.88
+
+### Regression Results: Academic Performance
+
+\begin{figure}
+		\includegraphics[height=2in]{sacerdote6}	
+	\end{figure}
+
+### Regression Results: Social Outcomes 
+
+\begin{figure}
+		\includegraphics[height=3in]{sacerdote9}	
+\end{figure}
+
+### Sacerdote's Conclusions
+
+- Peer effects are very strong!
+- Important influences in Freshman year performance (GPA) and activities (joining a social organization)
+- Not important for choosing a major
+
+\begin{figure}
+		\includegraphics[height=2in]{universitypeers}	
+\end{figure}
+
+
+## Duggan and Levitt (2002) on Corruption in Sumo 
+
+### Duggan and Levitt (2002) on Corruption in Sumo 
+
+Duggan, Mark and Steven D. Levitt (2002), "Winning Isn't Everything: Corruption in Sumo Wrestling," *American Economic Review* 92(5): 1594-1605
+
+\begin{figure}
+		\includegraphics[height=2in]{sumo}	
+\end{figure}
+
+### Paper Motivation
+
+- How can we *understand* and *detect* corruption?
+- A very important and consequential economic problem, nearly impossible to measure
+
+\begin{figure}
+		\includegraphics[height=2in]{rentseeking}	
+\end{figure}
+
+### Some Background: CPI 
+
+- **Transparency International: Corruption Perceptions Index (CPI)**
+    - Index of how people \emph{perceive} corruption in their country
+    -168 countries
+    - Draws on a composite of 4 expert opinion surveys
+    - Scale from 0-100, 0: high levels of perceived corruption; 100: low levels of perceived corruption
+
+### Some Background: CPI II 
+
+\begin{figure}
+		\includegraphics[height=2.5in]{tcpi2015}
+		\caption*{\href{http://www.transparency.org/cpi2015}{Transparency International CPI 2015}}	
+\end{figure}
+
+### Some Background: CPI III 
+
+\begin{figure}
+		\includegraphics[height=2in]{tcpi1}
+		\caption*{\href{http://www.transparency.org/cpi2015}{Transparency International CPI 2015}}	
+\end{figure}
+
+### Some Background: CPI IV
+
+\begin{figure}
+		\includegraphics[height=1.75in]{tcpi2}
+		\caption*{\href{http://www.transparency.org/cpi2015}{Transparency International CPI 2015}}	
+\end{figure}
+
+### Duggan and Levitt (2002): Relevant Institutions 
+
+- 2000 year history, national sport of Japan, extremely ritualistic
+- Japan is a country with low corruption (CPI: 75, Rank 18th best)
+- Good data available
+- Situation is ripe for cheating! So when/why does it happen? 
+
+\begin{figure}
+		\includegraphics[height=2in]{sumo}	
+\end{figure}
+
+### Duggan and Levitt (2002): Relevant Institutions II
+
+- Tournaments (*basho*), 66 wrestlers (*rikishi*), 15 bouts each
+- Wrestlers with 8+ wins (*kachi-koshi*) *move up* in rankings (*banzuke*)
+- Those with a losing record ($<$8 wins) (*maki-koshi*) *fall* in rankings 
+
+\begin{figure}
+		\includegraphics[height=2in]{sumo1}	
+\end{figure}
+
+### Duggan and Levitt (2002): Relevant Institutions III
+
+- A marginal win generates a 2.5 rank increase
+- But movement from 7 to 8 wins produces almost an 11 rank increase!
+- Rank signals prestige, moving up a single rank is worth about $3,000/year 
+- Top 5th-10th ranked wrestlers make $250,000/year  
+
+\begin{figure}
+		\includegraphics[height=2in]{sumo1}	
+\end{figure}
+
+### Duggan and Levitt (2002): Relevant Institutions IV
+
+- Consider 2 wrestlers: \textcolor{teal}{A (8-6)} vs \textcolor{magenta}{B (7-7)} going into final (15th) match
+- Return to winning for \textcolor{magenta}{B (7-7)} is much higher than for \textcolor{teal}{A (8-6)}
+- \textcolor{teal}{A (8-6)} throws the match to \textcolor{magenta}{B (7-7)}, who must return the favor in later tournaments if \textcolor{teal}{A} finds himself in the same 7-7 position
+
+\begin{figure}
+		\includegraphics[height=2in]{sumo}	
+\end{figure}
+
+### Duggan and Levitt (2002): Data
+
+- All official top-rank sumo matches from January 1989-January 2000
+- Six tournaments per year, nearly 70 wrestlers per tournament		
+- Tournaments last 15 days with one match per wrestler 
+- 64,000 wrestler-matches
+
+### The Theoretical vs. Actual Probability of Winning
+
+\begin{figure}
+		\includegraphics[height=2in]{sumo2}	
+\end{figure}
+
+- Theoretical (binomial) probability of winning 8 times: 19.6%
+- Actual probability (from data): 26%
+- Much higher probability for 8 wins than it should be! (& lower for 7)
+    - Could this be from rampant cheating!?
+
+### The Model 
+
+\begin{figure}
+		\includegraphics[height=0.5in]{sumo3}	
+\end{figure}
+
+- $Win=1$ if wrestler $i$ beats wrestler $j$ in tournament $t$ on day $d$
+- Bubble =1 if wrestler ($i$) is on margin (7-7), -1 if opponent ($j$) is on margin, =0 if neither are on margin 
+- $Rankdiff$: difference in rank between wrestlers 
+- Wrestler $\lambda$ and tournament $\delta$ fixed effects
+
+### Initial Results 
+
+\begin{figure}
+		\includegraphics[height=2.7in]{sumo4}	
+\end{figure}
+
+\scriptsize
+
+- Frequency of rigging increases as tournament nears end (day 15) 
+- On day 15, 7-7 wrestlers on margin win 25% more often than they otherwise should 
+
+### Interpretation of Initial Results
+
+- Two alternative hypotheses to explain results:
+    1. Match rigging (corruption)
+    2. Effort: wrestlers on margin (7-7) just fight harder! Wrestlers with 8 wins are more complacent (already made it) 
+- To test, look for evidence of **reciprocity** agreements over time 
+    - If these tacit agreements to rig matches exist, wrestlers from stable A should have very high win rates when on the margin against wrestlers from stable B, and vice versa 
+    
+### Interaction Effects
+
+\begin{figure}
+		\includegraphics[height=2.7in]{sumo5}	
+\end{figure}
+\scriptsize
+
+- Last row (before $R^2$): wrestler's success strongly increases with overall success rates of playing wrestlers on the bubble from other stables
+- For each 10% increase in success in other bubble matches between these two stables, the wrestler on the bubble is 2.7% more likely to win
+
+### Reciprocity
+
+\begin{figure}
+		\includegraphics[height=2.7in]{sumo6}	
+\end{figure}
+\scriptsize
+
+-Wrestlers who won a bubble match previously tend to do worse when playing same opponent - throw the match to them in reciprocity! 
+
+## Fisman and Miguel (2007) on U.N. Parking Tickets
+
+### Fisman and Miguel (2007) on U.N. Parking Tickets
+
+Fisman, Raymond and Edward Miguel, (2007), "Corruption, Norms, and Legal Enforcement: Evidence from Diplomatic Parking Tickets," *Journal of Political Economy* 115(6): 1020-1048
+
+\begin{figure}
+		\includegraphics[height=2in]{parkingticket}	
+\end{figure}
+
+### Fisman and Miguel (2007): Motivation
+
+- What determines the level of corruption?
+    1. Legal environment of country
+    2. Culture or social norms 
+- How to identify the true source(s)?
+
+\begin{figure}
+		\includegraphics[height=2in]{rentseeking}	
+\end{figure}
+
+### Fisman and Miguel (2007): Motivation II
+
+- U.N. Diplomats are given immunity from prosecution or lawsuits in the U.S.
+- Reciprocal agreements with other countries, designed to protect diplomats in unfriendly environments
+- Diplomatic license plates in NYC are identified, get ticket, but no way to enforce
+- "The best free parking pass in town"
+
+\begin{figure}
+		\includegraphics[height=1in]{parkingticket}	
+		\includegraphics[height=1in]{diplomatplates}	
+\end{figure}
+
+### Fisman and Miguel (2007): The Data
+
+- Between 11/1987 and 12/2002, 150,000 unpaid parking tickets, fines totaling $18,000,000
+- 30 Days to pay a fine, afterwards a 110% penalty. After 70 days, recorded as unpaid violation
+- Individual violation-level data: license plate, name, country of origin, date & time of violation, fine, amount paid (if any)
+- 43% were violations of "no standing/loading zone"
+- 20% of cases, the car was registered to the diplomatic mission (not personal)
+- Scale fines by the size of the country's mission 
+
+\begin{figure}
+		\includegraphics[height=1in]{parkingticket}	
+		\includegraphics[height=1in]{diplomatplates}	
+\end{figure}
+
+### Fisman and Miguel (2007): Identification Strategy
+
+- Becker's (1968) rational crime model says with no punishment$\implies$ rational for all diplomats to never pay parking fines
+- But large variation in data! Unpaid fines are strongly correlated with country's score on corruption index! 
+- Home country corruption norms are an important predictor of diplomats breaking the law
+    - Low corruption countries' diplomats tend to pay the fine even where they are not legally compelled to
+    - High corruption countries' diplomats rack up massive fines
+
+### Fisman and Miguel (2007): Identification Strategy II 
+
+- **Natural experiment**: post-9/11, NYC began cracking down on enforcement
+- Diplomats with 3+ unpaid parking tickets had diplomat plates revoked
+- Led to immediate 98% reduction in unpaid parking tickets
+- So enforcement matters as well as corruption norms
+
+\begin{figure}
+		\includegraphics[height=2in]{parking1}	
+\end{figure}
+
+### Fisman and Miguel (2007): Data 
+
+\begin{figure}
+		\includegraphics[height=2.5in]{parking2}	
+\end{figure}
+
+### Fisman and Miguel (2007): Data II
+
+\begin{figure}
+		\includegraphics[height=2.5in]{parking3}	
+\end{figure}
+
+### Fisman and Miguel (2007): Empirical Model
+
+$$\text{Unpaid Violations}=\beta_0+\beta_1\text{Corruption}+\beta_2\text{Enforcement}+\beta_3\text{Diplomats}+...+\beta_k\text{Controls}$$
+	
+\begin{figure}
+		\includegraphics[height=1in]{parkingticket}	
+		\includegraphics[height=1in]{diplomatplates}	
+\end{figure}
+
+### Fisman and Miguel (2007): Results 
+
+\begin{figure}
+		\includegraphics[height=2.5in]{parking4}	
+\end{figure}
+
+### Fisman and Miguel (2007): Results II
+
+\begin{figure}
+		\includegraphics[height=2.5in]{parking7}	
+\end{figure}
+
+### Fisman and Miguel (2007): Results III
+
+\begin{figure}
+		\includegraphics[height=2.5in]{parking5}	
+\end{figure}
+

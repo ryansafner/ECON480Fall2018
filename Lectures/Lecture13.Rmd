@@ -1,0 +1,435 @@
+---
+title: "Lecture 13: Dummy Variables"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "November 7, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, dev.args=list(bg="transparent"))
+```
+
+# Dummy Variables
+
+### Overview of the Remainder of the Course
+
+- You now have the "minimal toolkit" for data analysis with multivariate OLS regression
+- The remainder of the course is about two types of extensions to the toolkit:
+    1. "Data Wrangling" 
+        - Altering variables or data for useful analysis 
+        - Dummy variables for categorical data (`R` calls them `factors`)
+        - Transforming variable scales or models to fit nonlinear data
+    2. Advanced identification strategies and unique problems
+        - Time Series data
+        - Panel data
+        - Fixed effects and random effects models
+        - Difference-in-difference models
+        - Instrumental variables models
+        - Linear probability, logit, and probit models 
+
+### Data Wrangling
+ 
+- \alert{"Data wrangling"} is a term for altering and cleaning data from raw form (often unusable) to a form that is useful for analysis (e.g. plotting and regressions)
+- A \textbf{significant portion} of data analysis is initial data wrangling
+
+\begin{figure}
+  \includegraphics[height=2in]{datawrangling}
+  \includegraphics[height=2in]{datawrangling2}
+\end{figure}
+
+### Categorical Variables
+
+- Recall \alert{categorial variables} place an individual into one of several possible categories
+    - e.g. sex, season, political party
+    - may be responses to questions
+    - can be quantitative (e.g. age, zip code)
+
+\onslide<4->\begin{table}
+  \centering 
+  \begin{tabular}{lrrrrr}
+  Cut & Fair & Good & Very Good & Premium & Ideal\\ \toprule
+  Count & 1610 & 4906 & 12082 & 13791 & 21551 \\ \midrule
+  Proportion & 0.030 & 0.091 & 0.224 & 0.256 & 0.400\\ \bottomrule 
+  \end{tabular}
+  \caption*{Cut characteristics of 53,940 diamonds}
+\end{table}
+
+- Also recall `R` calls this type of data a `factor`
+
+### The Pure Statistics of Comparing Group Means
+
+\begin{example}
+Do men earn higher wages on average than women? 
+\end{example}
+
+- Using basic statistics, we can test for a statistically significant difference in group means with a **$t$-test**\footnote{See the \textbf{Handout} on Blackboard for this example.}
+- Let:
+    - \textcolor{blue}{$\bar{Y}_M$} the average earnings of a sample of \textcolor{blue}{$n_M$} men
+    - \textcolor{red}{$\bar{Y}_W$} the average earnings of a sample of \textcolor{red}{$n_W$} women
+    - Difference in group averages $d=\textcolor{blue}{\bar{Y}_M}-\textcolor{red}{\bar{Y}_W}$
+- The hypothesis test is: 
+  - $\textcolor{magenta}{H_0}: d=0$
+  - $\textcolor{teal}{H_1}: d \neq 0$
+
+### Comparing Groups in Regression
+
+- In a regression, we can easily compare across groups via a \alert{dummy variable}\footnote{Also called a \alert{binary variable} or \alert{dichotomous variable}}
+    - Dummy variable *only* $=0$ or $=1$, depending on if a condition is met
+    - Signifies whether an observation belongs to a category or not
+
+\onslide<4->\begin{example}
+	\begin{equation*}
+		\widehat{Wage_i}=\hat{\beta_0}+\hat{\beta_1}Female_i \quad \text{ where } Female_i =
+ 		 \begin{cases}
+    		1 & \text{if } i \text{ is }Female \\
+   			0 & \text{If } i \text{ is } Male\\
+  		\end{cases}
+		\end{equation*}
+\end{example}
+
+- Again, $\hat{\beta_1}$ makes less sense as the "slope" of a line in this context
+
+### Comparing Groups in Regression: Scatterplot
+
+```{r, echo=FALSE}
+# Our data comes from WAGE1.dta which you can find in Blackboard under data
+
+# Load WAGE1 as wages
+library("foreign") # to load .dta Stata files
+wages<-read.dta("../Data/WAGE1.dta")
+library("ggplot2")
+```
+
+```{r, echo=FALSE, fig.height=4}
+ggplot(data=wages, aes(x=female,y=wage, color=as.factor(female)))+
+  geom_point()+
+  geom_smooth(method="lm", color="purple")+
+  scale_x_discrete(breaks=c(0,1))+
+  labs(color="Female")+
+  scale_y_continuous(labels=scales::dollar)+theme_light()
+```
+
+### Comparing Groups in Regression: Scatterplot with Jittering
+
+```{r, echo=FALSE, fig.height=4}
+p<-ggplot(data=wages, aes(x=female,y=wage, color=as.factor(female)))+
+  geom_jitter(width=0.05)+
+  geom_smooth(method="lm", color="purple")+
+  scale_x_discrete(breaks=c(0,1))+
+  labs(color="Female")+
+  scale_y_continuous(labels=scales::dollar)+theme_light()
+p
+```
+
+- use `geom_jitter()` instead of `geom_point()` to "jitter" the data to avoid overplotting
+
+### Comparing Groups in Regression: Scatterplot with Jittering II 
+
+```{r, echo=FALSE, fig.height=4}
+p+geom_hline(yintercept=mean(wages$wage[wages$female==0]),linetype="dashed",color="red")+
+  geom_hline(yintercept=mean(wages$wage[wages$female==1]),linetype="dashed",color="blue")+
+  annotate("text", x=0.5,y=3.5,label="Average for Females", color="blue")+
+  annotate("text", x=0.5,y=8,label="Average for Males", color="red")
+```
+
+### Dummy Variables as Group Means
+
+$$\hat{Y_i}=\hat{\beta_0}+\hat{\beta_1} D_i \quad \text{ where }D_i=\{0,1\}$$
+
+- \textcolor{magenta}{When $D_i=0$ (Control group):}
+    - $\hat{Y_i}=\hat{\beta_0}$
+    - $E[Y|D_i=0]=\hat{\beta_0}$ $\iff$ the mean of $Y$ when $D_i=0$
+- \textcolor{teal}{When $D_i=1$ (Treatment group):}
+    - $\hat{Y_i}=\hat{\beta_0}+\hat{\beta_1} D_i$
+    - $E[Y|D_i=1]=\hat{\beta_0}+\hat{\beta_1}$ $\iff$ the mean of $Y$ when $D_i=1$
+- So the \emph{difference} in group means:
+\vspace{-1cm}
+\onslide<8->\begin{align*}
+		&=E[Y_i|D_i=1]-E[Y_i|D_i=0]\\
+		&=(\hat{\beta_0}+\hat{\beta_1})-(\hat{\beta_0})\\
+		&=\hat{\beta_1}\\
+\end{align*}
+
+### Dummy Variables as Group Means II
+
+\begin{example}
+		\begin{equation*}
+		\widehat{Wage_i}=\hat{\beta_0}+\hat{\beta_1}Female_i	
+		\end{equation*}
+		\[Female_i = \left\{
+ 		 \begin{array}{ll}
+    		1 & \text{if } i \text{ is }Female \\
+   			0 & \text{If } i \text{ is } Male\\
+  		\end{array}
+  		\right.
+		\]
+\end{example}
+
+\begin{itemize}
+		\item<2-> Mean wage for males: \onslide<3->$E[Wage|Female=0]=\hat{\beta_0}$
+		\item<4-> Mean wage for females: \onslide<5->$E[Wage|Female=1]=\hat{\beta_0}+\hat{\beta_1}$
+		\item<6-> Difference in wage between males \& females: \onslide<7->$\hat{\beta_1}$
+\end{itemize}
+
+### Dummy Variables as Group Means II
+
+```{r, echo=FALSE, fig.height=4}
+p+geom_hline(yintercept=mean(wages$wage[wages$female==0]),linetype="dashed",color="red")+
+  geom_hline(yintercept=mean(wages$wage[wages$female==1]),linetype="dashed",color="blue")+
+  annotate("text", x=0.9,y=3.5,label="beta0+beta1", color="blue")+
+  annotate("text", x=0.1,y=8,label="beta0", color="red")+
+  annotate("text", x=0.8, y=6.25, label="beta1=slope", color="purple")
+```
+
+### Dummy Regression vs. Group Means
+
+\begin{itemize}
+		\item<2-> OLS Regression: 
+	\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{ccccc}
+	$\widehat{\text{Wage}_i}=$ & \textcolor{teal}{7.10} & $-$& $\textcolor{magenta}{2.51}$ & $Female_i$\\
+	& \small (0.21) & & \small (\textcolor{blue}{0.30}) & \\ 
+	\end{tabular}
+	\item<3-> Simple tabulation of group means: \\
+	\begin{table}\small 
+	\centering 
+	\setlength{\tabcolsep}{0.125cm}
+		\begin{tabular}{lccc}
+			 & Avg. Wage & SE(avg) & \\ 
+			Sex & $(\bar{Y})$ & ($s_Y$)& n \\ \toprule 
+			Female	& 4.59 & 0.16 & 252\\ 
+			Male & \textcolor{teal}{7.10} & 0.21 & 274\\ \midrule 
+			Difference & \textcolor{magenta}{-2.51} & \textcolor{blue}{(0.30)} & -\\ \bottomrule
+		\end{tabular}
+		\end{table}
+		\item<4-> Differences in means:  $\overline{Y_{F}}-\overline{Y_{M}}=4.59- 7.10 = \textcolor{red}{-2.51}$
+		\item<5-> $SE(\overline{Y_{F}}-\overline{Y_{M}}) = \sqrt{\frac{s_M^2}{n_M}+\frac{s_F^2}{n_F}}=\sqrt{\frac{0.21^2}{274}+\frac{0.16^2}{252}} \approx \textcolor{blue}{0.30}$
+\end{itemize}
+
+### Looking at the Data *Conditionally*
+
+```{r}
+# Our data comes from WAGE1.dta which you can find in Blackboard under data
+
+# Load WAGE1 as wages
+library("foreign") # to load .dta Stata files
+wages<-read.dta("../Data/WAGE1.dta")
+
+# there's a lot of variables in wages, let's only look at wage and female for now
+wages<-subset(wages, select=c("wage","female"))
+```
+
+### Looking at the Data *Conditionally* II 
+
+```{r}
+# just get a sense of the data 
+
+head(wages)
+
+```
+
+### Looking at the Data *Conditionally* III 
+
+- We want to look at the data under certain **conditions**
+- Can do this in base R by **subsetting** data using square brackets `[]`\footnote{Later, I will show you how to do this in \texttt{dplyr}, a popular package that makes data wrangling easier}
+- Syntax: `data[df$variable condition]` where `condition` is likely: 
+    - A logical test, i.e. `>`, `<`, `!=`, `<=`, `>=`, `==` some value 
+
+
+### Looking at the Data *Conditionally* IV
+
+```{r}
+# look at average wage for men
+summary(wages$wage[wages$female==0])
+sd(wages$wage[wages$female==0]) # get sd 
+```
+
+### Looking at the Data *Conditionally* V
+
+```{r}
+# look at average wage for women
+summary(wages$wage[wages$female==1])
+sd(wages$wage[wages$female==1]) # get sd 
+```
+
+
+### The Dummy Regression 
+
+\columnsbegin
+\column{.5\textwidth}
+
+\scriptsize 
+
+```{r}
+dummyreg<-lm(wage~female, data=wages)
+summary(dummyreg)
+```
+
+\column{.5\textwidth}
+
+\begin{table}
+	\centering 	
+	\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{ccccc}
+	$\widehat{\text{Wage}_i}=$ & 7.10 & $-$& $2.51$ & $Female_i$\\
+	& \small (0.21) & & \small (0.30) & \\ 
+	\end{tabular}
+\end{table}
+
+\columnsend 
+
+### The Dummy Regression: Just Checking!
+
+\begin{table}
+	\centering 	
+	\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{ccccc}
+	$\widehat{\text{Wage}_i}=$ & 7.10 & $-$& $2.51$ & $Female_i$\\
+	& \small (0.21) & & \small (0.30) & \\ 
+	\end{tabular}
+\end{table}
+
+- Does this mean we've accurately measured the gender-wage gap as \$2.51/hr? 
+- Are there variables for which the following is true?
+
+\vspace{-1cm}
+\onslide<2->
+\begin{align*}
+corr(wage,Z)& \neq 0 \\
+corr(female, Z)& \neq 0 \\
+\end{align*}
+\vspace{-1cm}
+
+- `female` is probably endogenous, must include other control variables
+
+# Recoding Dummies
+
+### Recoding Dummies
+
+- What if instead of \emph{female} we had used: 
+
+\begin{example} 
+				\begin{equation*}
+		\widehat{Wage_i}=\hat{\beta_0}+\hat{\beta_1}Male_i	
+		\end{equation*}
+		\[Male_i = \left\{
+ 		 \begin{array}{ll}
+    		1 & \text{if } i \text{ is }Male \\
+   			0 & \text{If } i \text{ is } Female\\
+  		\end{array}
+  		\right.
+		\]
+		\end{example}
+
+- $female$ is a variable already in the data, we need to generate the $male$ variable
+
+### Recoding Dummies
+
+- Again, a very useful `R` function is 
+
+```{r, eval=FALSE}
+ifelse(conditions, do.this.if.true, do.this.if.false)
+```
+
+- So let's create a `male` variable in our `wages` dataframe that we define as `1` if `female==0` and `0` otherwise (i.e. if `female==1`)
+
+\scriptsize 
+\center 
+\onslide<3->
+```{r}
+wages$male<-ifelse(wages$female==0,1,0)
+head(wages) # verify that it worked
+```
+
+### Scatterplot with Male 
+
+```{r, echo=FALSE, fig.height=4}
+pm<-ggplot(data=wages, aes(x=male,y=wage, color=as.factor(male)))+
+  geom_jitter(width=0.05)+
+  geom_smooth(method="lm", color="purple")+
+  scale_x_discrete(breaks=c(0,1))+
+  labs(color="Male")+
+  scale_y_continuous(labels=scales::dollar)+theme_light()
+pm
+```
+
+### Scatterplot with Male II 
+
+```{r, echo=FALSE, fig.height=4}
+pm+geom_hline(yintercept=mean(wages$wage[wages$male==0]),linetype="dashed",color="red")+
+  geom_hline(yintercept=mean(wages$wage[wages$male==1]),linetype="dashed",color="blue")+
+  annotate("text", x=0.8,y=8,label="beta0+beta1", color="blue")+
+  annotate("text", x=0.1,y=3.5,label="beta0", color="red")+
+  annotate("text", x=0.8, y=5.75, label="beta1=slope", color="purple")
+```
+
+### The Dummy Regression with Male
+
+\columnsbegin
+\column{.5\textwidth}
+
+\scriptsize 
+
+```{r}
+mreg<-lm(wage~male, data=wages)
+summary(mreg)
+```
+
+\column{.5\textwidth}
+
+\begin{table}
+	\centering 	
+	\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{ccccc}
+	$\widehat{\text{Wage}_i}=$ & 4.59 & $+$& $2.51$ & $Male_i$\\
+	& \small (0.21) & & \small (0.30) & \\ 
+	\end{tabular}
+\end{table}
+
+\columnsend
+
+### The Dummy Regression: Male or Female
+
+\columnsbegin
+\column{.45\textwidth}
+
+\scriptsize 
+```{r, eval=FALSE}
+library("stargazer")
+stargazer(dummyreg, mreg, type="latex", 
+          header=FALSE, float=FALSE)
+```
+
+\column{.55\textwidth}
+
+```{r, echo=FALSE, results="asis"}
+library("stargazer")
+stargazer(dummyreg, mreg, type="latex", header=FALSE, float=FALSE, font.size="tiny")
+```
+
+- Note it doesn't matter if we use `male` or `female`, males always earn $2.51 more than females
+- Compare the constant (mean for the `D=0` group)
+
+\columnsend
