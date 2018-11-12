@@ -1,0 +1,798 @@
+---
+title: "Lecture 14: Categories and Interactions"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "November 12, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(ggplot2) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, dev.args=list(bg="transparent"))
+```
+
+```{r, echo=FALSE}
+# Load WAGE1 as wages
+library("foreign") # to load .dta Stata files
+wages<-read.dta("../Data/WAGE1.dta")
+```
+
+### Ordinal Variables
+
+- A \alert{categorical variable} expresses membership in a category, where there is no ranking or hierarchy of the categories
+    - e.g. Male/Female, Spring/Summer/Fall/Winter, Democratic/Republican/Independent
+- An \alert{ordinal variable} expresses rank or an ordering of data, but not necessarily their relative magnitude
+    - e.g. Order of finalists in a competition (1st, 2nd, 3rd)
+    - e.g. Highest education attained (1=elementary school, 2=high school, 3=bachelor's degree, 4=graduate degree)
+
+### Using Categorical Variables in Regression
+
+- Categorical variables are useful, but not in easily quantifiable form
+- We can easily transform a categorical variable into a set of dummy variables, one for each possible category 
+
+\onslide<2->\begin{example}
+	How do wages vary by region of the country? Let $Region_i=\{Northeast, Midwest, South, West\}$ 	
+	
+	\onslide<3->Can we run the following regression?
+	\begin{equation*}
+	\widehat{Wages_i}=\hat{\beta_0}+\hat{\beta_1}Region_i+\epsilon_i
+	\end{equation*}
+\end{example}
+
+### Using Categorical Variables in Regression II
+
+\begin{example}
+	How do wages vary by region of the country? 
+	
+	Let \[Region_i= \left\{
+ 		 \begin{array}{ll}
+    		1 & \text{if } i \text{ is in }Northeast \\
+   			2 & \text{If } i \text{ is in } Midwest\\
+    		3 & \text{if } i \text{ is in }South \\
+   			4 & \text{If } i \text{ is in } West\\
+  		\end{array}
+  		\right.
+		\]
+\begin{itemize}
+	\item<2-> Now can we run the following regression? 
+\end{itemize}
+	\begin{equation*}
+	\widehat{Wages_i}=\hat{\beta_0}+\hat{\beta_1}Region+\epsilon_i
+\end{equation*}
+\end{example}
+
+### Using Categorical Variables in Regression III
+
+\begin{example}
+	How do wages vary by region of the country? 
+\begin{itemize}
+		\item Create dummy for each region: 
+		\begin{itemize}
+			\item $Northeast_i=1$ if $i$ is in Northeast, else 0
+			\item $Midwest_i=1$ if $i$ is in Midwest, else 0
+			\item $South_i=1$ if $i$ is in South, else 0
+			\item $West_i =1$ if $i$ is in West, else 0 
+		\end{itemize}
+	\end{itemize}
+	\end{example} 
+	\begin{itemize}
+		\item<2-> Now can we run the following regression?
+	\begin{equation*}
+	\widehat{Wages_i}=\hat{\beta_0}+\hat{\beta_1}Northeast_i+\hat{\beta_2}Midwest_i+\hat{\beta_3}South_i+\hat{\beta_4}West_i+\epsilon_i	
+	\end{equation*}
+		\item<3-> For every $i$: $Northeast_i+Midwest_i+South_i+West_i=1$! 
+	\end{itemize}
+
+### The Dummy Variable Trap
+
+$$\widehat{Wages_i}=\hat{\beta_0}+\hat{\beta_1}Northeast+\hat{\beta_2}Midwest+\hat{\beta_3}South+\hat{\beta_4}West+\epsilon_i$$
+
+\onslide<2-> 
+
+- If we included *all* possible categories, they are \alert{perfectly multicollinear}, an exact linear function of one another: 
+
+$$Northeast_i+Midwest_i+South_i+West_i=1 \quad \forall i$$
+
+- This is known as the \alert{dummy variable trap}, a common source of perfect multicollinearity 
+
+### Reference Category
+
+- To avoid the dummy variable trap, always omit one category from the regression, known as the \alert{reference category}
+    - It does not matter which category we omit!
+    - Coefficients on dummies measure the *difference* between the reference category and each category dummy  
+
+\onslide<4->\begin{example}
+	\begin{equation*}
+	\widehat{Wages_i}=\hat{\beta_0}+\hat{\beta_1}Northeast_i+\hat{\beta_2}Midwest_i+\hat{\beta_3}South_i+\epsilon_i	
+	\end{equation*}
+\end{example} 
+
+\begin{itemize}
+		\item<5-> $West_i$ omitted (arbitrarily chosen) 
+		\item<6-> $\beta_0$: \onslide<7-> wages for $i$ in West 
+		\item<8-> $\beta_1$: \onslide<9-> difference between West and Northeast
+		\item<10-> $\beta_2$: \onslide<11-> difference between West and Midwest
+		\item<12-> $\beta_3$: \onslide<13-> difference between West and South 
+\end{itemize}
+
+### The Dummy Variable Trap in `R`
+
+```{r, echo=FALSE}
+# create northeast dummy as the final category
+wages$noreast<-ifelse((wages$northcen==0 & wages$south==0 & wages$west==0),1,0)
+```
+
+```{r}
+dtreg<-lm(wage~noreast+northcen+south+west, data=wages)
+summary(dtreg)
+```
+
+### Using Different Reference Categories
+
+```{r}
+# run 4 regressions
+no.noreast.reg<-lm(wage~northcen+south+west, data=wages)
+no.northcen.reg<-lm(wage~noreast+south+west, data=wages)
+no.south.reg<-lm(wage~noreast+northcen+west, data=wages)
+no.west.reg<-lm(wage~noreast+northcen+south, data=wages)
+```
+
+```{r, eval=FALSE}
+# make output table
+library("stargazer")
+stargazer(no.noreast.reg, no.northcen.reg,
+          no.south.reg, no.west.reg,
+          type="latex", header=FALSE,
+          float=FALSE, font.size="tiny")
+```
+
+### Using Different Reference Categories II 
+
+\columnsbegin
+\column{.6\textwidth}
+
+```{r, echo=FALSE, results="asis"}
+library("stargazer")
+stargazer(no.noreast.reg, no.northcen.reg,
+          no.south.reg, no.west.reg,
+          type="latex", header=FALSE,
+          float=FALSE, font.size="tiny")
+```
+
+\column{.4\textwidth}
+
+\scriptsize 
+
+- Constant is always mean wage for reference (omitted) category
+- Compare coefficient on `northcen` in (1) and `noreast` in (2)
+- Compare coefficient on `south` in (3) and `west` in (4)
+- **It doesn't matter which category we omit**
+- Same $n$, $R^2$, and $SER$; coefficients give same results
+
+\columnsend
+
+# Dummy *Dependent* ($Y$) Variables
+
+### Dummy *Dependent* ($Y$) Variables 
+
+- In many contexts, we will want to have our *dependent* ($Y$) variable be a dummy variable
+
+\onslide<2->\begin{example}
+	\begin{equation*}
+		\widehat{Admitted_i}=\hat{\beta_0}+\hat{\beta_1}GPA_i \quad \text{ where } Admitted_i =
+ 		 \begin{cases}
+    		1 & \text{if } i \text{ is Admitted} \\
+   			0 & \text{If } i \text{ is  Not Admitted}\\
+  		\end{cases}
+		\end{equation*}
+\end{example}
+
+\onslide<3->
+
+- A model where $Y$ is a dummy is called a \alert{linear probability model}, as it measures the \alert{probability of $Y$ occuring given the $X$'s, i.e. $P(Y_i=1|X_i)$}
+    - e.g. the probability person $i$ is Admitted to a program with a given GPA
+    - requires special tools to properly interpret and extend this (**logit**, **probit**, etc)
+- Feel free to write papers that have dummy $Y$ variables (but you may have to ask me some more questions)!
+
+# Interaction Effects
+
+### Interaction Effects
+
+- Sometimes an individual's membership in a category (measured by a dummy) might significantly \alert{interact} with *other* independent ($X$) variables
+
+\onslide<2->\begin{example}
+Return to the gender pay gap example. 
+\end{example}
+
+\onslide<3->
+
+- **Experience** certainly affects wages...Does experience affect *men's* wages **differently** than it affects *women's* wages?
+    - i.e. is there an \alert{interaction effect} between sex and experience?
+- Do men *gain more* than women from an *additional* year of experience?
+    - Note this is *not the same* as asking: "do men earn more than women with the same amount of experience?"
+
+### Three Types of Interactions
+
+- There are three types of interactions that may take place, depending on the types of variables
+- We look at each in turn:
+
+1. Interaction between a **dummy** and a **continuous** variable:
+$$Y_i=\beta_0+\beta_1X_i+\beta_2 D_i+\beta_3 \textcolor{magenta}{X_i * D_i} $$
+		
+2. Interaction between **two dummy** variables:
+$$Y_i=\beta_0+\beta_1D_{1i}+\beta_2 D_{2i}+\beta_3 \textcolor{magenta}{D_{1i}* D_{2i}}$$
+
+3. Interaction between **two continuous** variables:
+$$Y_i=\beta_0+\beta_1X_{1i}+\beta_2 X_{2i}+\beta_3 \textcolor{magenta}{X_{1i} * X_{2i}}$$
+
+# Interactions Between a Dummy and a Continuous Variable 
+
+### Model with Interaction Effects 
+
+- We can model this interaction by introducing a variable that is an \alert{interaction term} capturing the interaction between two variables:
+
+$$Y_i=\beta_0+\beta_1X_i+\beta_2 D_i+\beta_3 \textcolor{magenta}{X_i * D_i} \quad \text{ where } D_i=\{0,1\}$$
+
+- $\beta_3$ estimates the \alert{interaction term} (in this case between a dummy variable and a continuous variable) 
+- What do the different coefficients ($\beta$'s) tell us? 
+    - Again, think logically by examining each group ($D_i=0$ or $D_i=1$)
+
+### Interaction Effects as Two Regressions
+
+$$Y_i=\beta_0+\beta_1X_i+\beta_2 D_i+\beta_3 X_i * D_i$$
+
+- \textcolor{magenta}{When $D_i=0$ (Control group):}
+\vspace{-0.5cm}
+\begin{align*}
+			\only<2->{\hat{Y_i}&=\hat{\beta_0}+\hat{\beta_1}X_i+\hat{\beta_2}(\textcolor{magenta}{0})+\hat{\beta_3}X_i*(\textcolor{magenta}{0})\\}
+			\only<3->{\textcolor{magenta}{\hat{Y_i}}& \textcolor{magenta}{=\hat{\beta_0}+\hat{\beta_1}X_i}\\}
+\end{align*}
+
+\onslide<4->
+\vspace{-1.25cm}
+
+- \textcolor{teal}{When $D_i=1$ (Treatment group):}
+\vspace{-0.5cm}
+
+\begin{align*}
+			\only<5->{\hat{Y_i}&=\hat{\beta_0}+\hat{\beta_1}X_i+\hat{\beta_2}(\textcolor{teal}{1})+\hat{\beta_3}X_i*(\textcolor{teal}{1})\\}
+			\only<6->{\hat{Y_i}&=\hat{\beta_0}+\hat{\beta_1}X_i+\hat{\beta_2}+\hat{\beta_3}X_i\\}
+			\only<7->{\textcolor{teal}{\hat{Y_i}}& \textcolor{teal}{=(\hat{\beta_0}+\hat{\beta_2})+(\hat{\beta_1}+\hat{\beta_3})X_i}\\}
+\end{align*}
+\vspace{-1cm}
+
+\onslide<8->
+
+- So what we really have is *two* regression lines! 
+
+### Interaction Effects as Two Regressions II
+
+\begin{columns}
+		\begin{column}[c]{8cm}
+	\begin{figure}
+				\begin{tikzpicture}[scale=.5]\scriptsize 
+				\draw[->] (0,0) -- (11,0) coordinate (x axis) node[right]{$X$};
+ 				\draw[->] (0,0) -- (0,11) coordinate (y axis) node[above]{$Y$};	
+            	\draw<2->[ultra thick, magenta] (0,2)node[left]{$\hat{\beta_0}$}--node[below]{slope=$\hat{\beta_1}$}(10,5);
+            	\draw<3->[ultra thick, teal] (0,4)node[left]{$\hat{\beta_0}+\hat{\beta_2}$}--node[above=.5cm]{slope=$\hat{\beta_1}+\hat{\beta_3}$}(10,10);
+ 			\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+		\begin{column}[c]{6cm}
+		\begin{itemize} 
+			\item<3-> \textcolor{teal}{$D_i=1$ group:}\\ 
+			\textcolor{teal}{$\hat{Y_i}=(\hat{\beta_0}+\hat{\beta_2})+(\hat{\beta_1}+\hat{\beta_3})X_i$}
+			\item<2-> \textcolor{magenta}{$D_i=0$ group:}\\
+			\textcolor{magenta}{$\hat{Y_i}=\hat{\beta_0}+\hat{\beta_1}X_i$}
+		\end{itemize}
+		\end{column}
+	\end{columns}	
+
+### Interaction Effects as Two Regressions III 
+
+- Three distinct possibilities for the two lines \textcolor{magenta}{$D_i=0$} and \textcolor{teal}{$D_i=1$}: 
+
+\begin{columns}
+		\begin{column}[c]{4cm}
+	\onslide<2->\begin{figure}
+		\centering 
+				\begin{tikzpicture}[scale=.3]\scriptsize 
+				\draw[->] (0,0) -- (11,0) coordinate (x axis) node[right]{$X$};
+ 				\draw[->] (0,0) -- (0,11) coordinate (y axis) node[above]{$Y$};	
+            	\draw[ultra thick, magenta] (0,2)node[left]{$\hat{\beta_0}$}--node[below]{slope=$\hat{\beta_1}$}(10,5);
+            	\draw[ultra thick, teal] (0,2)--node[above=.6cm]{slope=$\hat{\beta_1}+\hat{\beta_3}$}(10,10);
+            	\draw (5,12)node[above]{Same intercept, different slopes};
+ 			\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+			\begin{column}[c]{4cm}
+	\onslide<3->\begin{figure}
+		\centering 
+				\begin{tikzpicture}[scale=.3]\scriptsize 
+				\draw[->] (0,0) -- (11,0) coordinate (x axis) node[right]{$X$};
+ 				\draw[->] (0,0) -- (0,11) coordinate (y axis) node[above]{$Y$};	
+            	\draw[ultra thick, magenta] (0,2)node[left]{$\hat{\beta_0}$}--node[below]{slope=$\hat{\beta_1}$}(10,5);
+            	\draw[ultra thick, teal] (0,4)node[left]{$\hat{\beta_0}+\hat{\beta_2}$}--node[above=.5cm]{slope=$\hat{\beta_1}$}(10,7);
+            	\draw (5,12)node[above]{Different intercepts, same slope};
+ 			\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+				\begin{column}[c]{4cm}
+	\onslide<4->\begin{figure}
+		\centering 
+				\begin{tikzpicture}[scale=.3]\scriptsize 
+				\draw[->] (0,0) -- (11,0) coordinate (x axis) node[right]{$X$};
+ 				\draw[->] (0,0) -- (0,11) coordinate (y axis) node[above]{$Y$};	
+            	\draw[ultra thick, magenta] (0,2)node[left]{$\hat{\beta_0}$}--node[below]{slope=$\hat{\beta_1}$}(10,5);
+            	\draw[ultra thick, teal] (0,4)node[left]{$\hat{\beta_0}+\hat{\beta_2}$}--node[above=.5cm]{slope=$\hat{\beta_1}+\hat{\beta_3}$}(10,10);
+            	\draw (5,12)node[above]{Different intercepts, different slopes};
+ 			\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+\end{columns}	
+
+\onslide<5->
+	
+- Well...four, but: what if they had the same slope and same intercept?
+
+### Interpretting the Coefficients
+
+$$Y_i=\beta_0+\beta_1X_i+\beta_2 D_i+\beta_3 X_i * D_i$$
+
+- To interpret the coefficients, compare cases after changing $X$ by $\textcolor{magenta}{\Delta X_i}$:
+
+\vspace{-0.5cm}
+
+\onslide<3->
+$$Y_i+\textcolor{magenta}{\Delta Y_i}=\beta_0+\beta_1(X_i\textcolor{magenta}{+\Delta X_i})\beta_2D_i+\beta_3\big((X_i\textcolor{magenta}{+\Delta X_i})D_i\big)$$
+
+\onslide<4->
+- Subtracting the two equations, the difference is: 
+
+\vspace{-0.75cm}
+\begin{align*}
+	\only<5->{\Delta Y_i &= \beta_1 \Delta X_i + \beta_3 D_i \Delta X_i\\}
+	\only<6->{\textcolor{magenta}{\frac{\Delta Y_i}{\Delta X_i}} &\textcolor{magenta}{= \beta_1+\beta_3 D_i}\\}
+\end{align*}
+
+\vspace{-0.75cm}
+\onslide<7->
+
+- **The effect of $X \rightarrow Y$ depends on the value of $D_i$!**
+- \alert{$\beta_3$: \emph{increment} to the effect of $X_i \rightarrow Y_i$ when $D_i=1$ (vs. $D_i=0$)}
+
+### Interpretting the Coefficients II
+
+$$Y_i=\beta_0+\beta_1X_i+\beta_2 D_i+\beta_3 X_i * D_i$$
+
+- $\beta_0$: $Y_i$ for $X_i=0$ and $D_i=0$
+- $\beta_1$: Marginal effect of $X_i \rightarrow Y_i$ for $D_i=0$
+- $\beta_2$: Marginal effect on $Y_i$ of difference between $D_i=0$ and $D_i=1$
+- $\beta_3$: The **difference** of the marginal effect of $X_i \rightarrow Y_i$ between $D_i=0$ and $D_i=1$
+- This is a bit awkward, easier to think about the two regression lines: 
+
+### Interpretting the Coefficients III
+
+$$Y_i=\beta_0+\beta_1X_i+\beta_2 D_i+\beta_3 X_i * D_i$$
+
+- \textcolor{magenta}{For $D_i=0$ Group:  $\hat{Y_i}=\hat{\beta_0}+\hat{\beta_1}X_i$}
+    - Intercept ($Y_i$ for $X_i=0$): $\hat{\beta_0}$
+    - Slope (Marginal effect of $X_i$ on $Y_i$ for $D_i=0$ group): $\hat{\beta_1}$
+- \textcolor{teal}{For $D_i=1$ Group:  $\hat{Y_i}=(\hat{\beta_0}+\hat{\beta_2})+(\hat{\beta_1}+\hat{\beta_3})X_i$}
+    - Intercept ($Y_i$ for $X_i=0$): $\hat{\beta_0}+\hat{\beta_2}$
+    - Slope (Marginal effect of $X_i$ on $Y_i$ for $D_i=1$ group): $\hat{\beta_1}+\hat{\beta_3}$
+- How can we determine if the two lines have the same slope and/or intercept (and distinguish between the 3 cases)?
+    - Same intercept? $t$-test $H_0$: $\beta_2=0$
+    - Same slope? $t$-test $H_0$: $\beta_3=0$
+
+### Example
+
+\begin{example}
+$$\widehat{wage_i}=\hat{\beta_0}+\hat{\beta_1}exper_i+\hat{\beta_2}female_i+\hat{\beta_3}exper_i * female_i$$
+
+	\begin{itemize}
+		\item<2-> \textcolor{magenta}{For Males ($female=0$):} 
+		\begin{equation*}
+		\widehat{wage_i}=\hat{\beta_0}+\hat{\beta_1}exper	
+		\end{equation*}
+		\item<3-> \textcolor{teal}{For Females ($female=1$): }
+		\begin{equation*}
+		\widehat{wage_i}=\underbrace{(\hat{\beta_0}+\hat{\beta_2})}_{\text{intercept}}+\underbrace{(\hat{\beta_1}+\hat{\beta_3})}_{\text{slope}}exper
+		\end{equation*}
+	\end{itemize}
+\end{example}
+
+### Example II
+
+```{r, echo=FALSE, fig.height=4}
+scatter.interaction<-ggplot(data = wages, aes(x=exper, y=wage))+
+  geom_point(aes(color=as.factor(female)))+
+  xlab("Years of Experience")+
+  labs(color="Female")+
+  scale_y_continuous(labels=scales::dollar)+theme_light()
+
+scatter.interaction
+```
+
+### Example III
+
+```{r, echo=FALSE, fig.height=4}
+scatter.interaction+geom_smooth(method="lm", aes(color=as.factor(female)))
+```
+
+### Example III
+
+```{r, echo=FALSE, fig.height=4}
+scatter.interaction+geom_smooth(method="lm", color="black")+facet_grid(cols=vars(female))
+```
+
+### Example Regression in `R`
+
+- Syntax for interaction term is easy, simply add `var1*var2` to the regression
+
+\scriptsize 
+
+```{r}
+interactionreg<-lm(wage~female+exper+female*exper, data=wages)
+summary(interactionreg)
+```
+
+### Example Regression in `R` II 
+
+\columnsbegin
+\column{.4\textwidth}
+
+\scriptsize 
+
+```{r, eval=FALSE}
+library("stargazer")
+stargazer(interactionreg,
+          type="latex", header=FALSE,
+          float=FALSE, font.size="tiny")
+```
+
+\column{.6\textwidth}
+
+\scriptsize 
+
+```{r, echo=FALSE, results="asis"}
+library("stargazer")
+stargazer(interactionreg,
+          type="latex", header=FALSE,
+          float=FALSE, font.size="tiny")
+```
+
+\columnsend
+
+### Example Regression in `R`: Interpretting Coefficients
+
+\begin{table}
+		\centering 	
+	\setlength{\tabcolsep}{0cm}
+\begin{tabular}{ccccccccccc}
+	 $\widehat{\text{wage}_i}=$ & 6.16 & + & $0.05$ & Experience$_i$ &$-$& $1.55$ & Female$_i$ & $-$ & $0.06$ & Experience$_i \times$Female$_i$\\
+	& \small (0.34) & & \small (0.02) & & & \small (0.49) & & & \small (0.02)\\
+	\end{tabular}
+\end{table}
+
+- $\hat{\beta_0}$: \onslide<2->Males with experience of 0 years earn $6.16
+- $\hat{\beta_1}$: \onslide<4->For every additional year of experience, \emph{males} earn $0.05
+- $\hat{\beta_2}$: \onslide<6->Women on average earn \$1.55 less than men, holding experience constant
+- $\hat{\beta_3}$: \onslide<8->Females earn \$0.06 less than men for every additional year of experience 
+
+### Example Regression in `R`: Interpretting Coefficients as Two Regressions
+
+
+\begin{table}
+		\centering 	
+	\setlength{\tabcolsep}{0cm}
+\begin{tabular}{ccccccccccc}
+	 $\widehat{\text{wage}_i}=$ & 6.16 & + & $0.05$ & Experience$_i$ &$-$& $1.55$ & Female$_i$ & $-$ & $0.06$ & Experience$_i *$Female$_i$\\
+	& \small (0.34) & & \small (0.02) & & & \small (0.49) & & & \small (0.02)\\
+	\end{tabular}
+\end{table}
+
+\small 
+
+- \textcolor{magenta}{Regression for males ($female=0$):}
+
+\vspace{-0.5cm}
+
+$$\widehat{\text{wage}_i}= 6.16 + 0.05Experience_i$$
+
+\vspace{-0.5cm}
+
+- Males with no experience earn $6.16
+- For every year of experience, males' wages increase by $0.05
+- \textcolor{teal}{Regression for females ($female=1$):}
+\vspace{-0.75cm}
+	\begin{align*}
+	 \widehat{\text{wage}_i}&= 6.16 + 0.05Experience_i-1.55(1)-0.06Experience_i * (1)\\
+	 &=(6.16-1.55)+(0.05-0.06)Experience\\
+	 &=4.61-0.01Experience
+	\end{align*}
+\vspace{-0.5cm}
+
+- Females with no experience earn $4.61
+- For every year of experience, females' wages decrease by $0.01
+
+### Example Regression in `R`: Hypothesis Testing
+
+\begin{table}
+		\centering 	
+	\setlength{\tabcolsep}{0cm}
+\begin{tabular}{ccccccccccc}
+	 $\widehat{\text{wage}_i}=$ & 6.16 & + & $0.05$ & Experience$_i$ &$-$& $1.55$ & Female$_i$ & $-$ & $0.06$ & Experience$_i *$Female$_i$\\
+	& \small (0.34) & & \small (0.02) & & & \small (0.49) & & & \small (0.02)\\
+	\end{tabular}
+\end{table}
+
+- How can we test significant differences between two regressions' slopes and intercepts?
+- **Different intercepts**?
+    - Difference between male vs. female wages for no experience?
+    - Is $\beta_2$ **significant**?
+    - Yes, $t=\frac{-1.55}{0.48}\approx -3.210$, $p(T>t)=0.000$ (from `R` output, above)
+- **Different slopes**?
+    - Differences between male vs. female change in wages per 1 year of experience?
+    - Is $\beta_3$ **significant**?
+    - Yes, $t=\frac{0.06}{0.02}\approx -2.483$, $p(T>t)=0.01$ (from `R` output, above)
+
+# Interactions Between Two Dummy Variables
+
+### Interactions Between Two Dummies
+
+$$Y_i=\beta_0+\beta_1D_{1i}+\beta_2D_{2i}+\beta_3\textcolor{magenta}{D_{1i}* D_{2i}}$$
+
+- $D_{1i}, D_{2i}$ are dummy variables
+- $\beta_1$: effect on $Y$ of going from $D_{1i}=0$ to $D_{1i}=1$
+- $\beta_2$: effect on $Y$ of going from $D_{1i}=0$ to $D_{2i}=1$ for $D_{1i}=0$
+- $\beta_3$: **increment** to effect on $Y$ of going from $D_{1i}=0$ to $D_{1i}=1$ when $D_{2i}=1$ (vs. when $D_{2i}=0$)
+- Again, best to think logically about the possibilities (when each dummy $=0$ or $=1$)
+
+### Interactions Between Two Dummies: Interpretting the Coefficients
+
+$$Y_i=\beta_0+\beta_1D_{1i}+\beta_2D_{2i}+\beta_3\textcolor{magenta}{D_{1i}* D_{2i}}$$
+
+- To interpret the coefficients, compare cases:
+
+\vspace{-0.5cm}
+\begin{align*}
+\only<2->{E(Y_i|D_{1i}=0, D_{2i}=d_2)&=\beta_0+\beta_2 d_2\\}
+\only<3->{E(Y_i|D_{1i}=1, D_{2i}=d_2)&=\beta_0+\beta_1+\beta_2 d_2+\beta_3 d_2\\}
+\end{align*}
+\vspace{-0.5cm}
+
+- Subtracting the two, the difference between is: 
+$$\beta_1+\beta_3d_2$$
+- **The effect of $D_{1i} \rightarrow Y_i$ depends on $d_{2i}$**
+- $\beta_3$: **increment** to the effect of $D_1$ when $D_2=1$
+
+### Interactions Between Two Dummies: Example
+
+\begin{example}
+Return to the gender pay gap: does it matter if person is married or single? 	
+$$\widehat{wage_i}=\hat{\beta_0}+\hat{\beta_1}female_i+\hat{\beta_2}married_i+\hat{\beta_3}female_i* married_i$$
+
+\begin{itemize}
+		\item<2-> Logically, 4 possible combinations of $female_i=\{0,1\}$ and $married_i=\{0,1\}$
+		\begin{enumerate}
+			\item<3-> \textbf{Unmarried males} (female$_i=0$, married$_i=0$)\\
+			\onslide<4->$\widehat{wage_i}=\hat{\beta_0}$
+			\item<5-> \textbf{Married males} (female$_i=0$, married$_i=1$)\\
+			\onslide<6->$\widehat{wage_i}=\hat{\beta_0}+\hat{\beta_2}$
+			\item<7-> \textbf{Unmarried females} (female$_i=1$, married$_i=0$)\\
+			\onslide<8->$\widehat{wage_i}=\hat{\beta_0}+\hat{\beta_1}$
+			\item<9-> \textbf{Married females} (female$_i=1$, married$_i=1$)\\
+			\onslide<10->$\widehat{wage_i}=\hat{\beta_0}+\hat{\beta_1}+\hat{\beta_2}+\hat{\beta_3}$
+		\end{enumerate}
+	\end{itemize}
+\end{example}
+
+### Interactions Between Two Dummies: Conditionally Looking at the Data
+
+\scriptsize 
+
+```{r}
+# get average wage for unmarried men
+mean(wages$wage[wages$married==0 & wages$female==0])
+# get average wage for married men
+mean(wages$wage[wages$married==1 & wages$female==0])
+# get average wage for unmarried women
+mean(wages$wage[wages$married==0 & wages$female==1])
+# get average wage for married wommen
+mean(wages$wage[wages$married==1 & wages$female==1])
+
+```
+
+### Interactions Between Two Dummies: Group Means
+
+$$\widehat{wage_i}=\hat{\beta_0}+\hat{\beta_1}female_i+\hat{\beta_2}married_i+\hat{\beta_3}female_i*married_i$$
+
+\begin{table}
+		\centering
+		\begin{tabular}{ccc}
+		& Unmarried & Married\\ \toprule 
+		Male & \$5.17 & \$7.98 \\
+		Female & \$4.61 & \$4.57\\ \bottomrule 
+		\end{tabular}
+		\caption*{\small Average Wage for each Grouping}
+\end{table}
+
+### Interactions Between Two Dummies: Regression in `R`
+
+\scriptsize
+
+```{r}
+reg.2dummies.interact<-lm(wage~female+married+female*married, data=wages)
+summary(reg.2dummies.interact)
+```
+
+### Interactions Between Two Dummies: Regression in `R` II 
+
+\columnsbegin
+\column{.4\textwidth}
+
+\scriptsize 
+
+```{r, eval=FALSE}
+library("stargazer")
+stargazer(reg.2dummies.interact,
+          type="latex", header=FALSE,
+          float=FALSE, font.size="tiny")
+```
+
+\column{.6\textwidth}
+
+\scriptsize 
+
+```{r, echo=FALSE, results="asis"}
+library("stargazer")
+stargazer(reg.2dummies.interact,
+          type="latex", header=FALSE,
+          float=FALSE, font.size="tiny")
+```
+
+\columnsend
+
+### Interactions Between Two Dummies: Interpretting the Coefficients 
+
+\begin{table}
+		\centering 	
+	\setlength{\tabcolsep}{0cm}
+\begin{tabular}{ccccccccccc}
+	 $\widehat{\text{wage}_i}=$ & 5.17 & $-$ & $0.56$ & Female$_i$ &$+$& $2.82$ & Married$_i$ & $-$ & $2.86$ & Female$_i *$Married$_i$\\
+	& \small (0.36) & & \small (0.47) & & & \small (0.44) & & & \small (0.61)\\
+	\end{tabular}
+\end{table}
+
+\begin{table}
+		\centering
+		\caption*{Average Wage for each Grouping}
+	\setlength{\tabcolsep}{0.5cm}
+		\begin{tabular}{ccc}
+		& Unmarried & Married\\ \toprule 
+		Male & \$5.17 & \$7.98 \\
+		Female & \$4.61 & \$4.57\\ \bottomrule 
+		\end{tabular}
+	\end{table}
+
+- Wage for **unmarried males**:	 $\hat{\beta_0}=\$5.17$
+- Wage for **married males**:  $\hat{\beta_0}+\hat{\beta_2}=5.17+2.82=\$7.98$
+- Wage for **unmarried females**: $\hat{\beta_0}+\hat{\beta_1}=5.17-0.56=\$4.61$
+- Wage for **married females**: $\hat{\beta_0}+\hat{\beta_1}+\hat{\beta_2}+\hat{\beta_3}=5.17-0.56+2.82-2.86=\$4.57$
+
+# Interactions Between Two Continuous Variables
+
+### Interactions Between Two Continuous Variables
+
+$$Y_i=\beta_0+\beta_1X_{1i}+\beta_2X_{2i}+\beta_3\textcolor{magenta}{(X_{1i}X_{2i})}$$
+- To interpret the coefficients, compare cases after changing $\Delta X_1$:
+$$Y+\Delta Y=\beta_0+\beta_1(X_1+\Delta X_1)\beta_2X_2+\beta_3((X_1+\Delta X_1)X_2)$$
+
+-The difference is: 
+
+\vspace{-0.75cm}
+\begin{align*}
+\Delta Y &= \beta_1 \Delta X_1 + \beta_3 X_2 \Delta X_1\\
+\frac{\Delta Y}{\Delta X_1} &= \beta_1+\beta_3 X_2\\ 	
+\end{align*}
+\vspace{-0.75cm}
+
+- The effect of $X_1$ depends on $X_2$
+- $\beta_3$: increment to the effect of $X_1$ from a 1 unit change in $X_2$
+
+### Interactions Between Two Continuous Variables: Example
+
+\begin{example}
+	Wages on education and experience: Do education \& experience interact? 	
+	\begin{equation*}
+	\widehat{wage_i}=\hat{\beta_0}+\hat{\beta_1}educ_i+\hat{\beta_2}exper_i+\hat{\beta_3}educ_i \times exper_i + \epsilon_i	
+	\end{equation*}
+	\begin{itemize}
+		\item<2-> Estimated effect of education on wages depends on the amount of experience (and vice versa)!
+		\begin{equation*}
+		\frac{\Delta wage}{\Delta educ}=\hat{\beta_1}+\beta_3 exper	
+		\end{equation*}
+		\item<3-> This is a type of nonlinearity (we will examine nonlinearities next lesson) 
+	\end{itemize}
+\end{example}
+
+### Interactions Between Two Continuous Variables: Regression in `R`
+
+```{r}
+reg.2x.interact<-lm(wage~educ+exper+educ*exper, data=wages)
+summary(reg.2x.interact)
+```
+
+### Interactions Between Two Continuous Variables: Regression in `R` II 
+
+\columnsbegin
+\column{.4\textwidth}
+
+\scriptsize 
+
+```{r, eval=FALSE}
+library("stargazer")
+stargazer(reg.2x.interact,
+          type="latex", header=FALSE,
+          float=FALSE, font.size="tiny")
+```
+
+\column{.6\textwidth}
+
+\scriptsize 
+
+```{r, echo=FALSE, results="asis"}
+library("stargazer")
+stargazer(reg.2x.interact,
+          type="latex", header=FALSE,
+          float=FALSE, font.size="tiny")
+```
+
+\columnsend
+
+### Interactions Between Two Continuous Variables: Interpretting Coefficients
+
+\begin{table}
+		\centering 	
+	\setlength{\tabcolsep}{0cm}
+\begin{tabular}{ccccccccccc}
+	 $\widehat{\text{wage}_i}=$ & -2.86 & + & $0.60$ & educ$_i$ &$+$& $0.05$ & exper$_i$ & $+$ & $0.002$ & educ$_i \times$exper$_i$\\
+	& \small (1.181) & & \small (0.090) & & & \small (0.043) & & & \small (0.003)\\
+	\end{tabular}
+\end{table}
+\vspace{-1cm}
+\onslide<2->\begin{table}
+		\centering
+		\caption*{Changes in Education}
+	\setlength{\tabcolsep}{0.5cm}
+		\begin{tabular}{rc}
+		Exper & $\displaystyle\frac{\Delta wage}{\Delta educ}$\\ \toprule 
+		5 & $0.60+0.002(5)= \$0.61$ \\
+		10 & $0.60+0.002(10)=\$0.62$\\
+		15 & $0.60+0.002(15)=\$0.63$\\ \bottomrule 
+		\end{tabular}
+\end{table}
+
+\onslide<3->
+- Marginal effect of education $\rightarrow$ wages **increases** with more experience (but very insignificantly)	
