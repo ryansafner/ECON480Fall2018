@@ -1,0 +1,502 @@
+---
+title: "Lecture 15: Better Data Wrangling with `dplyr`"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "November 14, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(tidyverse)
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, dev.args=list(bg="transparent"))
+```
+
+### Some Meta Thoughts About Code
+
+- There is a tradeoff between **precision** and **concision** in coding:
+    - `subset(diamonds, x == 0 & y == 0 & z == 0)` 
+    - vs. 
+    - `diamonds[diamonds$x == 0 & diamonds$y == 0 & diamonds$z == 0, ]`
+- It would be ideal for code to be "self-documenting" and easily readable to observers without excess explanation
+
+### Some Meta Thoughts About Code II 
+
+- Compare the following commands, which both subset the `gapminder` data to look only at year and life expectancy for Cambodia
+
+```{r, eval=FALSE}
+gapminder[gapminder$country=="Cambodia", c("year", "lifeExp0")]
+```
+
+```{r, eval=FALSE}
+gapminder %>%
+  filter(country == "Cambodia") %>%
+  select(year, lifeExp)
+```
+
+- Which is more intuitive to read and understand what we're doing? (without comments!)
+    - The first is using Base `R`, the second uses `dplyr`
+    
+### The Pipe Operator, `%>%`
+
+- The "pipe" operator, `%>%` will change your coding life 
+- Keyboard shortcut in R Studio:
+    - `CTRL+Shift+M` (Windows)
+    - `Cmd+Shift+M` (Mac)
+- `%>%` "pipes" the *output* of everything to the *left* of the pipe into the *input* on right
+- Running some function `f` on object `x` as `f(x)` can be "piped" as `x %>% f`
+    - i.e. "take `x` and then perform function `f` on it"
+
+### The Pipe Operator, `%>%` II
+
+- With ordinary math functions, we read operations from outside$\leftarrow$(inside): 
+$$g(f(x))$$
+i.e. take `x` and then perform function `f` on `x`, then perform function `g` on that result
+- With pipes, we read operations from left$\rightarrow$ right: 
+
+\onslide<3->
+```{r, eval=FALSE}
+x %>% f %>% g
+``` 
+
+\onslide<3->
+take `x` and then perform function `f` on it, then perform function `g` on that result 
+
+\onslide<4->
+- So read `%>%` mentally as "and then"
+
+### The Pipe Operator, %>% Example
+
+```{r}
+library("gapminder") # load gapminder package for gapminder dataset
+
+head(gapminder) # look at top 6 rows
+
+gapminder %>% head # use the pipe instead
+```
+
+
+### The `tidyverse`
+
+> "The tidyverse is an opinionated  collection of R packages designed for data science. All packages share an underlying design philosophy, grammar, and data structures. 
+
+- Core packages include ones we've discussed before: `ggplot2`, `dplyr`, `magrittr` among several others (`tidy` `readr`, `purr`, `forcats`, `stringr`)
+- Loading any `tidyverse` package loads `magrittr` (so you can use `%>%`)
+- Learn more at [tidyverse.org](tidyverse.org) 
+
+\begin{figure}
+  \includegraphics[height=1.45in]{tidyverse}
+\end{figure}
+
+### The `tidyverse` II 
+
+- Easiest to just load the core tidyverse all at once
+    - Note loading the tidyverse is "noisy", it will spew a lot of messages
+    - Remember you can hide these by setting `R` chunks (if using `R Markdown`) with `message=FALSE` and `warning=FALSE`
+
+```{r, echo=FALSE}
+detach("package:tidyverse", TRUE) # just to show start up message of tidyverse, let's unload it first
+```
+
+```{r, message=TRUE, warning=TRUE}
+library("tidyverse")
+```
+
+### The `tidyverse` III
+
+\begin{figure}
+  \includegraphics[height=2in]{tidyverse2}
+\end{figure}
+
+### `dplyr` Verbs
+
+- Base `R` is about running functions on nouns, e.g. `function(object)` 
+- `dplyr` is all about using active English-language verbs to accomplish tasks
+
+\onslide<3->
+
+| Function | Does | 
+|----------|------|
+| `filter` | Keep only selected *observations* | 
+| `select` | Keep only selected *variables* |
+| `arrange` | Reorder rows (e.g. in numerical order) |
+| `mutate` | Create new variables | 
+| `recode` | Change a variable's values or categories/`factor` levels |
+| `summarize` | Collapse data into summary statistics| 
+| `group_by` | Perform any of the above functions by groups/categories | 
+
+### `dplyr` Verbs II 
+
+- Syntax of any `dplyr` function is the same: `dyplrfunction(dataframe, condition)`, which returns a `data.frame`
+    - Or if you prefer to try out the pipe `%>%`:
+    
+\onslide<2->
+```{r, eval=FALSE}
+dataframe %>%
+  dplyrfunction(condition)
+```
+
+### `filter`
+
+- `filter` keeps only selected **observations**
+
+\scriptsize 
+
+\onslide<2->
+```{r}
+# look only at African observations 
+gapminder %>%
+  filter(continent=="Africa")
+```
+
+### `dplyr` Allows You to Test Without Overwriting
+
+- Great thing about `dplyr` is we don't necessarily need to store our results as objects until we're ready 
+    - Won't overwrite an object inccorectly, e.g.: 
+    - `gapminder %>% select(country == "United States")` does not overwrite `gapminder`. 
+- You can still deliberately save (and overwrite) objects with the assignment operator:
+    - `gapminder <- gapminder %>% select(country == "United States")` *would* overwrite gapminder with *just* the U.S. observations
+
+### `filter` Multiple AND Conditions
+
+- `filter` multiple conditions with commas (implicitly, having multiple "AND" conditions)
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# look only at observations that are in Europe AND in 1997 
+gapminder %>%
+  filter(continent=="Europe", year==1997)
+```
+
+### `filter` OR Conditions
+
+- `filter` multiple alternative conditions with | ("OR")
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# look only at observations that are in Europe OR in 1997 
+gapminder %>%
+  filter(continent=="Europe" | year==1997)
+```
+
+### `filter` Other Useful Operators
+
+- We can `filter` by membership `%in%` a particular set (represented by a vector)
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# look only at observations that are in the "set" of (Europe, Africa, Asia) 
+gapminder %>%
+  filter(continent %in% c("Europe", "Africa", "Asia"))
+```
+
+### `select` 
+
+- `select` keeps only selected **variables** 
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# Only keep country, year, and population variables
+gapminder %>%
+  select(country, year, pop)
+```
+
+### `select` Helper Functions
+
+- `select` has a lot of nice helper functions
+- Type `?select` to get more information
+- Some examples (where `string` is some text that you are searching for):
+
+\onslide<3->
+
+| Function | Description |
+|----------|-------------|
+| `starts_with("string")` | Variable name begins with `string` |
+| `ends_with("string")` | Variable name ends with `string` | 
+| `contains("string")` | Variable name contains `string` in it |
+
+### `select` Example
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# Only keep gdpPercap and othervariables that start with "c"
+gapminder %>%
+  select(gdpPercap,starts_with("c"))
+```
+
+### `select` Neg
+
+- `select` allows you to "negate" columns with a negative sign (-)
+    - A way of keeping "everything but" certain variables
+
+\scriptsize 
+
+\onslide<4->
+
+```{r}
+# keep all variables EXCEPT pop
+gapminder %>%
+  select(-pop)
+```
+
+### `rename` 
+
+- `rename` changes the name of a variable in the following format: `newname=oldname` 
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# Rename gdpPercap to just GDP
+gapminder %>%
+  rename(GDP=gdpPercap)
+```
+
+### `arrange`
+
+- `arrange` orders the observations (rows) in some logical order
+    - e.g. (reverse) alphabetical, (reverse) numerical, largest to smallest (smallest to largest)
+
+\scriptsize 
+
+\onslide<3->
+
+```{r}
+# Sort by lifeExp 
+gapminder %>%
+  arrange(lifeExp)
+```
+
+### `arrange`
+
+- use `desc()` for descending order
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# Sort by country name (reverse alphabetically)
+gapminder %>%
+  arrange(desc(country))
+```
+
+### `mutate`
+
+- `mutate` creates a new variable according to some operation on other variables
+    - syntax: `new.variable.name=operation`
+
+\scriptsize 
+
+\onslide<3->
+
+```{r}
+# make a GDP variable by multiplying gdpPercap and pop
+gapminder %>%
+  mutate(gdp= gdpPercap * pop)
+```
+
+### `mutate` Multiple Variables at Once
+
+- Can create multiple new variables with the same command using commas
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+gapminder %>%
+  mutate(gdp= gdpPercap * pop,
+         gdp.billions=gdp/1000000000)
+```
+
+### `summarize` 
+
+- `summarize`\footnote{Also the non-U.S. English spelling `summarise` works. `dplyr` was written by a Kiwi after all!} calculates desired summary statistics of a variable
+    - common summary statistics: `n()`, `mean()`, `sd()`, `min()`, `max()`
+    - `summarize` outputs a new `data.frame`
+    - Can give a name to the summary variable as if you are `mutate`-ing a new variable
+
+\scriptsize 
+
+\onslide<5->
+
+```{r}
+# get average life expectancy 
+gapminder %>%
+  summarize(avg.LE=mean(lifeExp))
+```
+
+### `summarize` II
+
+- Can `summarize` multiple variables at once 
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# get average life expectancy, gdp per capita, and population 
+gapminder %>%
+  summarize(avg.LE=mean(lifeExp),
+            avg.GDP=mean(gdpPercap),
+            abg.pop=mean(pop))
+```
+
+### `summarize` Other Statistics
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# get count, mean, sd, min, and max life expectancy 
+gapminder %>%
+  summarize(count.LE=n(),
+            avg.LE=mean(lifeExp),
+            sd.LE=sd(lifeExp),
+            min.LE=min(lifeExp),
+            max.LE=max(lifeExp))
+```
+
+### `group_by`
+
+- If we have `factor` variables (such as `continent`), we can run all of our `dplyr` verb commands by group
+- First we define the groups as the `continent` 
+
+\scriptsize 
+
+\onslide<3->
+
+```{r}
+gapminder %>% 
+  group_by(continent) %>% # first group by continent
+  summarize(mean_life=mean(lifeExp), # get averages for life exp 
+            mean_gdp=mean(gdpPercap), # and gdp per capita
+            mean_pop=mean(pop)) # and population by continent
+```
+
+### `group_by` Without the Pipe
+
+- Since there are several steps going on here, let's think about what this would look like without the %>% operator: 
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# first generate a variable for the groups 
+by_continent<-group_by(gapminder, continent)
+
+# then summarize the variable 
+summarize(by_continent, mean_life=mean(lifeExp),
+          mean_gdp=mean(gdpPercap),
+          mean_pop=mean(pop))
+```
+
+### `group_by` Example II
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+# track change in average Life Expectancy over time
+gapminder %>% 
+  group_by(year) %>%
+  summarize(mean.LE=mean(lifeExp),
+            meean.GPD=mean(gdpPercap))
+```
+
+### `group_by` and `summarize_at` to Combine Statistics
+
+- Use `summarize_at` to summarize multiple variables with multiple summary statistics
+- Syntax: `summarize_at(vars(var1, var2), funs(stat1, stat2))` where `var1` and `var2` are your variables and `stat1` and `stat2` are the summary statistics you'd like (e.g. mean, median, etc)
+
+\scriptsize 
+
+\onslide<3->
+
+```{r}
+# get summary statistics (mean, median, sd) for lifeExp and gdpPercap over time 
+gapminder %>%
+  group_by(year) %>%
+  summarize_at(vars(lifeExp, gdpPercap), funs(mean, median, sd))
+
+```
+
+### `tally` 
+
+- `tally` is shorthand for just getting the counts of observations by group (instead of `summarize` and `n()`)
+
+\scriptsize 
+
+\onslide<2->
+
+```{r}
+gapminder %>%
+  group_by(continent) %>%
+  tally
+```
+
+### Piping Across Packages
+
+- The `tidyverse` uses the same grammar and design philosophy, so you can (almost always) pipe things across packages and functions
+- Example: graph the change in average life expectancy by continent over time
+
+\scriptsize 
+
+\onslide<2->
+
+```{r, fig.height=2.5}
+gapminder %>% # start with gapminder data 
+  group_by(year, continent) %>% # create groups of years and of continents 
+  summarize(mean_life = mean(lifeExp)) %>% # get average life expectancy for each group 
+  ggplot(aes(year, mean_life, color = continent))+ # plot this over time 
+  geom_point() + geom_smooth(method="lm")
+```
+
+### `dplyr` Cheatsheet
+
+As usual, there is a fantastic cheatsheet for `dplyr` via RStudio
+
+\begin{figure}
+  \includegraphics[height=2.45in]{dplyrcheatsheet}
+  \caption*{\href{https://www.rstudio.com/wp-content/uploads/2015/02/data-wrangling-cheatsheet.pdf}{RStudio's dplyr Cheatsheet}}
+\end{figure}
+
