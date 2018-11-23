@@ -1,0 +1,193 @@
+---
+title: "R Practice 4 Answers"
+author: "Ryan Safner"
+date: "11/15/2018"
+output: pdf_document
+---
+
+# Intro to `dplyr` syntax
+
+### 1. Load the `gapminder` and `tidyverse` packages. 
+
+```{r}
+suppressPackageStartupMessages(library("tidyverse"))
+library("gapminder")
+```
+
+## `select()`
+
+### 1. Make a data frame containing the columns `year`, `lifeExp`, `country` from the gapminder data, in that order.
+
+```{r}
+select(gapminder, c(year, lifeExp, country))
+
+# using the pipe
+
+gapminder %>%
+  select(c(year, lifeExp, country))
+```
+
+### 2. Select all variables, from `country` to `lifeExp`. 
+
+```{r}
+
+```
+
+### 3. Select all variables, except `pop`.
+
+```{r}
+select(gapminder, -pop)
+
+# using the pipe
+
+gapminder %>%
+  select(-pop)
+```
+
+### 4. Rename `continent` to `cont`.
+
+```{r}
+rename(gapminder, cont=continent)
+
+# using the pipe
+
+gapminder %>%
+  rename(cont=continent)
+```
+
+## `arrange()`
+
+### 1. Order by year.
+
+```{r}
+gapminder %>%
+  arrange(year)
+```
+
+### 2. Order by year, in descending order.
+
+```{r}
+gapminder %>%
+  arrange(desc(year))
+```
+
+### 3. Order by year, then by life expectancy.
+
+```{r}
+gapminder %>%
+  arrange(year, lifeExp)
+```
+
+## Piping, `%>%`
+
+Note: think of `%>%` as the word "then"!
+
+### 1. Subset your data to look only at `year`, `gdpPercap`, and `country` in the year 1997, for countries that have a `gdpPercap` greater than 20,000, and order them alphabetically. 
+
+```{r}
+gapminder %>%
+  select(year, gdpPercap, country) %>%
+  filter(year==1997,
+         gdpPercap>20000) %>%
+  arrange(country)
+```
+
+Combine `select()` Task 1 with `arrange()` Task 3.
+
+## `filter()`
+
+### 1. Only take data with population greater than 1 billion.
+
+```{r}
+gapminder %>%
+  filter(pop>1000000000)
+```
+
+### 2. Of those, only look at data from China. 
+
+```{r}
+gapminder %>%
+  filter(pop>1000000000) %>%
+  filter(country=="India")
+```
+
+## `mutate()`
+
+### 1. Make a new variable that is `GDP` instead of `gdpPercap` (multiply `gdpPercap` by `pop`).
+
+```{r}
+gapminder %>%
+  mutate(GDP=gdpPercap*pop)
+```
+
+### 2. Make a new variable for `gdpPercap` that is in millions.  
+
+```{r}
+gapminder %>%
+  mutate(GDP=gdpPercap*pop) %>%
+  mutate(GDPm=(GDP/1000000))
+```
+
+### 3. Make a new population variable that is the population in millions. 
+
+```{r}
+gapminder %>%
+  mutate(popm=pop/1000000)
+```
+
+## `summarize()`
+
+### 1. Get the average GDP per capita
+
+```{r}
+gapminder %>%
+  summarize(mean(gdpPercap))
+```
+
+### 2. Get the number of observations, average, minimum, maximum, and standard deviation for GDP per capita.
+
+```{r}
+gapminder %>%
+  summarize(Obs=n(),
+            Average=mean(gdpPercap),
+            Minimum=min(gdpPercap),
+            Maximum=max(gdpPercap),
+            SD=sd(gdpPercap))
+```
+
+### 3. Get the average for GDP per capita, Life expectancy, and population
+
+```{r}
+gapminder %>%
+  summarize(Average_GDPcapita=mean(gdpPercap),
+            Average_LE=mean(lifeExp),
+            Average_pop=mean(pop))
+```
+
+## `group_by()`
+
+### 1. Track the change in average GDP per capita over time. Hint, first group by year. 
+
+```{r}
+gapminder %>%
+  group_by(year) %>%
+  summarize(Average_GDPcapita=mean(gdpPercap))
+```
+
+### 2. Get the average GDP per capita by continent.
+
+```{r}
+gapminder %>%
+  group_by(continent) %>%
+  summarize(Average_GDPcapita=mean(gdpPercap))
+```
+
+### 3. You can group by multiple groups. Try getting the average GDP per capita by year by continent. Hint: do `year` first, if you do `continent` first, there are no years to group by! 
+
+```{r}
+gapminder %>%
+  group_by(year, continent) %>%
+  summarize(Average_GDPcapita=mean(gdpPercap))
+```
+
+

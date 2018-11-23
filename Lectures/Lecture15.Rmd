@@ -2,7 +2,7 @@
 title: "Lecture 15: Better Data Wrangling with `dplyr`"
 subtitle: "ECON 480 - Econometrics - Fall 2018"
 author: "Ryan Safner"
-date: "November 14, 2018"
+date: "November 19, 2018"
 output: 
   beamer_presentation:
     #theme: "metropolis"
@@ -58,13 +58,17 @@ gapminder %>%
     
 ### The Pipe Operator, `%>%`
 
-- The "pipe" operator, `%>%` will change your coding life 
+- The \alert{"pipe" operator}, `%>%` (from package `magrittr`) will change your coding life 
 - Keyboard shortcut in R Studio:
     - `CTRL+Shift+M` (Windows)
     - `Cmd+Shift+M` (Mac)
 - `%>%` "pipes" the *output* of everything to the *left* of the pipe into the *input* on right
 - Running some function `f` on object `x` as `f(x)` can be "piped" as `x %>% f`
     - i.e. "take `x` and then perform function `f` on it"
+
+\begin{figure}
+  \includegraphics[height=1.4in]{magrittr}
+\end{figure}
 
 ### The Pipe Operator, `%>%` II
 
@@ -86,14 +90,29 @@ take `x` and then perform function `f` on it, then perform function `g` on that 
 
 ### The Pipe Operator, %>% Example
 
-```{r}
-library("gapminder") # load gapminder package for gapminder dataset
-
-head(gapminder) # look at top 6 rows
-
-gapminder %>% head # use the pipe instead
+```{r, echo=FALSE}
+library("gapminder")
 ```
 
+\columnsbegin
+
+\column{.5\textwidth}
+
+\tiny 
+```{r}
+# look at top 6 rows
+head(gapminder) 
+```
+
+\column{.5\textwidth}
+
+\tiny
+```{r}
+# use the pipe instead 
+gapminder %>% head()
+```
+
+\columnsend
 
 ### The `tidyverse`
 
@@ -111,7 +130,7 @@ gapminder %>% head # use the pipe instead
 
 - Easiest to just load the core tidyverse all at once
     - Note loading the tidyverse is "noisy", it will spew a lot of messages
-    - Remember you can hide these by setting `R` chunks (if using `R Markdown`) with `message=FALSE` and `warning=FALSE`
+    - Hide them with `suppressPackageStartupMessages()` and insert the `library()` command inside the `()` 
 
 ```{r, echo=FALSE}
 detach("package:tidyverse", TRUE) # just to show start up message of tidyverse, let's unload it first
@@ -150,10 +169,26 @@ library("tidyverse")
     - Or if you prefer to try out the pipe `%>%`:
     
 \onslide<2->
+
+\columnsbegin
+
+\column{.5\textwidth}
+
+\scriptsize 
 ```{r, eval=FALSE}
-dataframe %>%
-  dplyrfunction(condition)
+# without the pipe 
+dplyrfunction(dataframe, condition)
 ```
+
+\column{.5\textwidth}
+
+\scriptsize 
+```{r, eval=FALSE}
+# with the pipe 
+dataframe %>% condition()
+```
+
+\columnsend
 
 ### `filter`
 
@@ -162,11 +197,31 @@ dataframe %>%
 \scriptsize 
 
 \onslide<2->
+
+\columnsbegin
+
+\column{.5\textwidth}
+
+\tiny 
 ```{r}
-# look only at African observations 
+# look only at African observations
+# syntax without the pipe 
+filter(gapminder, continent=="Africa")
+```
+
+\column{.5\textwidth}
+
+\onslide<3->
+
+\tiny 
+```{r}
+# look only at African observations
+# syntax with the pipe 
 gapminder %>%
   filter(continent=="Africa")
 ```
+
+\columnsend
 
 ### `dplyr` Allows You to Test Without Overwriting
 
@@ -217,6 +272,12 @@ gapminder %>%
 gapminder %>%
   filter(continent %in% c("Europe", "Africa", "Asia"))
 ```
+
+### Compare to Base `R`'s `subset()` function
+
+\begin{figure}
+  \includegraphics[height=2.5in]{rsubset}
+\end{figure}
 
 ### `select` 
 
@@ -302,7 +363,13 @@ gapminder %>%
   arrange(lifeExp)
 ```
 
-### `arrange`
+### `arrange()` II 
+
+\begin{figure}
+  \includegraphics[height=2.5in]{arrange1}
+\end{figure}
+
+### `arrange` III 
 
 - use `desc()` for descending order
 
@@ -315,6 +382,12 @@ gapminder %>%
 gapminder %>%
   arrange(desc(country))
 ```
+
+### `arrange()` IV
+
+\begin{figure}
+  \includegraphics[height=2.5in]{arrange2}
+\end{figure}
 
 ### `mutate`
 
@@ -330,6 +403,18 @@ gapminder %>%
 gapminder %>%
   mutate(gdp= gdpPercap * pop)
 ```
+
+### `mutate()` II 
+
+\begin{figure}
+  \includegraphics[height=2.5in]{mutate1}
+\end{figure}
+
+### `mutate()` III
+
+\begin{figure}
+  \includegraphics[height=2.5in]{mutate2}
+\end{figure}
 
 ### `mutate` Multiple Variables at Once
 
@@ -356,13 +441,44 @@ gapminder %>%
 
 \onslide<5->
 
+\columnsbegin
+
+\column{.5\textwidth}
+
+\scriptsize 
 ```{r}
 # get average life expectancy 
+gapminder %>%
+  summarize(mean(lifeExp))
+```
+
+\column{.5\textwidth}
+
+\onslide<6->
+
+\scriptsize 
+```{r}
+# same thing, but calling the new variable "avg.LE" 
 gapminder %>%
   summarize(avg.LE=mean(lifeExp))
 ```
 
+\columnsend
+
+
 ### `summarize` II
+
+\begin{figure}
+  \includegraphics[height=2.5in]{summarize2}
+\end{figure}
+
+### `summarize` III
+
+\begin{figure}
+  \includegraphics[height=2.5in]{summarize1}
+\end{figure}
+
+### `summarize` IV
 
 - Can `summarize` multiple variables at once 
 
@@ -440,7 +556,7 @@ summarize(by_continent, mean_life=mean(lifeExp),
 gapminder %>% 
   group_by(year) %>%
   summarize(mean.LE=mean(lifeExp),
-            meean.GPD=mean(gdpPercap))
+            mean.GPD=mean(gdpPercap))
 ```
 
 ### `group_by` and `summarize_at` to Combine Statistics
