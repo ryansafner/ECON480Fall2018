@@ -1,0 +1,141 @@
+---
+title: "Testing Differences in Group Means"
+author: "Ryan Safner"
+date: "ECON 480 - Econometrics"
+output: pdf_document
+header-includes:
+    - \usepackage{booktabs} # this makes fancy looking tables in latex 
+    - \usepackage{xcolor}
+---
+
+Often we want to compare the means between two groups, and see if the difference is statistically significant. As an example, **is there a statistically significant difference in average hourly earnings between men and women**? Let:
+
+- \textcolor{red}{$\mu_W$}: mean hourly earnings for female college graduates
+- \textcolor{blue}{$\mu_M$}: mean hourly earnings for male college graduates
+
+We want to run a hypothesis test for the difference $(d)$ in these two population means: 
+$$ \textcolor{blue}{\mu_M}-\textcolor{red}{\mu_W}=d_0$$
+
+Our null hypothesis is that there is *no* statistically significant difference. Let's also have a two-sided alternative hypothesis, simply that there *is* a difference (positive or negative). 
+
+- $\textcolor{magenta}{H_0}: d=0$
+- $\textcolor{teal}{H_1}: d \neq 0$
+
+Note a logical one-sided alternative would be $H_2: d > 0$, i.e. men earn more than women
+
+### The Sampling Distribution of $d$
+
+The *true* population means $\textcolor{blue}{\mu_M}, \textcolor{red}{\mu_W}$ are unknown, we must estimate them from *samples* of men and women. Let:
+- \textcolor{blue}{$\bar{Y}_M$} the average earnings of a sample of \textcolor{blue}{$n_M$} men  
+- \textcolor{red}{$\bar{Y}_W$} the average earnings of a sample of \textcolor{red}{$n_W$} women 
+
+We then estimate ($\textcolor{blue}{\mu_M}-\textcolor{red}{\mu_W}$) with the sample ($\textcolor{blue}{\bar{Y}_M}-\textcolor{red}{\bar{Y}_W}$). 
+
+We would then run a **t-test** and calculate the **test-statistic** for the difference in means. The formula for the test statistic is:
+
+$$t = \frac{(\textcolor{blue}{\bar{Y_M}}-\textcolor{red}{\bar{Y_W}})-d_0}{\sqrt{\frac{\textcolor{blue}{s_M}^2}{\textcolor{blue}{n_M}}+\frac{\textcolor{red}{s_W}^2}{\textcolor{red}{n_W}}}}$$
+
+We then compare $t$ against the critical value $t^*$, or calculate the $p$-value $P(T>t)$ as usual to determine if we have sufficient evidence to reject $H_0$
+
+```{r}
+# Our data comes from WAGE1.dta which you can find in Blackboard under data
+
+# Load WAGE1 as wages
+library("foreign") # to load .dta Stata files
+wages<-read.dta("../Data/WAGE1.dta")
+
+# there's a lot of variables in wages, let's only look at wage and female for now
+wages<-subset(wages, select=c("wage","female"))
+
+# just get a sense of the data 
+
+head(wages)
+
+# we now want to look at the data under certain CONDITIONS
+# conditionals require subsetting data with square brackets []
+# such as: data[df$variable==condition]
+
+# look at average wage for men
+summary(wages$wage[wages$female==0])
+sd(wages$wage[wages$female==0]) # get sd 
+
+# look at average wage for women
+summary(wages$wage[wages$female==1])
+sd(wages$wage[wages$female==1]) # get sd 
+
+```
+
+So our data is telling us that male and female average hourly earnings are distributed as such:
+
+\begin{align*}
+\bar{Y}_M &\sim N(7.10,4.16)\\
+\bar{Y}_W &\sim N(4.59,2.53)\\
+\end{align*}
+
+We can plot this to see visually. There is a lot of overlap in the two distributions, but the male average is higher than the female average, and there is also a lot more variation in males than females, noticeably the male distribution skews further to the right. 
+
+```{r}
+wages$female<-as.factor(wages$female)
+
+library("ggplot2")
+ggplot(data=wages,aes(x=wage,fill=female))+
+  geom_density(alpha=0.5)+
+  scale_x_continuous(seq(0,25,5),name="Wage",labels=scales::dollar)+
+  theme_light()
+```
+
+Knowing the distributions of male and female average hourly earnings, we can estimate the **sampling distribution of the difference in group eans** between men and women as: 
+
+The mean: 
+\begin{align*}
+\bar{d}&=\textcolor{red}{\bar{Y}_M}-\textcolor{blue}{\bar{Y}_W}\\
+\bar{d}&=\textcolor{red}{7.10}-\textcolor{blue}{4.59}\\
+\bar{d}&=2.51\\
+\end{align*}
+
+The standard error of the mean:
+\begin{align*}
+SE(\bar{d})&=\sqrt{\frac{\textcolor{blue}{s_M}^2}{\textcolor{blue}{n_M}}+\frac{\textcolor{red}{s_W}^2}{\textcolor{red}{n_W}}}\\
+&=\sqrt{\frac{\textcolor{blue}{4.16}^2}{\textcolor{blue}{274}}+\frac{\textcolor{red}{2.33}^2}{\textcolor{red}{252}}}\\
+& \approx 0.29\\
+\end{align*}
+
+So the sampling distribution of the difference in group means is distributed:
+$$\bar{d} \sim N(2.51,0.29)$$
+
+```{r}
+ggplot(data.frame(x=0:6),aes(x=x))+
+  stat_function(fun=dnorm, args=list(mean=2.51, sd=0.29), color="purple")+
+  ylab("Density")+
+  scale_x_continuous(seq(0,6,1),name="Wage Difference",labels=scales::dollar)+
+  theme_light()
+```
+
+
+Now we the **$t$-test** like any other: 
+
+\begin{align*}
+t&=\frac{\text{estimate}-\text{null hypothesis}}{\text{standard error of the estimate}}\\
+&=\frac{d-0}{SE(d)}\\
+&=\frac{2.51-0}{0.29}\\
+&=8.66\\
+\end{align*}
+
+This is statistically significant. The $p$-value, $P(t>8.66)=$ is 0.000000000000000000410, or basically, 0. 
+
+
+
+```{r}
+pt(8.66,456.33, lower.tail=FALSE)
+```
+
+### The $t$-test in `R`
+
+```{r}
+t.test(wage~female, data=wages, var.equal=FALSE)
+```
+
+```{r}
+reg<-lm(wage~female, data=wages)
+summary(reg)
+```
