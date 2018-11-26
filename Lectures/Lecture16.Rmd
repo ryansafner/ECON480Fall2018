@@ -1,0 +1,691 @@
+---
+title: "Lecture 16: Nonlinear and Polynomial Models"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "November 26, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(tidyverse) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, dev.args=list(bg="transparent"))
+```
+
+### Linear Regression
+
+- OLS is commonly known as "**\emph{linear} regression**" as it fits a *straight line* to data points 
+- Often, data and relationships between variables may *not* be linear 
+
+### Nonlinearities? Example
+
+```{r, echo=FALSE}
+library("gapminder")
+library("ggplot2")
+```
+
+```{r, fig.height=4, echo=FALSE}
+p1<-ggplot(gapminder, aes(gdpPercap,lifeExp))+
+  geom_point(color="blue")+
+  geom_smooth(method="lm", color="red")+
+  scale_y_continuous(name="Life Expectancy (Years)", breaks=seq(0,90,20),limits=c(0,95))+
+  scale_x_continuous(name="GDP per Capita ($)", labels=scales::dollar, breaks=seq(0,120000,20000))
+p1
+```
+
+### Nonlinearities? Example: Quadratic Fit 
+
+```{r, fig.height=4, echo=FALSE}
+p1+stat_smooth(method = "lm", formula= y~poly(x,2), color="green")
+```
+
+### Nonlinearities? Example: No Outliers
+
+```{r, fig.height=4, echo=FALSE}
+p2<-gapminder %>%
+  filter(gdpPercap<50000) %>% 
+ggplot(., aes(gdpPercap,lifeExp))+
+  geom_point(color="blue")+
+  geom_smooth(method="lm", color="red")+
+  scale_y_continuous(name="Life Expectancy (Years)", breaks=seq(0,90,20),limits=c(0,95))+
+  scale_x_continuous(name="GDP per Capita ($)", labels=scales::dollar, breaks=seq(0,120000,20000))
+
+p2
+```
+
+### Nonlinearities? Example: Quadratic Fit
+
+```{r, fig.height=4, echo=FALSE}
+p2+stat_smooth(method = "lm", formula= y~poly(x,2), color="green", size=2)
+```
+
+### Nonlinearities? Example: Logarithmic Fit
+
+```{r, fig.height=4, echo=FALSE}
+p2+stat_smooth(method = "lm", formula= y~poly(x,2), color="green", size=2)+
+  stat_smooth(method = "lm", formula= y~log(x), color="orange", size=2)
+```
+
+### Nonlinear Regression
+
+- Despite being "linear regression", OLS can handle this with an easy fix
+- OLS requires all *parameters* (i.e. the $\beta$'s) to be linear, the *regressors* ($X$'s) can be nonlinear:
+
+\vspace{-1cm}
+\begin{align*}
+		\onslide<3->{Y&=\beta_0+\beta_1 X^2 &  \checkmark \\}
+		\onslide<4->{Y&=\beta_0+\beta_1^2 X &  x\\}
+		\onslide<5->{Y&=\beta_0+\beta_1 \sqrt{X} & \checkmark\\}
+		\onslide<6->{Y&=\beta_0+\sqrt{\beta_1} X  & x\\}
+		\onslide<7->{Y&=\beta_0+\beta_1 X_1 * X_2 & \checkmark\\}
+		\onslide<8->{Y&=\beta_0+\beta_1 ln(X) & \checkmark\\  }
+\end{align*}
+\vspace{-1cm}
+
+\onslide<9->
+
+- In the end, X will always be just a number, OLS can always estimate parameters for numbers
+- *Plotting* the points $(X, \hat{Y})$ can result in a curve for nonlinear $X$'s
+
+### Sources of Nonlinearities 
+
+- The effect of $X \rightarrow Y$ may be nonlinear if:
+1. $X \rightarrow Y$ is different for different levels of $X$
+    - e.g. Diminishing returns: $\uparrow X$ increases $Y$ at a decreasing rate
+    - e.g. Increasing returns: $\uparrow X$ increases $Y$ at an increasing rate
+2. $X \rightarrow Y$ depends on the value of $X_2$
+		- e.g. interaction terms (last lesson) 
+
+### Sources of Nonlinearities II
+
+\begin{columns}
+		\begin{column}[c]{4.75cm}
+			\begin{figure}
+			\centering 
+			\begin{tikzpicture}\scriptsize 
+	\begin{axis}[
+		scale=0.65,
+		axis lines=middle, 
+		enlarge x limits={rel=0.1, upper},
+		enlarge y limits={rel=0.1, upper},
+		every axis y label/.style={at={(axis description cs:-0.1,0.5)},rotate=90,anchor=north},
+		every axis x label/.style={at={(axis description cs:0.5,-0.1)},anchor=north},
+	%legend pos=outer north east,
+	xlabel=X,
+	ylabel=Y,
+	shader=flat,
+	ticks=none,
+	grid=none,
+	ymin=0,
+	xmin=0,
+	ymax=11,
+]
+	\addplot[domain=0:10, samples=20, ultra thick, color=blue!50]{10-x};
+	\draw[very thick, dashed, red] (axis cs:3,7)--node[left]{$\Delta Y$}(axis cs:3,6)--node[below]{$\Delta X$}(axis cs:4,6);
+\end{axis}
+\end{tikzpicture}	
+\caption*{\scriptsize Linear: slope $\beta_1=\frac{\Delta Y}{\Delta X}$ is constant} 
+\end{figure}
+		\end{column}
+		\begin{column}[c]{4.75cm}
+		\onslide<2->\begin{figure}
+			\centering	
+			\begin{tikzpicture}\scriptsize 
+	\begin{axis}[
+		scale=0.65,
+		axis lines=middle, 
+		enlarge x limits={rel=0.1, upper},
+		enlarge y limits={rel=0.1, upper},
+		every axis y label/.style={at={(axis description cs:-0.1,0.5)},rotate=90,anchor=north},
+		every axis x label/.style={at={(axis description cs:0.5,-0.1)},anchor=north},
+	%legend pos=outer north east,
+	xlabel=X,
+	ylabel=Y,
+	shader=flat,
+	ticks=none,
+	grid=none,
+	ymin=0,
+	xmin=0,
+	ymax=11,
+]
+	\addplot[domain=0:10, samples=20, ultra thick, color=blue!50]{10/(x)};
+	\draw[very thick, dashed, red] (axis cs:1,9)--node[right]{$\Delta Y$}(axis cs:1,5)--node[below]{$\Delta X$}(axis cs:2,5);
+	\draw[very thick, dashed, red] (axis cs:5,2)--node[left]{$\Delta Y$}(axis cs:5,1)--node[below]{$\Delta X$}(axis cs:9,1);
+\end{axis}
+\end{tikzpicture}	
+\caption*{\scriptsize Quadratic: slope $\beta_1$ depends on value of $X$} 
+\end{figure}
+		\end{column}
+		\begin{column}[c]{4.75cm}
+			\onslide<3->\begin{figure}
+			\centering 
+			\begin{tikzpicture}\scriptsize 
+	\begin{axis}[
+		scale=0.65,
+		axis lines=middle, 
+		enlarge x limits={rel=0.1, upper},
+		enlarge y limits={rel=0.1, upper},
+		every axis y label/.style={at={(axis description cs:-0.1,0.5)},rotate=90,anchor=north},
+		every axis x label/.style={at={(axis description cs:0.5,-0.1)},anchor=north},
+	%legend pos=outer north east,
+	xlabel=X,
+	ylabel=Y,
+	shader=flat,
+	grid=none,
+	ticks=none,
+	xmin=0,
+	ymax=11,
+	ymin=0
+]
+	\addplot[domain=0:10, samples=20, ultra thick, color=blue!50]{2+x};
+	\draw[very thick, dashed, red] (axis cs:2,4)--node[below]{\tiny $\Delta X$}(axis cs:4,4)--node[right]{\tiny $\Delta Y$}(axis cs:4,6);
+	\draw[blue!50] (axis cs: 8, 8)node[below]{\tiny When $X_2=0$};
+	\addplot[domain=0:10, samples=20, ultra thick, color=teal]{4+2*x};
+	\draw[very thick, dashed, red] (axis cs:2,7.5)--node[below]{\tiny $\Delta X$}(axis cs:4,7.5)--node[right]{\tiny $\Delta Y$}(axis cs:4,11);
+	\draw[teal] (axis cs: 6, 11)node[above]{\tiny When $X_2=1$};
+\end{axis}
+\end{tikzpicture}	
+\caption*{\scriptsize Interaction: slope $\beta_1$ depends on value of $X_2$} 
+\end{figure}
+		\end{column}
+	\end{columns}
+
+# Polynomial Functions
+
+### Polynomial Functions of $X$
+
+$$\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1} X_i + \hat{\beta_2} X_i^2 + ... + \hat{\beta_{\textcolor{magenta}{r}}} X_i^{\textcolor{magenta}{r}} + \epsilon_i$$
+
+- $r$ is the highest power $X_i$ is raised to (e.g. quadratic $r=2$, cubic $r=3$, etc)
+    - The graph of an $r$^th^-degree polynomial function has $r-1$ bends 
+- Just another multivariate OLS regression model  
+
+# Quadratic Model
+
+### Quadratic Model
+
+$$\hat{Y_i} = \hat{\beta_0} + \hat{\beta_1} X_i + \hat{\beta_2} X_i^2 + \epsilon_i$$
+
+- \alert{Quadratic model} has $X$ and $X^2$ variables in it (yes, need both!)
+- How to interpret coefficients?
+    - $\beta_0$ as "intercept" and $\beta_1$ as "slope" makes no sense 
+    - $\beta_1$ as effect $X_i \rightarrow Y_i$ holding $X_i^2$ constant makes no sense
+    - Note: this is *not* a multicollinearity problem! Correlation only measures *linear* relationships!
+    - **Calculate marginal effects** by calculating predicted $\hat{Y_i}$ for different $X_i$
+
+### Quadratic Model: Calculating Marginal Effects
+
+- What is the effect of $\Delta X_i \rightarrow \Delta Y_i$? 
+- Take the **derivative** of $Y_i$ with respect to $X_i$:
+$$\frac{d Y_i}{d X_i} = \hat{\beta_1}+2\hat{\beta_2} X_i$$
+- \alert{Marginal effect} of a 1 unit change in $X_i$ is a $\hat{\beta_1}+2\hat{\beta_2} X_i$ unit change in $Y$
+
+### Quadratic Model: Example
+
+\begin{example}
+$$\widehat{\text{Life Expectancy}_i} = \hat{\beta_0}+\hat{\beta_1} GDP_i+\hat{\beta_2}GDP^2_i$$
+	\begin{itemize}
+		\item Life Expectancy
+		\item GDP per Capita (GDP for short)
+	\end{itemize}
+\end{example}
+
+### Quadratic Model: Simplifying
+
+- These coefficients will be very large, let's first transform `gdpPercap` into \$1,000s, call it `gdp.t` [^1]
+
+\onslide<2->
+```{r}
+gapminder <- gapminder %>%
+  mutate(gdp.t=gdpPercap/1000)
+```
+
+\onslide<3->
+
+- Let's also make the quadratic term by squaring `gdp.t` and calling it `gdp.sq`
+
+\onslide<4->
+```{r}
+gapminder <- gapminder %>%
+  mutate(gdp.sq=gdp.t^2)
+```
+
+[^1]: Note I am using `dplyr` and `%>%` here for efficiency, I loaded them before without showing it
+
+### Quadratic Model: Example Regression in `R`
+
+- Can "manually" run regression with `gdp.t` and squared term `gdp.sq`
+
+\onslide<2->
+
+\scriptsize 
+```{r}
+reg1<-lm(lifeExp~gdp.t+gdp.sq, data=gapminder)
+summary(reg1)
+```
+
+### Quadratic Model: Example Regression in `R` II 
+
+ - Or can use one of `R`'s shortcuts for polynomial models:
+ - first term is normal, `x`, second term use `I(x^2)` to add squared term
+ 
+\onslide<3->
+\tiny
+
+```{r}
+reg1<-lm(lifeExp~gdp.t+I(gdp.t^2), data=gapminder)
+summary(reg1)
+```
+
+### Quadratic Model: Example Regression in `R` III 
+
+ - Another shortcut is just to use the `poly()` command
+ - Instead of any `x` variables, just add `poly(x,2)` where 2 is the highest power desired[^2]
+ 
+\onslide<3->
+\tiny
+
+```{r}
+reg1<-lm(lifeExp~poly(gdp.t,2, raw=TRUE), data=gapminder)
+reg1
+```
+
+[^2]: `R` gives different coefficient estimates for this version unless you add `, raw=TRUE` inside the `poly()` function, to ensure the polynomials are not computed orthogonally.
+
+### Quadratic Model: Marginal Effects
+
+\begin{table}[h!]
+	\centering 
+				\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{cccccccccc}
+	$\widehat{\text{Life Expectancy}_i}=$ & 50.52 & $+$ & 1.55 & $GDP$ &$-$& 0.02 & $GDP^2$ \\
+	 & \small (0.30) & & \small (0.04) & & & \small (0.00) & \\ 
+\end{tabular}
+\end{table}	
+
+- Marginal effect of GDP on Life Expectancy:
+
+\begin{align*}
+\only<2->{\frac{d \, Y}{d \; X} &= \hat{\beta_1}+2\hat{\beta_2} X_i\\}
+\only<3->{\frac{d \, \text{Life Expectancy}}{d \, \text{GDP}} &= 1.55+2(-0.02)\text{GDP}\\}
+\only<4->{ &= 1.55-0.04\text{GDP}\\}
+\end{align*}
+
+\onslide<5->
+
+- Positive, with diminishing returns
+- Effect on Life Expectancy of increasing GDP depends on initial value of GDP! 
+
+### Quadratic Model: Marginal Effects II
+
+\begin{table}[h!]
+	\centering 
+				\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{cccccccccc}
+	$\widehat{\text{Life Expectancy}_i}=$ & 50.52 & $+$ & 1.55 & $GDP$ &$-$& 0.02 & $GDP^2$ \\
+	 & \small (0.30) & & \small (0.04) & & & \small (0.00) & \\ 
+\end{tabular}
+\end{table}	
+
+- Marginal effect of GDP if GDP$=\$5$ (thousand): 
+
+\begin{align*}
+\only<2->{\frac{d \, \text{Life Expectancy}}{d \, \text{GDP}} &= 1.55-0.04\text{GDP}\\}
+		\onslide<3->{&= 1.55-0.04(5)\\}
+		\onslide<4->{&= 1.55-0.20\\}
+		\onslide<5->{&=1.35\\}
+\end{align*}
+\vspace{-1cm}
+\onslide<6->
+
+- i.e. for every addition \$1 (thousand) in GDP per capita, average life expectancy increases by 1.35 years
+
+### Quadratic Model: Marginal Effects III
+
+\begin{table}[h!]
+	\centering 
+				\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{cccccccccc}
+	$\widehat{\text{Life Expectancy}_i}=$ & 50.52 & $+$ & 1.55 & $GDP$ &$-$& 0.02 & $GDP^2$ \\
+	 & \small (0.30) & & \small (0.04) & & & \small (0.00) & \\ 
+\end{tabular}
+\end{table}	
+
+- Marginal effect of GDP if GDP$=\$25$ (thousand): 
+
+\begin{align*}
+\only<2->{\frac{d \, \text{Life Expectancy}}{d \, \text{GDP}} &= 1.55-0.04\text{GDP}\\}
+		\onslide<3->{&= 1.55-0.04(25)\\}
+		\onslide<4->{&= 1.55-1.00\\}
+		\onslide<5->{&=0.55\\}
+\end{align*}
+\vspace{-1cm}
+
+\onslide<6->
+
+- i.e. for every addition \$1 (thousand) in GDP per capita, average life expectancy increases by 0.55 years
+
+### Quadratic Model: Marginal Effects IV
+
+\begin{table}[h!]
+	\centering 
+				\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{cccccccccc}
+	$\widehat{\text{Life Expectancy}_i}=$ & 50.52 & $+$ & 1.55 & $GDP$ &$-$& 0.02 & $GDP^2$ \\
+	 & \small (0.30) & & \small (0.04) & & & \small (0.00) & \\ 
+\end{tabular}
+\end{table}	
+
+- Marginal effect of GDP if GDP$=\$50$ (thousand): 
+
+\begin{align*}
+\only<2->{\frac{d \, \text{Life Expectancy}}{d \, \text{GDP}} &= 1.55-0.04\text{GDP}\\}
+		\onslide<3->{&= 1.55-0.04(50)\\}
+		\onslide<4->{&= 1.55-2\\}
+		\onslide<5->{&=-0.45\\}
+\end{align*}
+\vspace{-1cm}
+
+\onslide<6->
+
+- i.e. for every addition \$1 (thousand) in GDP per capita, average life expectancy *decreases* by 0.45 years
+
+### Quadratic Model: Marginal Effects V
+
+\begin{table}[h!]
+	\centering 
+				\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{cccccccccc}
+	$\widehat{\text{Life Expectancy}_i}=$ & 50.52 & $+$ & 1.55 & $GDP$ &$-$& 0.02 & $GDP^2$ \\
+	 & \small (0.30) & & \small (0.04) & & & \small (0.00) & \\ 
+\end{tabular}
+\end{table}
+
+\begin{table}	
+	\centering 
+	\begin{tabular}{rr}
+	Initial GDP & Marginal Effect of +\$1,000 GDP\\ \toprule 
+	\onslide<2->{\$5,000 & 1.35 years\\}
+	\onslide<3->{\$25,000 & 0.55 years\\}
+	\onslide<4->{\$50,000 & $-0.45$ years\\ \bottomrule }
+	\end{tabular}
+\end{table}
+
+### Quadratic Model: Example
+
+```{r, fig.height=4, echo=FALSE}
+ggplot(gapminder, aes(gdpPercap,lifeExp))+
+  geom_point()+
+  stat_smooth(method = "lm", formula = y ~ x + I(x^2), color="green")+
+  geom_vline(xintercept=5000, linetype=2, color="blue")+
+  geom_vline(xintercept=25000, linetype=2, color="blue")+
+  geom_vline(xintercept=50000, linetype=2, color="blue")+
+  geom_text(x=5000, y=95, label="$5,000", color="blue")+
+  geom_text(x=25000, y=95, label="$25,000", color="blue")+
+  geom_text(x=50000, y=95, label="$50,000", color="blue")+
+  scale_y_continuous(name="Life Expectancy (Years)", breaks=seq(0,90,20),limits=c(0,95))+
+  scale_x_continuous(name="GDP per Capita ($)", labels=scales::dollar, breaks=seq(0,120000,20000))
+```
+
+### Quadratic Model: Maxima and Minima
+
+- For a quadratic model, we can also find the predicted **maximum** or **minimum** of $\hat{Y_i}$
+- By calculus, a minimum or maximum occurs where: 
+
+\begin{align*}
+		\onslide<3->{\frac{ d Y}{d X} &=0\\}
+		\onslide<4->{\beta_1 + 2\beta_2 X &= 0\\}
+		\onslide<5->{2\beta_2 X&= -\beta_1\\}
+		\onslide<6->{X^*&=-\frac{1}{2}\frac{\beta_1}{\beta_2}\\}
+		\end{align*}
+
+### Quadratic Model: Maxima and Minima Example
+
+\begin{table}[h!]
+	\centering 
+				\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{cccccccccc}
+	$\widehat{\text{Life Expectancy}_i}=$ & 50.52 & $+$ & 1.55 & $GDP$ &$-$& 0.015 & $GDP^2$ \\
+	 & \small (0.30) & & \small (0.04) & & & \small (0.00) & \\ 
+\end{tabular}
+\end{table}
+	\begin{align*}
+		\onslide<2->{X^*&=-\frac{1}{2}\frac{\beta_1}{\beta_2}\\}
+		\onslide<3->{GDP^*&=-\frac{1}{2}\frac{(1.55)}{(-0.015)}\\}
+		\onslide<4->{X^*&=-\frac{1}{2}(-103.333)\\}
+		\onslide<5->{X^*&=51.67\\}
+	\end{align*}
+
+### Quadratic Model: Maxima and Minima Example II 
+
+```{r, fig.height=4, echo=FALSE}
+ggplot(gapminder, aes(gdpPercap,lifeExp))+
+  geom_point()+
+  stat_smooth(method = "lm", formula = y ~ x + I(x^2), color="green")+ # alternatively formula=y~poly(x,2)
+  geom_vline(xintercept=51670, linetype=2, color="blue")+
+  geom_text(x=51670, y=95, label="$51,670", color="blue")+
+  scale_y_continuous(name="Life Expectancy (Years)", breaks=seq(0,90,20),limits=c(0,95))+
+  scale_x_continuous(name="GDP per Capita ($)", labels=scales::dollar, breaks=seq(0,120000,20000))
+```
+
+# Determining if (Larger) Polynomials are Necessary
+
+### Quadratic Model: Necessary?
+
+\begin{table}[h!]
+	\centering 
+				\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{cccccccccc}
+	$\widehat{\text{Life Expectancy}_i}=$ & 50.52 & $+$ & 1.55 & $GDP$ &$-$& 0.015 & $GDP^2$ \\
+	 & \small (0.30) & & \small (0.04) & & & \small (0.0005) & \\ 
+\end{tabular}
+\end{table}
+
+- Do we *need* a quadratic model? 
+- We can determine if $\hat{\beta_2}$ is statistically significant:
+    - $H_0$: $\beta_2=0$
+    - $H_1$: $\beta_2\neq 0$
+
+\onslide<5->
+$$t=\frac{\hat{\beta_2}-0}{SE(\hat{\beta_2})}=\frac{0.015}{0.0005}=30$$
+\onslide<6->
+
+- Statistically significant $\implies$ we should keep the quadratic model
+    - If we only ran a linear model, it would be biased!
+
+### Higher-Order Polynomials: Cubic Regression
+
+\begin{example}
+
+\begin{itemize}
+  \item Should we keep going up in polynomials? 
+\end{itemize}
+
+\onslide<2-> 
+$$\widehat{\text{Life Expectancy}_i} = \hat{\beta_0}+\hat{\beta_1} GDP_i+\hat{\beta_2}GDP^2_i+\hat{\beta_3}GDP_i^3$$
+
+\end{example}
+
+\onslide<3->
+
+```{r, echo=FALSE, fig.height=2.5}
+ggplot(gapminder, aes(gdpPercap,lifeExp))+
+  geom_point()+
+  stat_smooth(method = "lm", formula = y ~poly(x,3), color="orange")+ 
+  scale_y_continuous(name="Life Expectancy (Years)", breaks=seq(0,90,20),limits=c(0,95))+
+  scale_x_continuous(name="GDP per Capita ($)", labels=scales::dollar, breaks=seq(0,120000,20000))
+```
+
+### Higher-Order Polynomials
+
+- In general, should have a compelling theoretical reason why data or relationships should "change direction" multiple times 
+- Or clear data patterns that have multiple "bends"
+
+\onslide<2->
+```{r, echo=FALSE, fig.height=3.5}
+# make obviously cubic data
+
+set.seed(1)
+x <- seq(0,20,0.05)
+y <- (500 + 0.4 * (x-10)^3)+rnorm(length(x), 10, 50) # real function + random noise
+df<-data.frame(x,y)
+
+ggplot(data=df, aes(x=x,y=y))+
+  geom_point()+
+  stat_smooth(method="lm", formula=y~poly(x,3), color="orange")+
+  xlab("X")+ylab("Y")
+```
+
+### A Second Example
+
+\begin{example}
+	Test Scores: does school district's average income matter? 
+\end{example}
+
+```{r, echo=F, fig.height=3}
+library("foreign")
+CASchool<-read.dta("../Data/caschool.dta")
+
+p3<-ggplot(CASchool, aes(avginc, testscr))+
+  geom_point(color="blue")+
+  xlab("District Average Income (Thousands of $)")+ylab("Test Score")+
+  ylim(c(600,710))
+p3
+```
+
+### A Second Example II
+
+\begin{example}
+	Test Scores: does school district's average income matter? 
+\end{example}
+
+$$TestScore_i=\hat{\beta_0}+\hat{\beta_1}Income_i$$
+
+```{r, echo=F, fig.height=3}
+library("foreign")
+CASchool<-read.dta("../Data/caschool.dta")
+
+p3+geom_smooth(method="lm", color="red")
+```
+
+### A Second Example III
+
+\begin{example}
+	Test Scores: does school district's average income matter? 
+\end{example}
+
+$$TestScore_i=\hat{\beta_0}+\hat{\beta_1}Income_i+\hat{\beta_2}Income^2_i$$	
+
+```{r, echo=F, fig.height=3}
+library("foreign")
+CASchool<-read.dta("../Data/caschool.dta")
+
+p3+geom_smooth(method="lm", color="red")+geom_smooth(method="lm", formula="y~poly(x,2)", color="green", size=2)
+```
+
+### A Second Example IV
+
+- Let's manually generate a squared term, `avgincsq` 
+
+\onslide<2->
+
+```{r}
+CASchool <- CASchool %>%
+  mutate(avgincsq=avginc^2)
+```
+
+### A Second Example V
+
+\columnsbegin
+
+\column{0.5\textwidth}
+\scriptsize 
+
+```{r}
+regsc<-lm(testscr~avginc+avgincsq, data=CASchool)
+summary(regsc)
+```
+
+\column{0.5\textwidth}
+
+\begin{table}
+	\setlength{\tabcolsep}{0cm}
+	\begin{tabular}{cccccccc}
+	 $\widehat{\text{Test Score}}=$ & 607.30& $+$ & $3.85$ & $ Income$ & $-$ & $0.04$ & $Income^2$\\
+	& \small (3.05) & & \small (0.30) & & & \small (0.01) & \\
+	\end{tabular} 	
+\end{table}
+
+\columnsend
+
+### A Second Example VI
+
+\begin{example}
+	Test Scores: does school district's average income matter? 
+\end{example}
+
+$$TestScore_i=\hat{\beta_0}+\hat{\beta_1}Income_i+\hat{\beta_2}Income^2_i+\hat{\beta_3}Income^3_i$$
+
+```{r, echo=F, fig.height=3}
+p3+geom_smooth(method="lm", color="red")+
+  geom_smooth(method="lm", formula="y~poly(x,2)", color="green", size=2)+
+  geom_smooth(method="lm", formula="y~poly(x,3)", color="orange", size=2)
+```
+
+### A Second Example VII
+
+- Let's manually generate a cubic term, `avginc3`: 
+
+\onslide<2->
+
+```{r}
+CASchool <- CASchool %>%
+  mutate(avginc3=avginc^3)
+```
+
+### A Second Example VIII
+
+\scriptsize 
+
+```{r}
+regcu<-lm(testscr~avginc+avgincsq+avginc3, data=CASchool)
+summary(regcu)
+```
+
+### Strategy for Polynomial Model Specification
+
+1. Are there good theoretical reasons for relationships changing (e.g. increasing/decreasing returns)?
+2. Plot your data: does a straight line fit well enough?
+3. Specify a polynomial function of a higher power (start with 2) and estimate OLS regression
+4. Use $t$-test to determine if higher-power term is significant
+5. Interpret effect of change in $X$ on $Y$ 
+6. Repeat steps 3-5 as necessary
+
+```{r, echo=F, eval=F}
+func<-function(x){x}
+
+ggplot(data.frame(x=0:10),aes(x=x))+
+    stat_function(fun=log, color="blue")+
+    stat_function(fun=exp, color="red")+
+  stat_function(fun=func, linetype=2)+
+  ylim(c(0,10))
+```
