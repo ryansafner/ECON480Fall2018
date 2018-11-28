@@ -1,0 +1,709 @@
+---
+title: "Lecture 17: Logarithmic Models and Testing Joint Hypotheses"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "November 28, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(tidyverse) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, dev.args=list(bg="transparent"))
+```
+
+### Nonlinearities? Example
+
+```{r, echo=FALSE}
+library("gapminder")
+suppressPackageStartupMessages(library("tidyverse"))
+```
+
+```{r, fig.height=4, echo=FALSE}
+ggplot(gapminder, aes(gdpPercap,lifeExp))+
+  geom_point(color="blue")+
+  geom_smooth(method="lm", color="red")+
+  scale_y_continuous(name="Life Expectancy (Years)", breaks=seq(0,90,20),limits=c(0,95))+
+  scale_x_continuous(name="GDP per Capita ($)", labels=scales::dollar, breaks=seq(0,120000,20000))+
+  stat_smooth(method = "lm", formula= y~poly(x,2), color="green", size=2)+
+  stat_smooth(method = "lm", formula= y~log(x), color="orange", size=2)
+```
+
+```{r, echo=FALSE}
+gapminder<-gapminder %>%
+  mutate(l.gdp=log(gdpPercap),
+         l.life=log(lifeExp))
+```
+
+# Logarithmic Models
+
+### Logarithmic Models
+
+- Another model specification for nonlinear data is the \alert{logarithmic model}\footnote{Note, this should not be confused with a \textbf{logistic model}, which is a model for dependent dummy variables.}
+    - We transform either $X$, $Y$, or *both* by taking the (natural) logarithm
+- Logarithmic model has two additional advantages
+    - We can easily interpret coefficients as **percentage changes** or **elasticities**
+    - Useful economic shape: diminishing returns (production functions, utility functions, etc)
+
+```{r, echo=F, fig.height=2.5}
+ggplot(data.frame(x=0:10),aes(x=x))+
+    stat_function(fun=log, color="blue")+
+  geom_text(x=9,y=2.4, label="y=log(x)", color="blue")+
+  scale_x_continuous(breaks=seq(0,10,1))+
+  ylim(c(0,2.5))
+```
+
+### The Natural Logarithm
+
+- The **exponential function, $e^x$** or **$exp(x)$**, where base $e=2.71828...$
+- **Natural logarithm** is the inverse, $y=ln(x)$
+
+```{r, echo=F, fig.height=2.5}
+func<-function(x){x}
+
+ggplot(data.frame(x=0:10),aes(x=x))+
+    stat_function(fun=log, color="red")+
+    stat_function(fun=exp, color="blue")+
+  stat_function(fun=func, linetype=2)+
+  scale_x_continuous(breaks=seq(0,10,1), limits=c(0,5))+
+  ylim(c(0,5))
+```
+
+### The Natural Logarithm: Review  
+
+- Exponents are defined as
+$$b^n=\underbrace{b \times b \times ... \times b}_{n}$$
+where base $b$ is multiplied by itself $n$ times
+
+- e.g. $2^3=\underbrace{2 \times 2 \times 2}_{n=3}=8$
+- Logarithms the inverse, defined as the exponents in the expressions above
+$$\text{If } b^n=y\text{, then }log_b(y)=n$$
+$n$ is the number you must raise $b$ to in order to get $y$
+- e.g. $log_2(6)=3$
+- Logarithms can have any base, but common to use the \alert{natural logarithm (ln)} with base \alert{e=2.71828...}
+$$\text{If } e^n=y\text{, then }ln(y)=n$$
+
+### The Natural Logarithm: Properties
+
+- Natural logs have a lot of useful properties:
+    - $ln(\frac{1}{x})=-ln(x)$
+    - $ln(ab)=ln(a)+ln(b)$
+    - $ln(\frac{x}{a})=ln(x)-ln(a)$
+    - $ln(x^a)=a \, ln(x)$
+    - $\frac{d  \, ln \, x}{d \, x} = \frac{1}{x}$
+
+### The Natural Logarithm: Example
+
+- Most useful property: for small change in $x$, $\Delta x$:
+
+\vspace{-0.25cm}
+
+$$\underbrace{ln(x+\Delta x) - ln(x)}_{\text{Difference in logs}} \approx \underbrace{\frac{\Delta x}{x}}_{\text{Relative change}}$$
+\vspace{-0.25cm}
+
+\onslide<2->
+\begin{example}
+\begin{itemize}
+  \item<3->Let $x=100$ and $\Delta x =1$, relative change is:
+$$\frac{\Delta x}{x} = \frac{(101-100)}{100} = 0.01 \text{ or }1\%$$
+  \item<4-> The logged difference:
+$$ln(101)-ln(100) = 0.00995 \approx 1\%$$
+\end{itemize}
+\end{example}
+
+\vspace{-0.75cm}
+\onslide<5->
+
+- This allows us to very easily interpret coefficients as *percent changes* or **elasticities**
+
+### Measuring Changes
+
+- **Difference ($\Delta$):** the difference between two values of $x$, $x_1$ and $x_2$
+$$\Delta x=x_2-x_1$$
+- **Relative Difference**: the difference expressed in terms of the original value
+$$\frac{\Delta x}{x} = \frac{x_2-x_1}{x_1}$$
+ this becomes a proportion ($\pm$ between 0 and 1)
+- **Percentage Change** or **Growth Rate**: relative difference expressed as a *percentage* ($\pm$ between 0 and 100%)
+\begin{align*}
+\% \Delta &= \frac{\Delta x}{x_1} \times 100\%\\
+&=\frac{x_2-x_1}{x_1} \times 100\% \\ 
+\end{align*}
+
+### Relative Change and Percentage Change: Example
+
+\begin{example}
+A country's GDP is \$100 in 2017, and \$120 in 2018. Calculate the country's GDP growth rate for 2018. 
+
+\begin{align*}
+\only<2->{\text{GDP Growth Rate}_{2018} &= \frac{GDP_{2018}-GDP_{2017}}{GDP_{2017}} \times 100\% \\} 
+\only<3->{&= \frac{105-100}{100} \times 100\% \\}
+\only<4->{&= \frac{5}{100} \times 100\% \\}
+\only<5->{&= 0.05 \times 100\% \\}
+\only<6->{&=5\% \\ }
+\end{align*}
+\end{example}
+
+### Elasticity
+
+- An \alert{elasticity} between two variables, $E_{y,x}$ describes the *responsiveness* of one variable to a change in another. 
+- Measured in percentages: a 1\% change in $x$ will cause a $E$\% change in $y$
+
+\begin{align*}
+\only<3->{E_{y,x}&=\frac{\% \Delta y}{\% \Delta x}\\}
+\only<4->{&=\cfrac{\frac{\Delta y}{y}}{\frac{\Delta x}{x}}\\}
+\end{align*}
+
+\onslide<5->
+
+- Numerator is relative change in $Y$, Denominator is relative change in $X$
+
+### Math FYI: Cobb Douglas Functions and Logs
+
+- One of the (many) reasons why economists love Cobb-Douglas functions:
+$$Y=AL^{\alpha}K^{\beta}$$
+- Taking logs, relationship becomes linear:
+
+\onslide<2->
+$$ln(Y)=ln(A)+\alpha ln(L)+ \beta ln(K)$$
+
+\onslide<3->
+
+- With data on $(Y, L, K)$ and linear regression, can estimate $\alpha$ and $\beta$
+    - $\alpha$: elasticity of $Y$ with respect to $L$
+        - A 1\% change in $L$ will lead to an $\alpha$\% change in $Y$
+    - $\beta$: elasticity of $Y$ with respect to $K$
+        - A 1\% change in $K$ will lead to a $\beta$\% change in $Y$
+
+### Logarithms and Percentage Changes
+
+\begin{example}
+$$\widehat{Wages_{it}}= \beta_0+\beta_1 Inflation_t + \epsilon_t$$
+	\begin{itemize}
+		\item<2-> Does this make sense? 
+		\item<3-> Wages increase by $\hat{\beta_1}$ for every 1 unit increase in Inflation
+		\item<4-> Suppose $\hat{\beta_1}=1.25$: for every 1 unit increase in Inflation, \emph{everyone's} (CEOs, janitors, etc) wages increase by \$1.25.
+		\item<5-> What we really want is to estimate the \emph{percentage} increase in people's wages   	
+	\end{itemize}
+\end{example}
+
+### Logarithms and Percentage Changes II
+
+\begin{example}
+	\begin{equation*}
+	\widehat{\textcolor{magenta}{ln}(Wages_{it})}= \beta_0+\beta_1 Inflation_t + \epsilon_t 	
+	\end{equation*}
+	\end{example}
+	\begin{itemize}
+		\item<2-> Use ln(wages) for us to see the \emph{percentage} change in wages from inflation
+		\item<3-> If $\hat{\beta_1}=1.25$, wages increase by 1.25\% for every 1 unit increase in inflation
+		\item<4->Different \emph{levels} of wages between CEO \& janitor, but increase at same \emph{rate}
+\end{itemize}
+
+### Logarithms In `R`
+
+- The `log()` function can easily take the log
+
+\onslide<2->
+```{r}
+gapminder<-gapminder %>%
+  mutate(l.gdp=log(gdpPercap))
+```
+
+\onslide<3->
+
+- Note, `log()` by default is the **natural logarithm $ln()$**, i.e. base `e`
+    - Can change base with e.g. `log(x,base=5)`
+    - Some common built-in logs: `log10`, `log2` 
+
+### Types of Logarithmic Models
+
+- Three types of log regression models, depending on which variables we log
+    1.  Linear-log model:
+    $$Y=\beta_0+\beta_1 \textcolor{magenta}{ln(X)}$$
+    2. Log-linear model:
+		$$\textcolor{magenta}{ln(Y)}=\beta_0+\beta_1X$$
+		3.Log-log model:
+		$$\textcolor{magenta}{ln(Y)}=\beta_0+\beta_1\textcolor{magenta}{ln(X)}$$
+
+# Linear-Log Model
+
+### Linear-Log Model
+
+- \alert{Linear-log model} has an independent variable ($X$) that is logged
+
+\begin{align*}
+Y&=\beta_0+\beta_1 \textcolor{magenta}{ln(X)}\\
+\only<2->{\beta_1&=\cfrac{\Delta Y}{\big(\frac{\Delta X}{X}\big)}\\}
+\end{align*}
+
+\onslide<3->
+
+- $\hat{\beta_1}$: **a 1\% change in $X$** $\rightarrow$ **$\frac{\beta_1}{100}$ unit change in $Y$**
+
+### Linear-Log Model In `R`
+
+\columnsbegin
+
+\column{.4\textwidth}
+
+\tiny 
+
+```{r}
+lin_log_reg<-lm(lifeExp~l.gdp, data = gapminder)
+summary(lin_log_reg)
+```
+
+\column{.6\textwidth}
+
+$$\widehat{\text{Life Expectancy}}_i=-9.10+9.41ln(GDP)_i$$
+
+\onslide<2->
+
+\small 
+
+- $\hat{\beta_1}$: a **1\% change in GDP** $\rightarrow$ a $\frac{9.41}{100}=$ **0.0941 year increase** in Life Expectancy
+- A **25\% fall in GDP** $\rightarrow$ a $(25 \times 0.0941)=$ **2.353 year decrease** in Life Expectancy 
+- A **100\% rise in GDP** $\rightarrow$ a $(100 \times 0.0941)=$ **9.041 year increase** in Life Expectancy 
+
+\columnsend
+
+### Linear-Log Model Graph 
+
+```{r, fig.height=4, echo=FALSE}
+p1<-ggplot(gapminder, aes(gdpPercap,lifeExp))+
+  geom_point(color="blue")+
+  geom_smooth(method="lm", formula=y~log(x), color="red")+
+  scale_y_continuous(name="Life Expectancy (Years)", breaks=seq(0,90,20),limits=c(0,95))+
+  scale_x_continuous(name="GDP per Capita ($)")
+p1
+```
+
+### Linear-Log Model Graph II
+
+```{r, fig.height=4, echo=FALSE}
+linlog.s<-ggplot(gapminder, aes(l.gdp,lifeExp))+
+  geom_point(color="blue")+
+  geom_smooth(method="lm", color="red")+
+  scale_y_continuous(name="Life Expectancy (Years)", breaks=seq(0,90,20),limits=c(0,95))+
+  scale_x_continuous(name="Log GDP per Capita ($)")
+linlog.s
+```
+
+# Log-Linear Model
+
+### Log-Linear Model
+
+- \alert{Log-linear model} has the dependent variable ($Y$) logged
+
+\begin{align*}
+\textcolor{magenta}{ln(Y)}&=\beta_0+\beta_1X\\
+\only<2->{\beta_1&=\cfrac{\big(\frac{\Delta Y}{Y}\big)}{\Delta X}\\}
+\end{align*}
+
+\onslide<3->
+
+- $\hat{\beta_1}$: a **1 unit change in $X$** $\rightarrow$ **$\beta_1 \times 100\%$ change in $Y$**
+
+### Log-Linear Model In `R`
+
+- We will again have very large/small coefficients if we deal with GDP directly, again let's transform `gdpPercap` into \$1,000s, call it `gdp.t`
+
+\onslide<2->
+```{r}
+gapminder <- gapminder %>%
+  mutate(gdp.t=gdpPercap/1000)
+```
+
+
+### Log-Linear Model In `R`
+
+\columnsbegin
+
+\column{.4\textwidth}
+
+\tiny 
+
+```{r}
+log_lin_reg<-lm(l.life~gdp.t, data = gapminder)
+summary(log_lin_reg)
+```
+
+\column{.6\textwidth}
+
+$$\widehat{ln(\text{Life Expectancy})}_i=3.967+0.013GDP_i$$
+
+\onslide<2->
+
+\small 
+
+- $\hat{\beta_1}$: a **\$1 (thousand) change in (thousands of) GDP** $\rightarrow$ a $0.013 \times 100\%=$ **1.3\% increase** in Life Expectancy
+- A **\$25K fall in GDP** $\rightarrow$ a $(25 \times 1.3\%)=$ **32.5\% decrease** in Life Expectancy 
+- A **\$100K rise in GDP** $\rightarrow$ a $(100 \times 1.3\%)=$ **130\% increase** in Life Expectancy 
+
+\columnsend
+
+### Log-Linear Model Graph 
+
+```{r, fig.height=4, echo=FALSE}
+log.lin.s<-ggplot(gapminder, aes(gdp.t,l.life))+
+  geom_point(color="blue")+
+  geom_smooth(method="lm", color="red")+
+  scale_y_continuous(name="Log(Life Expectancy)", breaks=seq(0,5,1),limits=c(3,5))+
+  scale_x_continuous(name="GDP per Capita ($1,000s)")
+log.lin.s
+```
+
+# Log-Log Model
+
+### Log-Log Model
+
+- \alert{Log-log model} has both variables ($X$ and $Y$) logged
+
+\begin{align*}
+\textcolor{magenta}{ln(Y)}&=\beta_0+\beta_1\textcolor{magenta}{ln(X)}\\
+\only<2->{\beta_1&=\cfrac{\big(\frac{\Delta Y}{Y}\big)}{\big(\frac{\Delta X}{X}\big)}\\}
+\end{align*}
+
+\onslide<3->
+
+- $\hat{\beta_1}$: a **1\% change in $X$** $\rightarrow$ **$\beta_1 \%$ change in $Y$**
+- $\hat{\beta_1}$ is the **elasticity** of $Y$ with respect to $X$
+
+### Log-Log Model In `R`
+
+\columnsbegin
+
+\column{.4\textwidth}
+
+\tiny 
+
+```{r}
+log_log_reg<-lm(l.life~l.gdp, data = gapminder)
+summary(log_log_reg)
+```
+
+\column{.6\textwidth}
+
+$$\widehat{ln(\text{Life Expectancy})}_i=3.967+0.013GDP_i$$
+
+\onslide<2->
+
+\small 
+
+- $\hat{\beta_1}$: a **$1\% change in GDP** $\rightarrow$ a **0.147\% increase** in Life Expectancy
+- A **25\% fall in GDP** $\rightarrow$ a $(25 \times 0.147\%)=$ **3.675\% decrease** in Life Expectancy 
+- A **100\% rise in GDP** $\rightarrow$ a $(100 \times 0.147\%)=$ **14.7\% increase** in Life Expectancy 
+
+\columnsend
+
+### Log-Log Model Graph 
+
+```{r, fig.height=4, echo=FALSE}
+log.log.s<-ggplot(gapminder, aes(l.gdp,l.life))+
+  geom_point(color="blue")+
+  geom_smooth(method="lm", color="red")+
+  scale_y_continuous(name="Log(Life Expectancy)", breaks=seq(0,5,1),limits=c(3,5))+
+  scale_x_continuous(name="Log(GDP per Capita)")
+log.log.s
+```
+
+### Comparing Models
+
+\begin{table} 
+		\centering
+		\begin{tabular}{lll}
+		Model & Equation & Interpretation \\ \toprule 
+		Linear-Log & 	$Y=\beta_0+\beta_1 \textcolor{magenta}{ln(X)}$ & 1\alert{\%} change in $X \rightarrow \frac{\hat{\beta_1}}{100}$ \textbf{unit} change in $Y$\\
+		Log-Linear & $\textcolor{magenta}{ln(Y)}=\beta_0+\beta_1X$ & 1 \textbf{unit} change in $X \rightarrow \hat{\beta_1}\times 100$\alert{\%} change in $Y$\\
+		Log-Log & $\textcolor{magenta}{ln(Y)}=\beta_0+\beta_1\textcolor{magenta}{ln(X)}$ & 1\alert{\%} change in $X \rightarrow \hat{\beta_1}$\alert{\%} change in $Y$\\ \bottomrule 
+		\end{tabular}
+\end{table}
+
+- Hint: the variable that gets logged changes in \alert{percent} terms, the variable not logged changes in **unit** terms 
+
+### Comparing Models I
+
+\columnsbegin
+
+\column{.55\textwidth}
+
+\center
+
+```{r, echo=F, results="asis"}
+library("stargazer")
+stargazer(lin_log_reg, log_lin_reg, log_log_reg, header=F, float=F, type="latex", font.size = "tiny", column.labels = c("Linear-Log", "Log-Linear", "Log-Log"))
+```
+
+\column{.45\textwidth}
+
+- Models are very different units, how to choose? 
+- Compare $R^2$'s
+- Compare graphs
+- Compare intution
+
+\columnsend
+
+### When to Log?
+
+- In practice, the following types of variables are logged (ln):
+    - Variables that must always be positive (prices, sales, market values)
+    - Very large numbers (population, GDP)
+    - Variables expressed as percentages or percentage changes (inflation, population growth, GDP growth, labor force participation rate, unemployment rate)
+    - Variables that have nonlinear scatterplots
+-Never use logs for:
+    - Variables that are less than one, decimals, 0, or negative (temperature)
+    - Categorical variables
+    - Time variables (year, week, day) 
+
+# Comparing Across Units
+
+### Comparing Coefficients of Different Units
+
+$$\hat{Y_i}=\beta_0+\beta_1 X_1+\beta_2 X_2	$$
+
+- We often want to compare coefficients to see which variable $X_1$ or $X_2$ has a bigger effect on $Y$
+- What if $X_1$ and $X_2$ are different scales? 
+
+\onslide<3->\begin{example} 
+\begin{align*}
+\widehat{\text{Salary}_i}&=\beta_0+\beta_1 \text{Batting average}_i+\beta_2 \text{Home runs}_i\\
+\only<4->{\widehat{\text{Salary}_i}&=-\text{2,869,439.40}+\text{12,417,629.72} \text{Batting average}_i+\text{129,627.36} \text{Home runs}_i\\}
+\end{align*}
+\end{example} 
+
+### Standardizing Variables
+
+- An easy way is to \alert{standardize} the variables (i.e. take the $Z$-score) 
+
+$$X^{std}=\frac{X-\overline{X}}{sd(X)}$$
+
+### Standardizing Variables: Example
+
+\begin{example}
+
+\begin{table}\small 
+		\begin{tabular}{lll}
+		Variable & Mean & Std. dev.\\ \toprule 
+		Salary & \$2,024,616 & \$2,764,512\\	
+		Batting average & 0.267 & 0.031\\
+		Home runs & 12.11 & 10.31\\ \bottomrule 
+		\end{tabular}
+\end{table}
+		\begin{align*}\scriptsize  
+	\widehat{\text{Salary}_i}&=-\text{2,869,439.40}+\text{12,417,629.72} \text{Batting average}_i+\text{129,627.36} \text{Home runs}_i\\ 
+	\widehat{\text{Salary}_i}^{std}&=\text{0.00}+\text{0.14} \text{Batting average}_i^{std}+\text{0.48} \text{Home runs}_i^{std}\\
+	\end{align*}
+	\end{example}
+\vspace{-1cm}
+
+- \alert{Marginal effect} on $Y$ (in *standard deviations* of $Y$) from 1 *standard deviation* change in $X$
+- e.g. for 1 standard deviation increase in Batting Average, Salary increases by 0.14 standard deviations
+    - $0.14\times 2,764,512=\$387,032$
+
+### Standardizing in `R`
+
+- Use the `scale()` command inside `dplyr`'s `mutate()` function to standardize a variable
+
+```{r}
+gapminder<-gapminder %>%
+  mutate(s.life=scale(lifeExp),
+         s.gdp=scale(gdpPercap)) 
+
+summary(lm(s.life~s.gdp, data=gapminder))
+```
+
+# Joint-Hypothesis Testing
+
+### Joint Hypothesis Testing
+
+\begin{example}
+	$$\widehat{Wages_i}=\hat{\beta_0}+\hat{\beta_1}Male+\hat{\beta_2}Northeast_i+\hat{\beta_3}Northcen_i+\hat{\beta_4}South_i$$
+	\begin{itemize}
+		\item<2-> Maybe region doesn't affect wages \emph{at all}?
+		\item<3-> $H_0$: $\beta_2=0$, $\beta_3=0$, $\beta_4=0$ 
+		\item<4-> This is a \alert{joint hypothesis} to test
+	\end{itemize}
+\end{example}
+
+### Joint Hypothesis Testing II 
+
+- A \alert{joint hypothesis} tests against the null hypothesis of a value for *multiple* parameters:
+$$\textcolor{magenta}{H_0: \beta_1= \beta_2=0}$$
+the hypotheses that multiple regressors are equal to zero (have no causal effect on the outcome) 
+- Our alternative hypothesis is that:
+$$H_1: \text{ either } \beta_1\neq0\text{ or } \beta_2\neq0\text{ or both}$$
+or simply, that $H_0$ is not true 
+
+### Joint Hypothesis Tests 
+
+- Three possible cases: 
+    1. $H_0$: $\beta_1=\beta_2=0$
+        - Testing if multiple variables don't matter
+        - Useful under high multicollinearity
+        - $H_A$: at least one parameter is not 0
+    2. $H_0$: $\beta_1=\beta_2$
+        - Testing if two variables matter the same
+        - Variables must be in the same units
+        - $H_A$: $\beta_1 (\neq, <,$ or $>) \beta_2$
+    3. $H_0$: all $\beta$'s$=0$
+        - The "**Overall $F$-test**"
+        - Testing if regression explains \emph{no} variation in $Y$
+
+### Joint Hypothesis Tests: The $F$-Statistic
+
+- The \alert{$F$-statistic} is used to test joint hypotheses about regression coefficients with an \alert{$F$-test}
+- This involves comparing two models:
+    1. **Unrestricted model**: regression with all coefficients
+    2. **Restricted model**: regression under null hypothesis (coefficients equal hypothesized values)
+- $F$ is an **analysis of variance (ANOVA)**, essentially tests whether $R^2$ increases statistically significantly as we go from the restricted model$\rightarrow$unrestricted model
+- $F$ has its own distribution, with *two* sets of degrees of freedom 
+
+### Joint Hypothesis Tests: The $F$-Statistic II
+
+\begin{figure}
+		\includegraphics[height=3in]{ftable}	
+	\end{figure}
+
+### Joint Hypothesis $F$-test
+
+\begin{example}
+	\begin{equation*}
+		\widehat{Wages_i}=\hat{\beta_0}+\hat{\beta_1}Male+\hat{\beta_2}Northeast_i+\hat{\beta_3}Northcen_i+\hat{\beta_4}South_i+\epsilon_i	
+		\end{equation*}	
+	\begin{itemize}
+		\item<2-> Let $H_0$: $\beta_2=\beta_3=\beta_4=0$
+		\item<3-> Let $H_1$: $H_0$ is not true (at least one beta$\neq 0$	
+		\item<4-> \textbf{Unrestricted Model}: 
+	\begin{equation*}
+		\widehat{Wages_i}=\hat{\beta_0}+\hat{\beta_1}Male+\hat{\beta_2}Northeast_i+\hat{\beta_3}Northcen_i+\hat{\beta_4}South_i+\epsilon_i	
+		\end{equation*}	
+		\item<5-> \textbf{Restricted Model}: 
+	\begin{equation*}
+		\widehat{Wages_i}=\hat{\beta_0}+\hat{\beta_1}Male+\epsilon_i	
+		\end{equation*}	
+		\item<6->$F$: does going from restricted to unrestricted statistically significantly improve $R^2$?  
+	\end{itemize}
+\end{example}
+
+### Calculating the $F$-statistic
+
+\begin{equation*}
+	F_{\textcolor<5->{teal}{q},\textcolor<5->{magenta}{n-k-1}}=\cfrac{\displaystyle\frac{(\textcolor<2->{teal}{R^2_u}-\textcolor<3->{magenta}{R^2_r})}{q}}{\displaystyle\frac{(1-\textcolor<2->{teal}{R^2_u})}{(n-\textcolor<4->{teal}{k}-1)}}
+	\end{equation*}
+	\begin{itemize} 
+		\item<2-> \textcolor{teal}{$R^2_u$} : the $R^2$ from the \textcolor{teal}{unrestricted model}
+		\item<3-> \textcolor{magenta}{$R^2_r$}: the $R^2$ from the \textcolor{magenta}{restricted model}
+		\item<3-> $q$: number of restrictions
+		\item<4->\textcolor{teal}{$k$}: number of variables in the \textcolor{teal}{unrestricted model}
+		\item<5->$F$ has two sets of degrees of freedom, $q$ for numerator, $n-k-1$ for denominator 
+\end{itemize}
+
+### Calculating the $F$-statistic II
+
+\begin{equation*}
+	F_{q,n-k-1}=\cfrac{\displaystyle\frac{(R^2_u-R^2_r)}{q}}{\displaystyle\frac{(1-R^2_u)}{(n-k-1)}}
+\end{equation*}
+
+- The bigger the difference between $(R^2_u-R^2_r)$, the greater the improvement in fit by adding variables, the larger the $F$
+- This formula is actually a bit simplified, assumes **homoskedastic** errors
+    - Heteroskedasticity-robust formula a lot more complicated
+- This formula is just to give you an *intuition* of what $F$ is doing
+
+### The $F$-test Example
+
+```{r}
+# Load WAGE1 as wages
+library("foreign") # to load .dta Stata files
+wages<-read.dta("../Data/WAGE1.dta")
+
+unrestricted<-lm(wage~female+northcen+west+south, data=wages)
+restricted<-lm(wage~female, data=wages)
+```
+
+### The $F$-test Example II 
+
+```{r, ways-that-didnt-work, eval=F, echo=F}
+# leaving in other ways that the internet suggested to run an F-test (that didn't quite work!)
+anova(unrestricted, restricted)
+var.test(unrestricted, restricted)
+```
+
+\scriptsize 
+
+```{r}
+library("car") # load car package for additional regression tools
+linearHypothesis(unrestricted, c("northcen", "west", "south")) # test that northcen=west=south=0
+```
+
+### Testing a Joint Hypothesis: Are Two Coefficients Equal
+
+- Testing whether two coefficients equal one another
+
+\begin{example}
+	\begin{equation*}
+		\widehat{wage_i}=\beta_0+\beta_1 \text{Adolescent height}_i + \beta_2 \text{Adult height}_i + \beta_3 \text{Male}_i	
+	\end{equation*}
+		\begin{itemize}
+			\item<2-> Does height as an adolescent have the same effect on wages as height as an adult? 
+		\begin{equation*}
+		H_0: \beta_1=\beta_2	
+		\end{equation*}
+		\item<3-> What is the restricted regression? 
+	\onslide<4->\begin{equation*}
+		\widehat{wage_i}=\beta_0+\beta_1(\text{Adolescent height}_i + \text{Adult height}_i )+ \beta_3 \text{Male}_i	
+	\end{equation*}
+	\end{itemize}
+\end{example}
+
+### Testing a Joint Hypothesis: Are Two Coefficients Equal: Example 
+
+\scriptsize 
+
+```{r}
+# load HeightWages 
+height<-read.csv("../Data/HeightWages.csv")
+
+# make a "heights" variable as the sum of adolescent and adult height
+height <- height %>%
+  mutate(heights=height81+height85)
+
+h.unrestricted<-lm(wage96~height81+height85+male, data=height)
+h.restricted<-lm(wage96~heights+male, data=height)
+```
+
+### Testing a Joint Hypothesis: Are Two Coefficients Equal: Example II 
+
+\scriptsize 
+
+```{r}
+linearHypothesis(h.unrestricted, "height81=height85") # F-test 
+```
+
+- No. Insufficient evidence to reject $H_0$ 
+
+### Testing a Joint Hypothesis: The "Overall $F$-test"
+
+- The "overall $F$-test" tests against $H_0$: *all* regression coefficients $=0$
+- The $R^2_{restricted}=0$
+- Tests if $R^2$ of a model is statistically significantly greater than 0
+- `R` calculates automatically for every regression run (bottom line of output)
+
