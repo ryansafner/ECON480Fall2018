@@ -22,35 +22,6 @@ knitr::opts_chunk$set(echo = TRUE)
 suppressPackageStartupMessages(library("tidyverse"))
 ```
 
-# Data Wrangling
-
-### Data Types
-
-- A good time to refresh the different types of data
-    1. `Numeric`
-        - Called "`double`" if non-integer (i.e. has a decimal point)
-        - Integer if an integer
-    2. `Character`: any string of text (needs "quotes")
-    3. `Factor`: a type of character or integer that signifies membership in a category (categories are called "`levels`")
-        - Ordered factor if order/rank of levels matter (i.e. `1>2>3>4` or `freshman<sophomore<junior<senior`)
-    4. `Logical`: binary variable with values either `TRUE` or `FALSE`
-        - Not really applicable for our purposes
-    4. `Date/time`: a point in time (Year, Month, Day, Hour, Min, Sec, etc)
-        - Try to avoid if possible, if needed, ask me! 
-
-### Data Wrangling: Why Wrangle? 
-
-- **Multiple Sources of Data**: may want to merge multiple spreadsheets into one `data.frame`
-- **Un-tidy Data**: data might come in a spreadsheet in a form that is not friendly to plotting, regression, etc 
-- **Getting a Better Look**: a lot of data analysis happens before the plots and regressions, need to know *what data we have* and how it looks like
-    - May need to rescale, transform, or create new variables
-    - May want to **subset** or look at data **conditionally** for patterns, comparing groups, eliminate outliers, etc
-
-### Data Wrangling: Why Wrangle? 
-
-- This is all "stuff under the hood"
-    - Most analysis requires this but you never see it in the final paper or figures 
-- Generous researchers take raw, messy data and offer a copy of the final, cleaned, dataset along with their process of how they wrangled it
 
 # Subsetting Data 
 
@@ -322,7 +293,7 @@ df2
 ### `NA` Strategy III
 
 3. Most functions have a `NA` option built in
-    - Add "`,na.rm=TRUE`" inside any function's `()` to simply *ignore* all observations with `NA`s
+    - Add "`, na.rm=TRUE`" inside any function's `()` to simply *ignore* all observations with `NA`s
 
 ```{r}
 mean(df$x, na.rm=TRUE)
@@ -330,221 +301,13 @@ sd(df$x, na.rm=TRUE)
 sum(df$x, na.rm=TRUE)
 ```
 
-# Merging Datasets
 
-###
-
-- `rbind()` adds observation(s)-(rows) for *all* existing variables (columns)
-- `cbind()` adds variable(s)-(columns) for *all* existing observations (rows)
-
-
-# Tidy Data
-
-### Tidy Data
-
-\begin{figure}
-\includegraphics{tidydata}
-\end{figure}
-
-
-### Tidy Data
-
-```{r, load-data}
-library("knitr")
-FOTR<-read.csv("../Data/The_Fellowship_Of_The_Ring.csv")
-TTT<-read.csv("../Data/The_Two_Towers.csv")
-ROTK<-read.csv("../Data/The_Return_Of_The_King.csv")
-```
-
-### Tidy Data II: Three Datasets
-
-\columnsbegin
-
-\column{.33\textwidth}
-
-\tiny
-
-```{r, echo=FALSE}
-kable(FOTR)
-```
-
-\column{.33\textwidth}
-
-\tiny
-
-```{r, echo=FALSE}
-kable(TTT)
-```
-
-\column{.33\textwidth}
-
-\tiny
-
-```{r, echo=FALSE}
-kable(ROTK)
-```
-
-\columnsend
-
-### Tidying
-
-```{r}
-suppressPackageStartupMessages(library("tidyverse"))
-LOTR <- bind_rows(FOTR, TTT, ROTK)
-```
-
-### Tidying II
-
-```{r}
-str(LOTR)
-```
-
-### 
-
-```{r}
-LOTR
-```
-
-### Tidying III
-
-\scriptsize 
-
-```{r}
-LOTR_tidy <-
-  gather(LOTR, key = 'Gender', value = 'Words', Female, Male)
-LOTR_tidy
-```
-
-### Saving the Tidy Data
-
-```{r}
-write.csv(LOTR_tidy,"../Data/LOTR_tidy.csv")
-```
-
-### Now We Can Work With This 
-
-- Tidy data works better for analysis 
-- All `tidyverse` packages assume tidy data
-
-```{r}
-LOTR_tidy %>% 
-  count(Gender, Race, wt = Words)
-```
-
-###
-
-```{r}
-by_race_film <- LOTR_tidy %>% 
-   group_by(Film, Race) %>% 
-   summarize(Words = sum(Words))
-
-by_race_film
-```
-
-###
-
-```{r}
-p <- ggplot(by_race_film, aes(x = Film, y = Words, fill = Race))
-p + geom_bar(stat = "identity", position = "dodge") +
-  coord_flip() + guides(fill = guide_legend(reverse = TRUE))
-```
-
-# Managing Your Workflow 
+# Managing Your Workflow with `R Projects`
 
 ### Using `RProj` Projects
 
 \begin{figure}
-\includegraphics{workflowgithub.png}
+\includegraphics[height=2in]{workflowgithub.png}
+\caption*{Go to \href{http://github.com/ryansafner/workflow}{github.com/ryansafner/workflow} and follow the instructions!}
 \end{figure}
 
-
-# Advanced: Automate All The Things!
-
-### Automate all the Things!
-
-- You may find yourself in one of the following positions:
-    1. You have a very specific need that existing commands do not easily address
-    2. You are running the same task many times on different objects
-- If so, you can solve your needs with:
-    1. Writing your own `R` `function`s
-    2. Running a `for` loop 
-- Famous acronym in computer science: **DRY: Don't Repeat Yourself**
-    - increases likelihood of error
-    - easier for readers to follow your intent
-
-
-### `function`s in `R`
-
-- We've seen built in functions like `mean()`
-- You can write your own functions using the following syntax:
-
-```{r, eval=F}
-my.function<-function(inputs){
-  argument.using.inputs
-}
-```
-
-### `function`s in `R` II 
-
-- Let's make our own `mean()` function called `my.mean()`: 
-
-```{r}
-my.mean<-function(x){
-  sum(x)/length(x)
-}
-```
-
-### `function`s in `R` III 
-
-- You can then use your function on any object 
-
-```{r}
-a<-c(1,2,3,4,5)
-
-my.mean(a)
-
-b<-c(2,4,6,8,10)
-
-my.mean(b)
-```
-
-### Another Simple Example
-
-- You can even put another function as an input to a function
-
-```{r}
-power<-function(exponent){
-  function(x) x^exponent
-}
-
-# define other functions 
-square<-power(2)
-cube<-power(3)
-
-# run on examples
-
-square(6)
-cube(2)
-```
-
-### `for` Loops
-
-- `R` will execute some statement `for` each `value` in a `sequence` of values:
-
-```{r, eval=F}
-for (value in sequence){
-  statement
-}
-```
-
-### `for `Loops 
-
-- Square all the numbers in the following vector `numbers.to.square` 
-
-```{r}
-numbers.to.square<-c(1,7.5,pi,3,-57,874,91)
-
-for (i in numbers.to.square){
-  print(i^2)
-}
-```

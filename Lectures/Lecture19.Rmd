@@ -1,0 +1,398 @@
+---
+title: "Lecture 19: Difference-in-Difference Models"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "December 5, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(tidyverse) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, dev.args=list(bg="transparent"))
+```
+
+# Difference-in-Difference Models
+
+### Difference-in-Difference Models 
+
+- Often, we want to examine the consequences of a change, such as a law or policy
+    - e.g. States that implemented law $X$ saw a change in $Y$
+    - **Treatment**: States that implement law $X$
+    - **Control**: States that did not implement law $X$
+    - If we have **panel data** with observations for all states before *and* after the change:
+- Simple logic: compare difference in outcomes of treatment group (before and after treatment) with those of non-treated group (before and after same treatment period)
+
+### Difference-in-Difference Models II
+
+- The \alert{difference-in-difference model} 	(aka \alert{"diff-in-diff"}" or \alert{"DND"}) identifies treatment effect by differencing the difference pre- and post-treatment between treatment and control groups
+$$\widehat{Y_{it}}=\beta_0+\beta_1 \text{Treated}_i +\beta_2 \text{After}_{t}+\beta_3 (\text{Treated}_i * \text{After}_{t})+\epsilon_{it}$$
+    - $Treated_i= \begin{cases}1 \text{ if } i \text{ is in treatment group}\\ 0 \text{ if } i \text{ is not in treatment group}\end{cases}$
+    - $After_t= \begin{cases}1 \text{ if } t \text{ is after treatment period}\\ 0 \text{ if } t \text{ is before treatment period}\end{cases}$
+
+\onslide<4->\begin{table}\small 
+		\centering 
+		\begin{tabular}{rrrr}
+		 & Control & Treatment & \textcolor{red}{Group Diff. ($\Delta Y_i$)}\\ \toprule 
+		 Before & $\beta_0$ & $\beta_0+\beta_1$ & \textcolor{red}{$\beta_1$}\\
+		 After & $\beta_0+\beta_2$ & $\beta_0+\beta_1+\beta_2+\beta_3$ & \textcolor{red}{$\beta_1+\beta_3$}\\ \midrule 
+		 \textcolor{blue}{Time Diff. ($\Delta Y_t$)} & \textcolor{blue}{$\beta_2$}	 & \textcolor{blue}{$\beta_2+\beta_3$} & \textcolor{purple}{$\beta_3$}\\ \bottomrule 
+		 & & & \textcolor{purple}{Diff-in-diff ($\Delta_i \Delta_t Y$)}\\ 
+		\end{tabular}
+	\end{table}
+	
+### Visualizing Diff-in-Diff
+	
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+	\vspace{-0.5cm}
+	\begin{columns}
+		\begin{column}[c]{7cm}
+	\begin{figure}
+				\begin{tikzpicture}[scale=.45]\scriptsize 
+				\draw[->] (-1,0) -- (11,0) coordinate (x axis) node[right]{$time$};
+ 				\draw[->] (-1,0) -- (-1,11) coordinate (y axis) node[above]{$Y$};	
+ 				\draw<2->[fill=black](2,2)circle(0.1cm)node[below]{$C_1$};
+ 				\draw<2->[fill=black](8,4)circle(0.1cm)node[above]{$C_2$};
+ 				\draw<6->[fill=black](2,5)circle(0.1cm)node[above]{$T_1$};
+ 				\draw<6->[fill=black](8,10)circle(0.1cm)node[above]{$T_2$};
+            	\draw<3->[ultra thick, magenta] (2,2)--(8,4);
+            	\draw<5->[ultra thick, dotted, magenta] (2,2)--(8,2)--node[right]{$\hat{\beta_2}$}(8,4);
+            	\draw<7->[ultra thick, teal] (2,5)node[left]{$\hat{\beta_0}+\hat{\beta_1}$}--(8,10);
+            	\draw<9->[ultra thick, dotted, teal] (2,5)--(8,5);
+            	\draw<9->[ultra thick, dotted, magenta](8,5)--node[right]{$\hat{\beta_2}$}(8,7);
+            	\draw<9->[ultra thick, dotted, magenta](2,5)--(8,7);
+            	\draw<10->[ultra thick, blue](8,7)--node[right]{$\hat{\beta_3}$}(8,10);
+            	\draw (2,0.25)--(2,-0.25)node[below]{$t_{Before}$};
+            	\draw (8,0.25)--(8,-0.25) node[below]{$t_{After}$};
+            	\draw<8->[thick, dotted](2,2)--node[left]{$\hat{\beta_1}$}(2,5);
+            	\draw<4->[thick, dotted](2,0)--(2,2)node[left]{\textcolor{magenta}{$\hat{\beta_0}$}};
+ 			\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+		\begin{column}[c]{8cm}
+		\begin{itemize}\small 
+			\item<7-> \textcolor{teal}{Treatment ($Treated=1$) group}
+			\item<3-> \textcolor{magenta}{Control ($Treated=0$) group}
+			\item<4->$\hat{\beta_0}$: value of $Y$ for control before treatment 
+			\item<8->$\hat{\beta_1}$: difference between treatment and control (before treatment)
+			\item<5->$\hat{\beta_2}$: time difference (for control group)
+			\item<10->\textcolor{blue}{$\hat{\beta_3}$}: difference-in-difference: effect of treatment    
+		\end{itemize}
+		\end{column}
+	\end{columns}	
+
+### Visualizing and Comparing Group Means
+
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+\vspace{-0.5cm}
+\begin{columns}
+		\begin{column}[c]{7cm}
+	\begin{figure}
+				\begin{tikzpicture}[scale=.45]\scriptsize 
+				\draw[->] (-1,0) -- (11,0) coordinate (x axis) node[right]{$time$};
+ 				\draw[->] (-1,0) -- (-1,11) coordinate (y axis) node[above]{$Y$};	
+ 				\draw[fill=black](2,2)circle(0.1cm)node[below]{$C_1$};
+ 				\draw[fill=black](8,4)circle(0.1cm)node[above]{$C_2$};
+ 				\draw[fill=black](2,5)circle(0.1cm)node[above]{$T_1$};
+ 				\draw[fill=black](8,10)circle(0.1cm)node[above]{$T_2$};
+            	\draw[ultra thick, magenta] (2,2)--(8,4);
+            	\draw[ultra thick, dotted, magenta] (2,2)--(8,2)--(8,4);
+            	\draw[ultra thick, teal] (2,5)--(8,10);
+            	\draw[ultra thick, dotted, teal] (2,5)--(8,5);
+            	\draw[ultra thick, dotted, magenta](8,5)--(8,7);
+            	\draw[ultra thick, dotted, magenta](2,5)--(8,7);
+            	\draw[ultra thick, teal, dotted](8,7)--(8,10);
+            	\draw (2,0.25)--(2,-0.25)node[below]{$t_{Before}$};
+            	\draw (8,0.25)--(8,-0.25) node[below]{$t_{After}$};
+            	\draw[thick, dotted](2,0)--(2,2);
+            	\draw<2-> (2,2)node[left]{$\hat{\beta_0}$};
+            	\draw<3-> (8,4)node[right]{$\hat{\beta_0}+\hat{\beta_2}$};
+            	\draw<4-> (2,5)node[left]{$\hat{\beta_0}+\hat{\beta_1}$};
+            	\draw<5-> (8,10)node[right]{\tiny $\hat{\beta_0}+\hat{\beta_1}+\hat{\beta_2}+\hat{\beta_3}$};
+            	\draw<6->[color=blue, thick] (8,7)--(8,10);
+ 			\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+		\begin{column}[c]{8cm}
+		\begin{itemize}\small 
+			\item<2-> $Y$ for Control Group Before: $\hat{\beta_0}$
+			\item<3-> $Y$ for Control Group After: $\hat{\beta_0}+\hat{\beta_2}$
+			\item<4-> $Y$ for Treatment Group Before: $\hat{\beta_0}+\hat{\beta_1}$
+			\item<5-> $Y$ for Treatment Group After: $\hat{\beta_0}+\hat{\beta_1}+\hat{\beta_2}+\hat{\beta_3}$
+			\item<6-> Treatment Effect: \textcolor{blue}{$\hat{\beta_3}$}
+		\end{itemize}
+		\end{column}
+\end{columns}	
+
+### Comparing Group Means (Again)
+
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+
+\begin{table}\small 
+		\centering 
+		\begin{tabular}{rrrr}
+		 & Control & Treatment & \textcolor{red}{Group Diff. ($\Delta Y_i$)}\\ \toprule 
+		 Before & $\beta_0$ & $\beta_0+\beta_1$ & \textcolor{red}{$\beta_1$}\\
+		 After & $\beta_0+\beta_2$ & $\beta_0+\beta_1+\beta_2+\beta_3$ & \textcolor{red}{$\beta_1+\beta_3$}\\ \midrule 
+		 \textcolor{blue}{Time Diff. ($\Delta Y_t$)} & \textcolor{blue}{$\beta_2$}	 & \textcolor{blue}{$\beta_2+\beta_3$} & \textcolor{purple}{$\beta_3$}\\ \bottomrule 
+		 & & & \textcolor{purple}{Diff-in-diff ($\Delta_i \Delta_t Y$)}\\ 
+		\end{tabular}
+\end{table}
+
+### Key Assumption About Counterfactual
+
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+\vspace{-0.5cm}
+\begin{columns}
+		\begin{column}[c]{7cm}
+	\begin{figure}
+				\begin{tikzpicture}[scale=.45]\scriptsize 
+				\draw[->] (-1,0) -- (11,0) coordinate (x axis) node[right]{$time$};
+ 				\draw[->] (-1,0) -- (-1,11) coordinate (y axis) node[above]{$Y$};	
+ 				\draw[fill=black](2,2)circle(0.1cm)node[below]{$C_1$};
+ 				\draw[fill=black](8,4)circle(0.1cm)node[above]{$C_2$};
+ 				\draw[fill=black](2,5)circle(0.1cm)node[above]{$T_1$};
+ 				\draw[fill=black](8,10)circle(0.1cm)node[above]{$T_2$};
+            	\draw[ultra thick, magenta] (2,2)--(8,4);
+            	\draw[ultra thick, dotted, magenta] (2,2)--(8,2)--(8,4);
+            	\draw[ultra thick, teal] (2,5)--(8,10);
+            	\draw[ultra thick, dotted, teal] (2,5)--(8,5);
+            	\draw[ultra thick, dotted, magenta](8,5)--(8,7);
+            	\draw[ultra thick, dotted, magenta](2,5)--(8,7);
+            	\draw[ultra thick, teal, dotted](8,7)--(8,10);
+            	\draw (2,0.25)--(2,-0.25)node[below]{$t_{Before}$};
+            	\draw (8,0.25)--(8,-0.25) node[below]{$t_{After}$};
+            	\draw[thick, dotted](2,0)--(2,2);
+ 			\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+		\begin{column}[c]{8cm}
+		\begin{itemize}\small 
+			\item<2-> Key assumption in DND models is that the time trend is parallel
+			\item<3-> Treatment \& control groups must be similar over time \emph{except for treatment}
+			\item<4-> \textcolor{purple}{Counterfactual} if the treatment group were \emph{not} treated, they would change the same as control group over time $\hat{\beta_2}$
+		\end{itemize}
+		\end{column}
+	\end{columns}	
+
+### Key Assumption about Counterfactual II
+
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+\vspace{-0.5cm}
+\begin{columns}
+		\begin{column}[c]{7cm}
+	\begin{figure}
+				\begin{tikzpicture}[scale=.45]\scriptsize 
+				\draw[->] (-1,0) -- (11,0) coordinate (x axis) node[right]{$time$};
+ 				\draw[->] (-1,0) -- (-1,11) coordinate (y axis) node[above]{$Y$};	
+ 				\draw[fill=black](2,2)circle(0.1cm)node[below]{$C_1$};
+ 				\draw[fill=black](8,4)circle(0.1cm)node[above]{$C_2$};
+ 				\draw[fill=black](2,5)circle(0.1cm)node[above]{$T_1$};
+ 				\draw[fill=black](8,10)circle(0.1cm)node[above]{$T_2$};
+            	\draw[ultra thick, magenta] (2,2)--(8,4);
+            	\draw[ultra thick, dotted, magenta] (2,2)--(8,2)--(8,4);
+            	\draw[ultra thick, teal] (2,5)--(8,10);
+            	\draw[ultra thick, dotted, teal] (2,5)--(8,5);
+            	\draw[ultra thick, dotted, magenta](8,5)--(8,5.5);
+            	\draw[ultra thick, dotted, magenta](2,5)--(8,5.5);
+            	\draw[ultra thick, teal, dotted](8,5.5)--(8,10);
+            	\draw (2,0.25)--(2,-0.25)node[below]{$t_{Before}$};
+            	\draw (8,0.25)--(8,-0.25) node[below]{$t_{After}$};
+            	\draw[thick, dotted](2,0)--(2,2);
+ 			\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+		\begin{column}[c]{8cm}
+		\begin{itemize}\small 
+			\item<2-> If time trend is different between treatment and control groups
+			\item<3-> Treatment effect may be over/under-estimated!  
+		\end{itemize}
+		\end{column}
+	\end{columns}	
+
+### Diff-in-Diff Example
+
+\begin{example}
+	In 1993 Georgia initiated a HOPE scholarship program to let state residents with at least a B average in high school attend public college in Georgia for free. Did it increase college enrollment?  
+	\begin{itemize}
+		\item<2-> Dynarski, Susan (2000), "Hope for Whom? Financial Aid for the Middle Class and Its Impact on College Attendance" micro-level data on 4,291 young individuals: 
+		\begin{itemize}
+			\item<3-> InCollege$_{it}=\begin{cases}1 \text{ if } i \text{ is in college during year }t\\ 0 \text{ if } i \text{ is not in college during year }t\\ \end{cases}$
+			\item<4-> Georgia$_i=\begin{cases}1 \text{ if } i \text{ is a Georgia resident}\\ 0 \text{ if } i \text{ is not a Georgia resident}\\ \end{cases}$
+			\item<5-> After$_t=\begin{cases}1 \text{ if } t \text{ is after 1992}\\ 0 \text{ if } t \text{ is after 1992}\\ \end{cases}$
+			\item<6-> \textcolor{magenta}{Note: With a dummy \emph{dependent} variable ($Y$), coefficients estimate the probability $Y=1$, i.e. the \emph{probability} a person is enrolled in college}
+		\end{itemize} 
+  \end{itemize}
+\end{example}
+
+### Diff-in-Diff Example II
+
+\begin{example}
+	In 1993 Georgia initiated a HOPE scholarship program to let state residents with at least a B average in high school attend public college in Georgia for free. Did it increase college enrollment?  
+\begin{itemize}
+		\item<2-> We can use a diff-in-diff model to measure the effect of HOPE scholarship on enrollments 
+		\item<3-> Georgia and nearby states: if not for HOPE, changes should be the same over time
+		\item<4-> Treatment period: 1992
+		\item<5-> Treatment: Georgia 
+	\end{itemize}
+	\begin{align*}
+	\only<6->{\Delta_i \Delta_t Enrolled &= (\text{GA}_{after}-\text{GA}_{before})-(\text{neighbors}_{after}-\text{neighbors}_{before})\\}
+	\only<7->{\widehat{Enrolled_{it}} &= \beta_0+\beta_1 Georgia_{it}+\beta_2 After_{it}+\beta_3 Georgia_{it} \times After_{it}\\}
+	\end{align*}
+\end{example}
+
+### Diff-in-Diff Example III
+
+```{r, echo=F}
+HOPE<-read.csv("../Data/HOPE.csv")
+```
+
+\columnsbegin
+
+\column{.5\textwidth}
+
+\tiny 
+
+```{r}
+DND<-lm(InCollege~Georgia+After+AfterGeorgia, data=HOPE)
+summary(DND)
+```
+
+\column{.5\textwidth}
+
+$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{i}-0.004 After_{t}+0.089 Georgia_{i} \times After_{t}$$
+
+\columnsend
+
+### Diff-in-Diff Example: Interpreting Coefficients
+
+$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{i}-0.004 After_{t}+0.089 Georgia_{i} \times After_{t}$$
+
+- $\beta_0$: A non-Georgian before 1992 was 40.6\% likely to be a college student
+- $\beta_1$: Georgians are 10.5\% less likely to be college students than neighboring states
+- $\beta_2$: After 1992, young Americans are 0.4\% less likely to be college students
+- $\beta_3$: After 1992, Georgians are 8.9\% more likely to enroll in colleges than neighboring states
+-\alert{Treatment effect: HOPE increased enrollment likelihood by 8.9\%}
+
+### Diff-in-Diff Example: Comparing Group Means 
+
+$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{i}-0.004 After_{t}+0.089 Georgia_{i} \times After_{t}$$
+
+- A group mean for a dummy $Y$ is $E[Y=1]$, i.e. the probability a student is enrolled: 
+    - **Non-Georgian enrollment probability pre-1992**: $\beta_0=0.406$
+		- **Georgian enrollment probability pre-1992**: $\beta_0+\beta_1=0.406-0.105=0.301$
+		- **Non-Georgian enrollment probability post-1992**: $\beta_0+\beta_2=0.406-0.004=0.402$
+		- **Georgian enrollment probability post-1992**: $\beta_0+\beta_1+\beta_2+\beta_3=0.406-0.105-0.004+0.089=0.386$
+
+### Diff-in-Diff Example: Comparing Group Means in `R`
+
+\columnsbegin
+
+\column{.5\textwidth}
+
+\scriptsize 
+```{r}
+# group mean for non-Georgian before 1992
+HOPE %>%
+  filter(Georgia==0 & After==0) %>%
+  summarize(prob=mean(InCollege))
+
+# group mean for Georgian before 1992
+HOPE %>%
+  filter(Georgia==1 & After==0) %>%
+  summarize(prob=mean(InCollege))
+```
+
+\column{.5\textwidth}
+
+\scriptsize 
+
+```{r}
+# group mean for non-Georgian AFTER 1992
+HOPE %>%
+  filter(Georgia==0 & After==1) %>%
+  summarize(prob=mean(InCollege))
+
+# group mean for Georgian AFTER 1992
+HOPE %>%
+  filter(Georgia==1 & After==1) %>%
+  summarize(prob=mean(InCollege))
+```
+
+\columnsend
+
+### Diff-in-Diff Example Summary
+
+$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{it}-0.004 After_{it}+0.089 Georgia_{it} \times After_{it}$$
+
+\begin{table}\small 
+		\centering 
+		\begin{tabular}{rrrr}
+		 & Neighbors & Georgia & \textcolor{red}{Group Diff. ($\Delta Y_i$)}\\ \toprule 
+		 Before & $0.406$ & $0.301$ & \textcolor{red}{$-0.105$}\\
+		 After & $0.402$ & $0.386$ & \textcolor{red}{$0.016$}\\ \midrule 
+		 \textcolor{blue}{Time Diff. ($\Delta Y_t$)} & \textcolor{blue}{$-0.004$}	& \textcolor{blue}{$0.085$} & \textcolor{purple}{$0.089$}\\ \bottomrule 
+		 & & & \textcolor{purple}{Diff-in-diff ($\Delta \Delta Y$)}\\ 
+		\end{tabular}
+	\end{table}
+
+\onslide<2->\begin{align*}
+	\Delta_i \Delta_t Enrolled &= (\text{GA}_{after}-\text{GA}_{before})-(\text{neighbors}_{after}-\text{neighbors}_{before})\\
+	&=(0.386-0.301)-(0.402-0.406)\\
+	&=(\text{\textcolor{blue}{0.085}})-(-\text{\textcolor{blue}{0.004}})\\
+	&=\text{\textcolor{purple}{0.089}}\\
+	\end{align*}
+
+### Diff-in-Diff Time Graph
+
+```{r}
+HOPE %>%
+  ggplot(data=., aes(x=After, y=InCollege, color=factor(Georgia)))+
+  geom_smooth(method="lm", se=FALSE)+
+  #scale_y_continuous(breaks=c(0,1,0.125), limits=c(0.3,0.5))+
+  scale_x_discrete(breaks=seq(0,1,1), labels=c("Before", "After"), name="Before or After HOPE")+
+  guides(color=guide_legend(title="Georgia"))+ylab("Probability of Being Enrolled in College")
+```
+
+```{r, experiment, eval=F}
+HOPE %>%
+  mutate(After=as.factor(After)) %>% 
+  ggplot(data=., aes(x=factor(After), y=InCollege), color=factor(Georgia))+
+  geom_smooth(method="lm", se=FALSE)+
+  scale_y_continuous(breaks=c(0,1,0.125), limits=c(0.3,0.5))+
+  scale_x_discrete(breaks=seq(0,1,1), labels=c("Before", "After"), name="Before or After HOPE")+
+  guides(color=guide_legend(title="Georgia"))+ylab("Probability of Being Enrolled in College")
+```
+
+```{r, experiment1, eval=F}
+HOPE %>%
+  do(lm(InCollege~Georgia+After+AfterGeorgia, data=.) %>%
+  predict %>%
+  data_frame(Pred=.) %>%
+  bind_cols(HOPE))
+  ggplot(data=HOPE, aes(Year, y=Pred))+
+  geom_line(aes(color=factor(Georgia)))
+  #scale_y_continuous(breaks=c(0,1,0.125), limits=c(0.3,0.5))+
+  #scale_x_discrete(breaks=seq(0,1,1), labels=c("Before", "After"), name="Before or After HOPE")+
+  #guides(color=guide_legend(title="Georgia"))+ylab("Probability of Being Enrolled in College")
+
+```
