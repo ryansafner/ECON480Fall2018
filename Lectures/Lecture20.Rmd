@@ -1,0 +1,350 @@
+---
+title: "Lecture 20: Instrumental Variables Models"
+subtitle: "ECON 480 - Econometrics - Fall 2018"
+author: "Ryan Safner"
+date: "December 5, 2018"
+output: 
+  beamer_presentation:
+    #theme: "metropolis"
+    incremental: true 
+    fig_caption: yes
+    toc: true 
+    slide_level: 3
+    includes:
+      in_header: header.tex
+    keep_tex: no 
+    latex_engine: xelatex #required for Fira Sans font to render properly 
+
+classoption: aspectratio=169
+#fontsize:bigger
+---
+
+```{r setup, include=FALSE}
+# For making transparent ggplot2 graphs, from https://gist.github.com/cboettig/5600558 
+
+# Set plotting to bw plot default, but with transparent background elements.  
+# Note transparency requires the panel.background, plot.background, and device background all be set!
+library(tidyverse) 
+theme_set(theme_bw(base_size=12))
+theme_update(panel.background = element_rect(fill = "transparent", colour = NA),
+             plot.background = element_rect(fill = "transparent", colour = NA))
+knitr::opts_chunk$set(warning=FALSE, message=FALSE, dev.args=list(bg="transparent"))
+```
+
+# Instrumental Variables Models
+
+### Advanced Identification Strategies
+
+- **Endogeneity** remains the hardest (and most common) econometric challenge
+- Additionally, there may be **reverse causation** or **simultaneous causation** between $X \iff Y$
+- DND/Fixed Effects are one strategy to remove endogeneity
+    - *Requires* panel data
+    - Can't use time-varying omitted variables that are correlated with regressors
+- Another strategy to is to find some source of exogenous variation that removes the endogeneity of a variable, using that source as a \alert{instrumental variable} 
+  
+### Advanced Identification Strategies
+
+\begin{figure}
+  \includegraphics[height=2.5in]{ivhot}
+\end{figure}
+
+### Understanding Instrumental Variables
+
+\begin{columns}
+		\begin{column}[c]{8cm}
+	\begin{figure}
+		\begin{tikzpicture}\tiny 
+			\node<2->[rectangle, ultra thick, draw, text width=2.5em, minimum height=4em, text centered, rounded corners, blue](Y){$Y$};
+			\node<3->[rectangle, ultra thick, draw, text width=2.5em, minimum height=4em, text centered, rounded corners, blue, below of=Y, node distance=3cm](X){$X$};
+			\node<4->[rectangle, ultra thick, dashed, draw, text width=2.5em, minimum height=4em, text centered, rounded corners, red, right of=X, node distance=3cm](Z){$Z$};
+			\draw<3->[<->, thick, teal](X) --node[below]{$corr(X,Y)\neq 0$} (Y);
+			\draw<5->[<->, thick, teal](Y) --node[right]{$corr(Y,Z)\neq0$} (Z);
+			\draw<6->[<->, thick, teal](X)--node[below]{$corr(X,z)\neq 0$} (Z);
+			\node<7->[rectangle, ultra thick, dashed, draw, text width=2.5em, minimum height=4em, text centered, rounded corners, black, left of=X, node distance=3cm](I){$IV$};
+			\draw<9->[<->, thick, teal](X) --node[below]{$corr(X,IV)\neq 0$} (I);
+			\draw<8->[red, dotted, thick, magenta](Y) --node[left]{$corr(Y,IV)=0$} (I);
+		\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+		\begin{column}[c]{7cm}
+		\begin{itemize}\small 
+			\item<3-> $X$ and $Y$ correlated
+			\item<4-> \textcolor{red}{Omitted Variable, $Z$}
+			\begin{itemize}
+				\item<5-> $Z$ explains $Y$\\
+				 ($Z$ in $\epsilon$)
+				\item<6-> $Z$ \& $X$ correlated\\
+				 ($X$ endogenous) 
+			\end{itemize} 
+			\item<7-> \textbf{Instrumental Variable, $IV$}
+			\begin{itemize}
+				\item<8-> $IV$ doesn't explain $Y$ \\
+				($IV$ \emph{not} $\epsilon$)
+				\item<9-> $IV$ \& $X$ correlated \\
+				($X$ exogenous) 
+			\end{itemize} 
+		\end{itemize}
+		\end{column}
+	\end{columns}	
+
+### Understanding Instrumental Variables II
+
+\begin{columns}
+		\begin{column}[c]{8cm}
+	\begin{figure}
+		\begin{tikzpicture}\tiny 
+			\node[rectangle, ultra thick, draw, text width=2.5em, minimum height=4em, text centered, rounded corners, blue](Y){$Y$};
+			\node[rectangle, ultra thick, draw, text width=2.5em, minimum height=4em, text centered, rounded corners, blue, below of=Y, node distance=3cm](X){$X$};
+			\node[rectangle, ultra thick, dashed, draw, text width=2.5em, minimum height=4em, text centered, rounded corners, black, left of=X, node distance=3cm](I){$IV$};
+			\draw[<->, thick](X) --(Y);
+			\draw<2->[<->, thick, teal](X) --node[below]{$corr(X,IV)\neq 0$} (I);
+			\draw<3->[dotted, thick, magenta](Y) --node[left]{$corr(Y,IV)=0$} (I);
+		\end{tikzpicture}	
+	\end{figure}
+		\end{column}
+		\begin{column}[c]{7cm}
+		\begin{itemize}\small 
+			\item \textbf{Variable $IV$} is a good \textbf{instrument} for $X$ if it satisfies two conditions: 
+			\begin{enumerate}
+				\item<2-> \textcolor{teal}{Inclusion Condition}:\\ $IV$ statistically significantly explains $X$
+				\item<3-> \textcolor{magenta}{Exclusion Condition}:\\ $IV$ uncorrelated with $\epsilon$, so doesn't directly affect $Y$	
+			\end{enumerate}
+			\item<4-> $IV$ \textbf{only} affects $Y$ \textbf{through} $X$ 
+		\end{itemize} 
+		\end{column}
+	\end{columns}	
+
+### Example
+
+\begin{example}
+	How do police affect crime? 
+	\begin{equation*}
+	Crime_{it}=\beta_0+\beta_1 Police_{it}+\epsilon_{it}	
+	\end{equation*}
+	\begin{itemize}[<+->]
+		\item Police$\rightarrow$crime (more police reduces crime)
+		\item Crime$\rightarrow$Police (high crime areas tend to have more police)	
+		\item $corr(Police, \epsilon)\neq 0$: population, income per capita, drug use, recessions, demography, etc.
+	\end{itemize}
+	\end{example}
+
+### Example: Levitt (2002)
+
+\begin{example}
+\begin{itemize}[<+->]
+		\item Levitt (2002): use number of firefighters as an \alert{instrumental variable}
+		\item Some police are hired for \emph{endogenous} reasons (respond to crime, changes in economy, demographics, etc)
+		\item Some police are hired for \emph{exogenous} reasons (city just gains a larger budget and so hires more police)
+		\begin{itemize}
+				\item These exogenous dynamics affect the number of firefighters in a city---\emph{not} due to crime, but due to excess budgets, etc. 
+		\end{itemize}
+		\item Isolate that portion of variation in Police that covaries with Firefighters for those \emph{exogenous} changes (i.e. for reasons \emph{other} than crime or its causes), see how \emph{these} changes in Police affect crime 
+	\end{itemize} \medskip \tiny 
+	Levitt, Steven D, (2002), ``Using Electoral Cycles in Police Hiring to Estimate the Effect of Police on Crime: Reply,'' \emph{American Economic Review} 92(4): 1244-1250
+\end{example}
+
+# Two-Stage Least Squares 
+
+### Two-Stage Least Squares
+
+- We use an instrument via \alert{Two Stage Least Squares (2SLS)} method:
+- Our main equation is\footnote{Consider for convenience $X_{2i}$ representing other control variables}:
+$$\widehat{Y_i}=\widehat{\beta_0}+\widehat{\beta_1}X_{1i}+\widehat{\beta_2}X_{2i}+ \widehat{\epsilon_i}$$
+- We proceed with the **First Stage** using the $IV$ to explain $X_{1i}$ in an **auxiliary regression**: 
+$$\textcolor<4->{magenta}{\widehat{X_{1i}}}=\widehat{\gamma_0}+\widehat{\gamma_1}IV_i+\widehat{\gamma_2}X_{2i}+ \widehat{\nu_i}$$
+- Then substitute in the *predicted* value of $\widehat{X_{1i}}$ for the original regression in the **Second Stage**:
+$$\widehat{Y_i}=\widehat{\beta_0}+\widehat{\beta_1}\textcolor{magenta}{\widehat{X_{1i}}}+\widehat{\beta_2}X_{2i}+ \widehat{\epsilon_i}$$
+
+### Conditions for a Valid Instrument
+
+- Recall, an IV needs to pass: 
+    1. **Inclusion Condition**:$IV$ statistically significantly explains $X$
+    2. **Exclusion Condition**: $IV$ uncorrelated with $\epsilon$, doesn't directly affect $Y$	
+- We test inclusion condition by examining the First Stage regression: 
+$$\widehat{X_{1i}}=\widehat{\gamma_0}+\widehat{\gamma_1}IV_i+\widehat{\gamma_2}X_{2i}+ \widehat{\nu_i}$$
+- See if $\gamma_1$ on $IV_i$ is statistically significant (ROT: $|t$-statistic$| > 3$)
+- Always report the first stage regression results! 
+
+### Conditions for a Valid Instrument II
+
+- **There is no statistical test for the exclusion restriction!**
+    - Hardest condition to meet
+    - Must give a convincing argument for why $corr(IV, \epsilon)=0$; $IV \nRightarrow Y$; and that $IV$ \emph{only} affects $Y$ indirectly \emph{through} $X$
+    - If $corr(IV, \epsilon) \neq 0$, we would want $IV$ as a control in the regression (omitted variable bias!)
+    - If $corr(IV, \epsilon) =0$, can't include in the Second Stage regression:
+$$\widehat{Y_i}=\widehat{\beta_0}+\widehat{\beta_1}+\widehat{X_{1i}}+\widehat{\beta_2}X_{2i}+ \widehat{\beta_3}IV_i+\widehat{\epsilon_i}$$
+$\widehat{X_{1i}}$ is a linear function of $X_{2i}$ and $IV_i$, perfect multicollinearity! 
+
+### Instrumental Variables 2SLS Example
+
+\begin{example} 
+	\begin{itemize}
+		\item Levitt's (2002) paper, First Stage: 
+		\begin{equation*}
+		\widehat{ln(Police_{ct})}=\widehat{\gamma_1}ln(Firefighters_{ct})+\alpha_c + \tau_t+ \widehat{\gamma}Controls_{ct}+\nu_{ct}
+		\end{equation*}
+subscripts for city $c$ at year $t$, two-way fixed effects: $\alpha_c$ city fixed-effects, $\tau_t$ year fixed-effects
+		\item<2-> \small Second Stage: 
+		\begin{equation*}
+		\widehat{ln(Crime_{ct})}=\widehat{\beta_1} \widehat{ln(Police_{c{t-1}})}+\alpha_c + \tau_t+\widehat{\beta} Controls_{ct}+\epsilon_{ct}	
+		\end{equation*}
+		\scriptsize lag for police (last year's police force determines this year's crime rates) 
+	\end{itemize}
+\end{example} 
+
+### Instrumental Variables 2SLS Example II
+
+\begin{example} 
+	\begin{figure}
+		\includegraphics[height=2.5in]{levitt2002a}	
+	\end{figure}
+	\begin{itemize}\small 
+		\item Instrument is statistically significant ($t \approx 5$), inclusion condition met 
+		\item A 1\% increase in firefighters is associated with a 0.206-0.251\% increase in police  
+	\end{itemize}
+\end{example} 
+
+### Instrumental Variables 2SLS Example II
+
+\begin{figure}
+		\includegraphics[height=2.5in]{levitt2002b}	
+	\end{figure}
+
+- A 1\% increase in police (last year) leads to a 0.435\% decrease in violent crimes, 0.501\% decrease in property crimes 
+
+### Acemoglu, Johnson, and Robinson (2001): Another Famous IV Model
+
+\begin{figure}
+        \includegraphics[height=2in]{europeanempires}
+        \caption*{European Empires at their maximal extents (c.1500-c.1900)}    
+\end{figure}
+	    \tiny Acemoglu, Daron, Simon Johnson, and James A Robinson, (2001), "The Colonial Origins of Comparative Development: An Empirical Investigation," *American Economic Review* 91(5): 1369-1401
+	    
+### Acemoglu, Johnson, and Robinson (2001): Theoretical Argument
+
+- Acemoglu, Johnson, and Robinson (2001): countries' wealth or poverty today depends strongly on how they were colonized.
+- Europeans set up one of two types of colonies depending on the disease environment of the country:
+    - **"Extractive institutions"**: Europeans facing high mortality rates set up extractive colonies primarily to exploit indigenous population to mine resources to ship back to Europe
+    - **"Inclusive institutions"**: Europeans facing low mortality rates set up inclusive colonies primarily for settlement and promoting open access to trade and politics
+- Those initial colonies carried through to institutions in present countries; inclusive colonies grew wealthy, extractive colonies remain stagnant 
+
+### Acemoglu, Johnson, and Robinson (2001): Identification Strategy
+
+- Instrument: Settler Mortality in 1500
+- **Inclusion Restriction**: Settler mortality in 1500 determines risk of expropriation today
+- **{Exclusion Restriction**: Settler mortality in 1500 **does not** affect Present GDP
+    - Settler mortality in 1500 **only** affects Present GDP **through** institutions determined by historical path set by settler mortality rates  
+
+\begin{figure}
+        \includegraphics[height=1in]{ajr3}    
+\end{figure}
+
+### Acemoglu, Johnson, and Robinson (2001): Model 
+
+- First Stage:  	
+$$\widehat{\text{Expropriation Risk}_i}=\widehat{\gamma_0}+\widehat{\gamma_1}ln(\text{Settler Mortality in 1500}_i)+\widehat{\gamma}Controls+\nu_i$$
+- Second Stage:
+$$\widehat{\text{ln(Present GDP per capita)}}=\hat{\beta_0}+\hat{\beta_1}\widehat{\text{Expropriation Risk}_i}+\cdots+\hat{\beta_k}\text{Controls}+\epsilon_i$$
+
+### Acemoglu, Johnson, and Robinson (2001): Relationship Between $Y$ and $IV$
+
+\begin{figure}
+		\includegraphics[height=2.5in]{ajr1}	
+\end{figure}
+
+### Acemoglu, Johnson, and Robinson (2001): Relationship Between $X$ and $Y$
+
+\begin{figure}
+		\includegraphics[height=2.5in]{ajr5}	
+\end{figure}
+
+### Acemoglu, Johnson, and Robinson (2001): Relationship Between $X$ and $IV$
+
+\begin{figure}
+		\includegraphics[height=2.5in]{ajr6}	
+\end{figure}
+
+### Acemoglu, Johnson, and Robinson (2001): Results
+
+\begin{figure}
+		\includegraphics[height=3in]{ajr7}	
+\end{figure}
+
+# An Example of 2SLS in `R`
+
+### An Example of 2SLS in `R`
+
+\begin{example}
+	Does economic growth reduce the odds of civil conflict? Data (`RainIV.dta` on Blackboard) on 41 African countries between 1981-1999.
+	\begin{itemize}
+		\item \texttt{Internalconflict}: =1 if civil war ($<25$ deaths), else =0
+		\item \texttt{LaggedGDPGrowth}: 1st lag of GDP growth
+		\item \texttt{LagggedRainfallGrowth}: 1st lag of change in mm of rain from previous year
+		\item Other controls
+	\end{itemize}
+\end{example}
+
+### An Example of 2SLS in `R`: Simple Regression
+
+```{r, echo=F}
+library("readstata13")
+rain<-read.dta13("../Data/RainIV.dta")
+```
+
+\tiny 
+
+```{r}
+# normal regression
+reg1<-lm(InternalConflict~LaggedGDPGrowth, data=rain)
+summary(reg1)
+```
+
+### An Example of 2SLS in `R`: Simple Regression with Controls
+
+\tiny 
+
+```{r}
+# normal regression with controls
+reg2<-lm(InternalConflict~LaggedGDPGrowth+InitialGDP+Democracy+Mountains+EthnicFrac+ReligiousFrac, data=rain)
+summary(reg2)
+```
+
+### The First Stage
+
+- Use `LaggedRainfallGrowth` as an instrument for `LaggedGDPGrowth`
+    - **Inclusion restriction**: $corr(LaggedGDPGrowth, LaggedRainfallGrowth) \neq 0$
+    - **Exclusion restriction**: $corr(LaggedGDPGrowth, \epsilon) = 0$
+
+\scriptsize
+
+```{r}
+rain.corr<-rain %>%
+  select(InternalConflict, LaggedGDPGrowth, LaggedRainfallGrowth)
+
+cor(rain.corr)
+```
+
+### The First Stage II
+
+\tiny 
+
+```{r}
+# normal regression with controls
+firststage<-lm(LaggedGDPGrowth~LaggedRainfallGrowth+InitialGDP+Democracy+Mountains+EthnicFrac+ReligiousFrac, data=rain)
+summary(firststage)
+```
+
+### From First to Second Stage in `R`
+
+\tiny 
+
+```{r}
+# save predicted values of first stage 
+gdp.hat<-fitted.values(firststage)
+
+# run second stage regression using gdp.hat instead of gdp
+secondstage<-lm(InternalConflict~gdp.hat+InitialGDP+Democracy+Mountains+EthnicFrac+ReligiousFrac, data=rain)
+summary(secondstage)
+
+```
+

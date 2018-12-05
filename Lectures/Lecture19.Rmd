@@ -44,10 +44,18 @@ knitr::opts_chunk$set(warning=FALSE, message=FALSE, dev.args=list(bg="transparen
 
 ### Difference-in-Difference Models II
 
+\begin{figure}
+  \includegraphics[height=2.5in]{dndhot}
+\end{figure}
+
+### Difference-in-Difference Models III
+
 - The \alert{difference-in-difference model} 	(aka \alert{"diff-in-diff"}" or \alert{"DND"}) identifies treatment effect by differencing the difference pre- and post-treatment between treatment and control groups
 $$\widehat{Y_{it}}=\beta_0+\beta_1 \text{Treated}_i +\beta_2 \text{After}_{t}+\beta_3 (\text{Treated}_i * \text{After}_{t})+\epsilon_{it}$$
     - $Treated_i= \begin{cases}1 \text{ if } i \text{ is in treatment group}\\ 0 \text{ if } i \text{ is not in treatment group}\end{cases}$
     - $After_t= \begin{cases}1 \text{ if } t \text{ is after treatment period}\\ 0 \text{ if } t \text{ is before treatment period}\end{cases}$
+
+\vspace{-0.5cm}
 
 \onslide<4->\begin{table}\small 
 		\centering 
@@ -62,7 +70,7 @@ $$\widehat{Y_{it}}=\beta_0+\beta_1 \text{Treated}_i +\beta_2 \text{After}_{t}+\b
 	
 ### Visualizing Diff-in-Diff
 	
-$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i * \text{After}_{t})+\hat{\epsilon_{it}}$$
 	\vspace{-0.5cm}
 	\begin{columns}
 		\begin{column}[c]{7cm}
@@ -102,7 +110,7 @@ $$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \
 
 ### Visualizing and Comparing Group Means
 
-$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i * \text{After}_{t})+\hat{\epsilon_{it}}$$
 \vspace{-0.5cm}
 \begin{columns}
 		\begin{column}[c]{7cm}
@@ -145,7 +153,7 @@ $$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \
 
 ### Comparing Group Means (Again)
 
-$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i * \text{After}_{t})+\hat{\epsilon_{it}}$$
 
 \begin{table}\small 
 		\centering 
@@ -160,7 +168,7 @@ $$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \
 
 ### Key Assumption About Counterfactual
 
-$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i * \text{After}_{t})+\hat{\epsilon_{it}}$$
 \vspace{-0.5cm}
 \begin{columns}
 		\begin{column}[c]{7cm}
@@ -196,7 +204,7 @@ $$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \
 
 ### Key Assumption about Counterfactual II
 
-$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i \times \text{After}_{t})+\hat{\epsilon_{it}}$$
+$$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \text{After}_{t}+\hat{\beta_3} (\text{Treated}_i * \text{After}_{t})+\hat{\epsilon_{it}}$$
 \vspace{-0.5cm}
 \begin{columns}
 		\begin{column}[c]{7cm}
@@ -256,7 +264,7 @@ $$\widehat{Y_{it}}=\hat{\beta_0}+\hat{\beta_1} \text{Treated}_i +\hat{\beta_2} \
 	\end{itemize}
 	\begin{align*}
 	\only<6->{\Delta_i \Delta_t Enrolled &= (\text{GA}_{after}-\text{GA}_{before})-(\text{neighbors}_{after}-\text{neighbors}_{before})\\}
-	\only<7->{\widehat{Enrolled_{it}} &= \beta_0+\beta_1 Georgia_{it}+\beta_2 After_{it}+\beta_3 Georgia_{it} \times After_{it}\\}
+	\only<7->{\widehat{Enrolled_{it}} &= \beta_0+\beta_1 Georgia_{it}+\beta_2 After_{it}+\beta_3 Georgia_{it} * After_{it}\\}
 	\end{align*}
 \end{example}
 
@@ -279,29 +287,31 @@ summary(DND)
 
 \column{.5\textwidth}
 
-$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{i}-0.004 After_{t}+0.089 Georgia_{i} \times After_{t}$$
+\scriptsize 
+
+$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{i}-0.004 After_{t}+0.089 Georgia_{i} * After_{t}$$
 
 \columnsend
 
 ### Diff-in-Diff Example: Interpreting Coefficients
 
-$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{i}-0.004 After_{t}+0.089 Georgia_{i} \times After_{t}$$
+$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{i}-0.004 After_{t}+0.089 Georgia_{i} * After_{t}$$
 
-- $\beta_0$: A non-Georgian before 1992 was 40.6\% likely to be a college student
-- $\beta_1$: Georgians are 10.5\% less likely to be college students than neighboring states
-- $\beta_2$: After 1992, young Americans are 0.4\% less likely to be college students
-- $\beta_3$: After 1992, Georgians are 8.9\% more likely to enroll in colleges than neighboring states
--\alert{Treatment effect: HOPE increased enrollment likelihood by 8.9\%}
+- $\beta_0$: A **non-Georgian** **before** 1992 was 40.6\% likely to be a college student
+- $\beta_1$: **Georgians** **before** 1992 were 10.5\% less likely to be college students than neighboring states
+- $\beta_2$: **After** 1992, **non-Georgians** are 0.4\% less likely to be college students
+- $\beta_3$: **After** 1992, **Georgians** are 8.9\% more likely to enroll in colleges than neighboring states
+- \alert{Treatment effect: HOPE increased enrollment likelihood by 8.9\%}
 
 ### Diff-in-Diff Example: Comparing Group Means 
 
-$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{i}-0.004 After_{t}+0.089 Georgia_{i} \times After_{t}$$
+$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{i}-0.004 After_{t}+0.089 Georgia_{i} * After_{t}$$
 
-- A group mean for a dummy $Y$ is $E[Y=1]$, i.e. the probability a student is enrolled: 
+- A group mean for a dummy $Y$ is $E[Y=1]$, i.e. the probability a student is enrolled:
     - **Non-Georgian enrollment probability pre-1992**: $\beta_0=0.406$
-		- **Georgian enrollment probability pre-1992**: $\beta_0+\beta_1=0.406-0.105=0.301$
-		- **Non-Georgian enrollment probability post-1992**: $\beta_0+\beta_2=0.406-0.004=0.402$
-		- **Georgian enrollment probability post-1992**: $\beta_0+\beta_1+\beta_2+\beta_3=0.406-0.105-0.004+0.089=0.386$
+    - **Georgian enrollment probability pre-1992**: $\beta_0+\beta_1=0.406-0.105=0.301$
+    - **Non-Georgian enrollment probability post-1992**: $\beta_0+\beta_2=0.406-0.004=0.402$
+    - **Georgian enrollment probability post-1992**: $\beta_0+\beta_1+\beta_2+\beta_3=0.406-0.105-0.004+0.089=0.386$
 
 ### Diff-in-Diff Example: Comparing Group Means in `R`
 
@@ -342,7 +352,7 @@ HOPE %>%
 
 ### Diff-in-Diff Example Summary
 
-$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{it}-0.004 After_{it}+0.089 Georgia_{it} \times After_{it}$$
+$$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{it}-0.004 After_{it}+0.089 Georgia_{it} * After_{it}$$
 
 \begin{table}\small 
 		\centering 
@@ -364,7 +374,7 @@ $$\widehat{Enrolled_{it}}=0.406-0.105 Georgia_{it}-0.004 After_{it}+0.089 Georgi
 
 ### Diff-in-Diff Time Graph
 
-```{r}
+```{r, echo=F}
 HOPE %>%
   ggplot(data=., aes(x=After, y=InCollege, color=factor(Georgia)))+
   geom_smooth(method="lm", se=FALSE)+
@@ -373,7 +383,7 @@ HOPE %>%
   guides(color=guide_legend(title="Georgia"))+ylab("Probability of Being Enrolled in College")
 ```
 
-```{r, experiment, eval=F}
+```{r, experiment, eval=F, echo=F}
 HOPE %>%
   mutate(After=as.factor(After)) %>% 
   ggplot(data=., aes(x=factor(After), y=InCollege), color=factor(Georgia))+
@@ -383,7 +393,7 @@ HOPE %>%
   guides(color=guide_legend(title="Georgia"))+ylab("Probability of Being Enrolled in College")
 ```
 
-```{r, experiment1, eval=F}
+```{r, experiment1, eval=F, echo=F}
 HOPE %>%
   do(lm(InCollege~Georgia+After+AfterGeorgia, data=.) %>%
   predict %>%
@@ -396,3 +406,162 @@ HOPE %>%
   #guides(color=guide_legend(title="Georgia"))+ylab("Probability of Being Enrolled in College")
 
 ```
+
+
+# Generalizing DND Models
+
+### Generalizing DND Models
+
+- DND can be **generalized** with a two-way fixed effects model:  	
+$$\widehat{Y_{it}}=\alpha_i+\theta_t+\beta_3 (\text{Treated}_i * \text{After}_{it})+\nu_{it}$$
+    - $\alpha_i$: **group fixed effects** (treatments/control groups)
+    - $\theta_t$: **time fixed effects** (pre/post treatment)
+- Allows *many* periods, and treatment(s) can occur at different times to different units (so long as some do not get treated)
+- Can also add control variables that vary within units and over time 
+$$\widehat{Y_{it}}=\alpha_i+\theta_t+\beta_3 (\text{Treated}_i * \text{After}_{it})+\beta_4 X_{it}+\nu_{it}$$
+
+### The Georgia HOPE Example, Generalized
+
+\begin{example}
+$$\widehat{Enrolled_{it}} = \alpha_i+\theta_t+\beta_3 Georgia_{it} * After_{it}$$
+\end{example}
+
+### The Georgia HOPE Example, Generalized II
+
+\columnsbegin
+
+\column{.45\textwidth}
+
+\scriptsize
+
+- `StateCode` is a variable for the State $\implies$ create State fixed effect
+- `Year` is a variable for the year $\implies$ create year fixed effect
+- Using LSDV method (note we must ensure both `StateCode` and `Year` are `factor` variables!): 
+
+\column{.55\textwidth}
+
+\tiny 
+
+\onslide<4-> 
+
+```{r}
+DND_fe<-lm(InCollege~AfterGeorgia+factor(StateCode)+factor(Year), data=HOPE)
+summary(DND_fe)
+```
+
+\columnsend
+
+### Intuition Behind DND Models
+
+- Diff-in-diff models are the quintessential example of exploiting \alert{natural experiments} 
+    - A major change at a point in time (change in law, a natural disaster, political crisis) separates groups where one is affected and another is not---identifies the effect of the change (treatment) 
+- One of the cleanest and clearest causal **identification strategies**
+
+\begin{figure}
+		\includegraphics[height=2in]{rct}
+	\end{figure}
+
+# Example: "The" Card-Kreuger Minimum Wage Study
+
+### DND Example: Card & Kreuger (1994)
+
+\begin{example}
+	\emph{The} controversial minimum wage study, Card \& Kreuger (1994) is a quintessential (and clever) diff-in-diff.\\ \medskip  
+	
+	\small Card, David, Krueger, Alan B, (1994), ``Minimum Wages and Employment: A Case Study of the Fast-Food Industry in New Jersey and Pennsylvania,'' \emph{American Economic Review} 84 (4): 772–793	
+\end{example}
+
+### Minimum Wage
+
+\begin{columns}
+		\begin{column}[c]{8cm}
+			\begin{itemize}
+					\item Economic theory: increases in minimum wage ($\bar{W}$) move us up a downward-sloping demand curve for labor 
+					\item A surplus of labor: disemployment 
+			\end{itemize}
+		\end{column}
+		\begin{column}[c]{7cm}
+			\begin{tikzpicture}[y=.5cm, x=.5cm]\scriptsize 
+				 \draw[->] (0,0) -- (11,0) coordinate (x axis) node[right]{L};
+ 				\draw[->] (0,0) -- (0,11) coordinate (y axis) node[above]{$W (\$)$};
+				\draw[very thick,blue] (0,10) -- (10,0) node[right] {D};
+				\draw[very thick,red] (0,0) -- (10,10) node[right] {S};	
+				\draw[very thick, dotted, black] (0,5) node[left] {W*}-- (5,5) -- (5,0) node[below] {L*};
+				\draw[very thick, black] (0,7) node[left]{$\bar{W}$} -- (10,7);
+				\draw[very thick,black, dashed] (3,0) node[below]{\textcolor{blue}{$\bar{L_D}$}}-- (3,7);
+				\draw[very thick,black, dashed] (7,0) node[below]{\textcolor{red}{$\bar{L_S}$}}-- (7,7);
+				\draw[<->, very thick, black] (3, 1.5)--node[above]{Surplus}(7,1.5);
+				\draw[ultra thick, ->] (-1.5, 5)--(-1.5,7);
+ 			\end{tikzpicture}
+		\end{column}
+	\end{columns}
+
+### Card & Kreuger (1994): Background
+
+- Card & Kreuger (1994)	compare employment in fast food restaurants on New Jersey and Pennsylvania sides of border between February and November 1992.
+- Pennsylvania & New Jersey both had a minimum wage of \$4.25 before February 1992
+- In February 1992, New Jersey raised minimum wage from \$4.25 to \$5.05
+
+\begin{figure}
+		\includegraphics[height=1.5in]{PANJ}	
+\end{figure}
+
+### Card & Kreuger (1994): Background II
+
+- If we look only at New Jersey before & after change: 
+    - **Omitted variable bias**: macroeconomic variables (there's a recession!), weather, etc.
+		- Including PA as a control will control for these time-varying effects if they are national trends
+- Surveyed 400 fast food restaurants on each side of the border, before & after min wage increase
+    - \alert{Key assumption}: Pennsylvania and New Jersey follow parallel trends, 
+		- **Counterfactual**: if not for the minimum wage increase, NJ employment would have changed similar to PA employment
+
+\begin{figure}
+		\includegraphics[height=1.5in]{PANJ}	
+\end{figure}
+
+### Card & Kreuger (1994): Comparisons
+
+\begin{figure}
+		\includegraphics[height=3in]{CardKreuger1}
+\end{figure}
+
+### Card & Kreuger (1994): Summary
+
+\begin{figure}
+		\includegraphics[height=3in]{CardKreuger2}
+\end{figure}
+
+### Card & Kreuger (1994): Summary II 
+
+\begin{figure}
+		\includegraphics[height=3in]{CardKreuger3}
+\end{figure}
+
+### Card & Kreuger (1994): Identification Strategy and Model 
+
+$$\widehat{Employment_{i t}}=\beta_0+\beta_1 NJ_	{i}+\beta_2 After_{t}+\beta_3(NJ_i * After_t)$$
+
+- PA Before: $\beta_0$
+- PA After: $\beta_0+\beta_2$
+- NJ Before: $\beta_0+\beta_1$
+- NJ After: $\beta_0+\beta_1+\beta_2+\beta_3$
+- **Diff-in-diff**: $(NJ_{after}-NJ_{before})-(PA_{after}-PA_{before})$
+
+\begin{table}\small 
+		\centering 
+		\begin{tabular}{rrrr}
+		 & PA & NJ & \textcolor{red}{State Diff. ($\Delta Y_i$)}\\ \toprule 
+		 Before & $\beta_0$ & $\beta_0+\beta_1$ & \textcolor{red}{$\beta_1$}\\
+		 After & $\beta_0+\beta_2$ & $\beta_0+\beta_1+\beta_2+\beta_3$ & \textcolor{red}{$\beta_1+\beta_3$}\\ \midrule 
+		 \textcolor{blue}{Time Diff. ($\Delta Y_t$)} & \textcolor{blue}{$\beta_2$}	 & \textcolor{blue}{$\beta_2+\beta_3$} & \textcolor{purple}{$\beta_3$}\\ \bottomrule 
+		 & & & \textcolor{purple}{Diff-in-diff ($\Delta \Delta Y$)}\\ 
+		\end{tabular}
+\end{table}
+
+### Card & Kreuger (1994): Comparisons
+
+\begin{figure}
+		\includegraphics[height=2in]{CardKreuger5.png}
+\end{figure}
+
+
