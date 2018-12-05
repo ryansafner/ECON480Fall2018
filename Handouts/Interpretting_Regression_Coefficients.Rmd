@@ -1,0 +1,151 @@
+---
+title: "Interpretting Regression Coefficients"
+author: "Ryan Safner"
+date: "12/4/2018"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = F, warning=F, message=F)
+```
+
+How we interpret the coefficients in regression models will depend on how the dependent ($Y$) and independent ($X$) variables are measured. In general, there tend to be three types of variables used in econometrics: continuous variables, the natural log (ln) of continuous variables, and dummy variables. In the examples below, we will consider models with three different independent variables:
+
+- $X_{1i}$: a continuous variable
+- $ln(X_{2i})$: the natural log of a continuous variable
+- $X_{3i}$: a dummy variable that equals 1 (if yes) or 0 (if no)
+
+Below are three different OLS models. In each case, we keep the right hand side variables are the same, but as a demonstration, we change the dependent variable ($Y$) of interest to show the difference when we measure it as a continuous variable, the natural log of a continuous variable, or a dummy variable:
+
+- $Y_{1i}$: a continuous variable
+- $ln(Y_{2i})$: the natural log of a continuous variable
+- $Y_{3i}$: a dummy variable that equals 1 (if yes) or 0 (if no)
+
+## Model 1
+
+$$Y_{1i}=\beta_0+\beta_1X_{1i}+\beta_2ln(X_{2i})+\beta_3X_{3i}+\epsilon_i$$
+
+- $\beta_1=\frac{\Delta Y_{1i}}{\Delta X_{1i}}$: a one unit change in $X_1$ causes a $\beta_1$ unit change in $Y_{1i}$
+- $\beta_2=\frac{\Delta Y_{1i}}{\Delta ln(X_{2i})}$: a 1\% change in $X_2$ causes a $0.01\times\beta_2$ unit change in $Y_{1i}$
+- $\beta_3=\frac{\Delta Y_{1i}}{\Delta X_{3i}}$: the change in $X_3$ from 0 to 1 causes a $\beta_3$ unit change in $Y_{1i}$	
+
+## Model 2
+
+$$ln(Y_{2i})=\beta_0+\beta_1X_{1i}+\beta_2ln(X_{2i})+\beta_3X_{3i}+\epsilon_i$$
+
+- $\beta_1=\frac{\Delta ln(Y_{2i})}{\Delta X_{1i}}$: a one unit change in $X_1$ causes a $100\times\beta_1$ percent change in $Y_{2i}$
+- $\beta_2=\frac{\Delta ln(Y_{2i})}{\Delta ln(X_{2i})}$: a 1\% change in $X_2$ causes a $\beta_2$ percent change in $Y_{2i}$
+- $\beta_3=\frac{\Delta Y_{1i}}{\Delta X_{3i}}$: the change in $X_3$ from 0 to 1 causes a $100\times\beta_3$ percent change in $Y_{2i}$	
+
+## Model 3
+
+$$Y_{3i}=\beta_0+\beta_1X_{1i}+\beta_2ln(X_{2i})+\beta_3X_{3i}+\epsilon_i$$
+
+- $\beta_1=\frac{\Delta Y_{3i}}{\Delta X_{1i}}$: a one unit change in $X_1$ causes a $100\times\beta_1$ percentage point change in the probability of $Y_{3i}$ occurring (=1)
+- $\beta_2=\frac{\Delta Y_{3i}}{\Delta ln(X_{2i})}$: a 1\% change in $X_2$ causes a $\beta_2$ percentage point change in the probability of $Y_{3i}$ occurring (=1)
+- $\beta_3=\frac{\Delta Y_{3i}}{\Delta X_{3i}}$: the change in $X_3$ from 0 to 1 causes a $100\times\beta_3$ percentage point change in the probability of $Y_{3i}$ occurring (=1)
+
+# Example With Data
+
+
+Below are the results from three regressions using the same data set. The results parallel the three general models outlined above. The dataset `meps2005.dta` can be found under Blackboard/Datasets. It contains responses from a sample of senior citizens all on Medicare. 
+
+The regressions have three different outcome measures (analogous to $Y_1$, $Y_2,$ and $Y_3$ above): total expenditures on medical care (`totalexp`, $Y_1$), the natural log of total expenditures on medical care (`ln.totalexp`, $Y_2$), and whether or not the person reports "`goodhealth`" ($Y_3$). 
+
+For each of these three dependent variables, we regress three potential independent variables, a continuous variable (`age`), the natural log of a continuous variable (`ln.income`), and a dummy variable (`obese`$=$1 if a person is obese, $=0$ otherwise). The sample description and summary statistics are presented below: 
+
+```{r, load-data, echo=F}
+library("readstata13")
+handout<-read.dta13("../Data/meps_2005.dta")
+
+```
+
+```{r, summary-stats, echo=F}
+suppressPackageStartupMessages(library("dplyr"))
+library("tidyr")
+library("knitr")
+handout<- handout %>%
+  rename(ln.totalexp="ln_totalexp",
+         ln.income="ln_income")
+```
+
+```{R}
+handout.sum<-handout %>%
+  select(totalexp, ln.totalexp, goodhealth, age, ln.income, obese) %>% 
+  summarize_each(funs("Obs"=n(),
+            "Mean"=round(mean(.,na.rm=TRUE),2),
+            "Std. Dev."=round(sd(., na.rm=TRUE),2),
+            "Min"=round(min(., na.rm=TRUE),2),
+            "Q1"=round(quantile(., 0.25, na.rm=TRUE),2),
+            "Median"=round(median(., na.rm=TRUE),2),
+            "Q3"=round(quantile(., 0.75, na.rm=TRUE),2),
+            "Max"=round(max(., na.rm=TRUE),2)
+            ))
+
+handout.sum.tidy<- handout.sum %>%
+  gather(key=stat,value=val) %>%
+  separate(stat, into=c("var", "stat"), sep="_") %>% 
+  spread(stat, val) %>% 
+  select("var", "Obs", "Min", "Q1", "Median", "Q3", "Max", "Mean", "Std. Dev.") %>%
+  rename(Variable="var") %>% 
+  kable(.) 
+
+handout.sum.tidy
+```
+
+\clearpage 
+
+# Model 1
+
+$$\widehat{Totalexp}=\hat{\beta_0}+\hat{\beta_1}age+\hat{\beta_2}ln(income)+\hat{\beta_3}obese$$
+
+```{r, echo=F}
+lm(totalexp~age+ln.income+obese, data=handout) %>%
+  summary()
+```
+
+$$\widehat{Totalexp}=-6857.36+194.08age+44.30ln(income)+1393.60obese$$
+
+Interpreting the coefficients: 
+
+- `age`: a one year increase in age will increase annual medical expenditures by $194
+- `ln.income`: a 1\% increase in income will increase medical spending by $0.01\times44.2=\$0.442$
+- `obses`: obese seniors spend $1,393 more per year on medical care than non-obese seniors
+
+\clearpage 
+
+# Model 2
+
+$$\widehat{ln(Totalexp)}=\hat{\beta_0}+\hat{\beta_1}age+\hat{\beta_2}ln(income)+\hat{\beta_3}obese$$
+
+```{r, echo=F}
+lm(ln.totalexp~age+ln.income+obese, data=handout) %>%
+  summary()
+```
+
+$$\widehat{ln(Totalexp)}=6.17+0.044age-0.16ln(income)+0.45obese$$
+
+Interpreting the coefficients:
+
+- `age`: a one year increase in age will increase annual medical expenditures by 4.37\%
+- `ln.income`: a 1\% increase in income will reduce medical spending by 0.16\%
+- `obese`: obese seniors spend 44.6\% more per year on medical care than non-obese seniors
+
+\clearpage 
+
+# Model 3
+
+$$\widehat{Goodhealth}=\hat{\beta_0}+\hat{\beta_1}age+\hat{\beta_2}ln(income)+\hat{\beta_3}obese$$
+
+```{r, echo=F}
+lm(goodhealth~age+ln.income+obese, data=handout) %>%
+  summary()
+```
+
+$$\widehat{Goodhealth}=-0.421+0.003age+0.079ln(income)+0.167obese$$
+
+Interpreting the coefficients:
+
+- `age`: a one year increase in age will increase the probability of reporting good health by 0.3 percentage points
+- `ln.income`: a 1\% increase in income will increase the probability of reporting good health by 0.079 percentage points
+- `obese`: obese seniors have 16.7 higher percentage point probability of reporting good health than non-obese seniors
